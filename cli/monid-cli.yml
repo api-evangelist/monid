@@ -1,0 +1,48 @@
+generated: '2026-07-23'
+method: searched
+source: https://monid.ai/docs/cli/overview.md
+name: Monid CLI
+binary: monid
+package: "@monid-ai/cli"
+install:
+- npm install -g @monid-ai/cli
+setup:
+- command: monid setup
+  description: >-
+    Complete CLI setup. Optional flags --client <agent-name> and --email <email>.
+- command: monid keys add -k <api-key> -l <label>
+  description: Store an API key locally under a label (e.g. -l main).
+- command: monid keys list
+  description: List locally stored API keys.
+- command: monid keys activate <label>
+  description: Switch the active API key.
+- command: monid keys remove <label>
+  description: Remove an API key from the local credential store.
+commands:
+- name: discover
+  summary: Search for data endpoints using natural language.
+  backs: POST /v1/discover
+- name: inspect
+  summary: Get full details (schema + pricing) for a specific data endpoint.
+  backs: POST /v1/inspect
+- name: run
+  summary: Execute a data endpoint and retrieve results.
+  backs: POST /v1/run
+- name: runs list
+  summary: List recent runs.
+  backs: GET /v1/runs
+- name: runs get
+  summary: Get the status and results of a specific run.
+  backs: GET /v1/runs/{runId}
+- name: runs stop
+  summary: Stop a queued or running run.
+  backs: POST /v1/runs/{runId}/stop
+- name: keys
+  summary: Manage local API keys (add / list / activate / remove).
+env:
+- name: NO_COLOR
+  value: "1"
+  description: Disable ANSI color codes for scripted/agent use.
+notes: >-
+  The CLI auto-checks for newer versions and notifies on updates. For canonical
+  command signatures run `monid --help` and `monid <command> --help`.

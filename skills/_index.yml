@@ -1,0 +1,26 @@
+generated: '2026-07-23'
+method: searched
+skills:
+- file: monid-skill.md
+  name: monid
+  method: searched
+  source: https://monid.ai/SKILL.md
+  api: openapi/monid-openapi.json
+  description: >-
+    Provider-published Agent Skill (saved verbatim). Installs the Monid CLI and
+    teaches an agent to run `monid discover` before fetching/scraping/enriching,
+    then inspect and run endpoints, plus API-key setup.
+- file: monid-discover-inspect-run.md
+  name: Discover, inspect, and run a data endpoint
+  method: generated
+  api: openapi/monid-openapi.json
+  operations:
+  - POST /v1/discover
+  - POST /v1/inspect
+  - POST /v1/run
+  - GET /v1/runs/{runId}
+  - GET /v1/wallet/balance
+  description: >-
+    HTTP-API operating instructions for the core discover -> inspect -> run ->
+    poll loop, grounded in the real Monid REST operations, with the wallet,
+    pricing, and error rules an agent must respect.

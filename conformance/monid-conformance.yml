@@ -1,0 +1,42 @@
+generated: '2026-07-23'
+method: searched
+source: https://api.monid.ai/.well-known/openid-configuration + openapi/monid-openapi.json
+standards:
+- id: oauth2
+  conforms: true
+  evidence: >-
+    OAuth 2.0 authorization-code flow advertised at
+    /.well-known/oauth-authorization-server (Clerk-backed); scopes + token/auth
+    endpoints published.
+- id: oidc
+  conforms: true
+  evidence: >-
+    /.well-known/openid-configuration present; response_types [code],
+    id_token signing RS256, standard claims (sub/iss/aud/exp/iat/email/name/org_id).
+- id: oauth-pkce
+  conforms: true
+  evidence: code_challenge_methods_supported [S256] in discovery documents.
+- id: rfc8414-oauth-metadata
+  conforms: true
+  evidence: /.well-known/oauth-authorization-server returns RFC 8414 metadata.
+- id: rfc9728-protected-resource-metadata
+  conforms: true
+  evidence: /.well-known/oauth-protected-resource returns resource + authorization_servers.
+- id: rfc9457-problem-details
+  conforms: false
+  evidence: >-
+    Errors use a flat { code, message } envelope with application/json, not
+    application/problem+json.
+- id: cursor-pagination
+  conforms: true
+  evidence: List endpoints use opaque cursor pagination (limit + cursor -> items + cursor).
+- id: rfc9116-security-txt
+  conforms: false
+  evidence: No /.well-known/security.txt (404).
+- id: idempotency
+  conforms: false
+  evidence: No Idempotency-Key contract documented.
+notes: >-
+  Derived from published OAuth/OIDC discovery documents and the OpenAPI. No
+  formal third-party compliance certifications (SOC 2 / ISO 27001 / PCI) are
+  published, so no Compliance pointer is emitted.

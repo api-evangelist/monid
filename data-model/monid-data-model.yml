@@ -1,0 +1,107 @@
+generated: '2026-07-23'
+method: derived
+source: openapi/monid-openapi.json
+description: >-
+  Entity-relationship graph derived from the Monid OpenAPI schemas and id-reference
+  fields. Monid's core is a discover -> inspect -> run loop over a catalog of
+  external Provider endpoints, metered against a workspace Wallet with spend controls.
+entities:
+- name: User
+  id: userId
+  id_example: user_2abcDEFghiJKLmnop
+  source_schema: AuthUser
+  note: Clerk-backed identity behind an API key or OAuth token.
+- name: Workspace
+  id: workspaceId
+  id_example: org_2abcDEFghiJKLmnop
+  source_schema: AuthWorkspace
+  note: Clerk organization; owns the wallet, controls, runs, resources, and keys.
+- name: Provider
+  id: provider
+  id_example: exa
+  source_schema: PublicEndpointInfo
+  note: An upstream data/tool provider in the public registry.
+- name: Endpoint
+  id: endpoint
+  id_example: /search
+  source_schema: PublicEndpointInfo / InspectResponse
+  note: A callable operation on a Provider; carries a price and input JSON Schema.
+- name: Run
+  id: runId
+  id_example: 01JGXYZABCDEFGHJKMNPQRSTVW
+  source_schema: Run
+  note: A single billed execution of a Provider Endpoint (ULID).
+- name: Resource
+  id: resourceId
+  source_schema: Resource
+  note: A provisioned upstream resource (e.g. phone_number) with a renewal lifecycle.
+- name: Wallet
+  id: null
+  source_schema: WalletBalanceResponse
+  note: Prepaid balance + holds, one per workspace.
+- name: WorkspaceBudget
+  id: budgetControlId
+  source_schema: WorkspaceBudget
+  note: Period-windowed spend cap control (HOUR/DAY/WEEK/MONTH).
+- name: RunCap
+  id: runCapControlId
+  source_schema: workspace run-cap control
+  note: Cap on concurrent/total runs.
+- name: ApiKey
+  id: label
+  source_schema: /v1/api-keys
+  note: Named API key credential (monid_live_...).
+relationships:
+- from: Workspace
+  to: User
+  type: belongs_to
+  via: caller / userId
+- from: Run
+  to: Workspace
+  type: belongs_to
+  via: caller
+- from: Run
+  to: Provider
+  type: belongs_to
+  via: provider
+- from: Run
+  to: Endpoint
+  type: belongs_to
+  via: endpoint
+- from: Run
+  to: Resource
+  type: has_many
+  via: resources[]
+- from: Endpoint
+  to: Provider
+  type: belongs_to
+  via: provider
+- from: WorkspaceBudget
+  to: Workspace
+  type: belongs_to
+  via: workspaceId
+- from: WorkspaceBudget
+  to: Run
+  type: has_many
+  via: /controls/workspace/budgets/{budgetControlId}/runs
+- from: RunCap
+  to: Run
+  type: has_many
+  via: /controls/workspace/run-caps/{runCapControlId}/runs
+- from: Wallet
+  to: Workspace
+  type: belongs_to
+  via: workspace scope
+- from: Resource
+  to: Provider
+  type: belongs_to
+  via: provider
+id_prefixes:
+- prefix: user_
+  entity: User
+- prefix: org_
+  entity: Workspace
+- prefix: monid_live_
+  entity: ApiKey
+- prefix: ULID
+  entity: Run / Resource / Budget

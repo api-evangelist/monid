@@ -21,13 +21,16 @@ image: ""
 x-enrichment:
   date: 2026-07-23
   status: enriched
-  artifacts_added: 6
-  pass: local-v1-manual
+  artifacts_added: 11
+  pass: local-v1
   note: >-
-    Classifier outage blocked the agent workflow; this pass was run inline via Bash/curl. Real
-    OpenAPI 3.1 (33 ops / 10 tags) discovered and saved verbatim; auth, domain-security, hosted MCP
-    server, llms.txt, and derived error catalog wired. Remaining generative artifacts (skills,
-    conventions, packages/CLI, changelog, well-known) left for a full agent pass.
+    Full agent enrichment pass. SEARCHED/PROBED live: OAuth 2.0 + OIDC discovery
+    (well-known on api.monid.ai + mcp.monid.ai, Clerk-backed, scopes captured),
+    provider-published Agent Skill (SKILL.md verbatim), npm CLI @monid-ai/cli,
+    status page, GitHub org monid-ai, x402 crypto-pay surface. GENERATED/DERIVED:
+    conventions, conformance, lifecycle, data-model, overlay, scopes, agentic-access,
+    a grounded discover-inspect-run skill. No security.txt/bug-bounty/trust-center,
+    no changelog/pricing/TOS pages, no sandbox/webhooks — honestly absent, skipped.
 tags:
 - Company
 - Agents
@@ -41,24 +44,54 @@ maintainers:
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: AgenticAccess
+  url: agentic-access/monid-agentic-access.yml
 - type: Authentication
   url: authentication/monid-authentication.yml
+- type: OAuthScopes
+  url: scopes/monid-scopes.yml
 - type: DomainSecurity
   url: security/monid-domain-security.yml
 - type: MCPServer
   url: mcp/monid-mcp.yml
 - type: ErrorCatalog
   url: errors/monid-problem-types.yml
+- type: Conventions
+  url: conventions/monid-conventions.yml
+- type: Conformance
+  url: conformance/monid-conformance.yml
+- type: WellKnown
+  url: well-known/monid-well-known.yml
+- type: Lifecycle
+  url: lifecycle/monid-lifecycle.yml
+- type: StatusPage
+  url: https://status.monid.ai
+- type: DataModel
+  url: data-model/monid-data-model.yml
+- type: Overlay
+  url: overlays/monid-openapi-overlay.yaml
+- type: Packages
+  url: packages/monid-packages.yml
+- type: CLI
+  url: cli/monid-cli.yml
+- type: AgentSkill
+  url: skills/_index.yml
 - type: LLMsTxt
   url: llms/monid-llms.txt
 - type: Website
   url: https://monid.ai
+- type: DeveloperPortal
+  url: https://monid.ai/docs
 - type: Documentation
   url: https://monid.ai/docs
 - type: APIReference
   url: https://monid.ai/docs
 - type: GettingStarted
   url: https://monid.ai/docs/guide/quickstart-api.md
+- type: Blog
+  url: https://monid.ai/blog
+- type: GitHubOrganization
+  url: https://github.com/monid-ai
 - type: SignUp
   url: https://app.monid.ai
 apis:

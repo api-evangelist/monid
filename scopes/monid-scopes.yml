@@ -1,0 +1,38 @@
+generated: '2026-07-23'
+method: searched
+source: https://api.monid.ai/.well-known/openid-configuration
+docs: https://monid.ai/docs/integrations/oauth.md
+schemes:
+- name: OAuth2
+  type: oauth2
+  provider: Clerk (clerk.app.monid.ai)
+  flows:
+  - flow: authorizationCode
+    authorizationUrl: https://clerk.app.monid.ai/oauth/authorize
+    tokenUrl: https://clerk.app.monid.ai/oauth/token
+    revocationUrl: https://clerk.app.monid.ai/oauth/token/revoke
+    refreshSupported: true
+    pkce: S256
+  resource: https://api.monid.ai/v1
+scopes:
+- scope: openid
+  description: Required for OIDC. Enables ID tokens.
+  flows: [authorizationCode]
+- scope: profile
+  description: User's name and profile info.
+  flows: [authorizationCode]
+- scope: email
+  description: User's email address.
+  flows: [authorizationCode]
+- scope: offline_access
+  description: Return a refresh token so you can act while the user is offline.
+  flows: [authorizationCode]
+- scope: "user:org:read"
+  description: Read the user's organizations and workspaces.
+  flows: [authorizationCode]
+notes: >-
+  The OpenAPI declares only an HTTP bearer scheme (Monid API key `monid_live_...`
+  or a Clerk-issued JWT). OAuth 2.0 scoped access is documented separately and
+  advertised via the anonymous /.well-known/ discovery documents; agents obtain
+  a user-delegated access token with these scopes to act on the user's own
+  workspace. Authorization requests must include resource=https://api.monid.ai/v1.

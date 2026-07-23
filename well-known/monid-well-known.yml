@@ -1,0 +1,33 @@
+generated: '2026-07-23'
+method: searched
+source: live probe of /.well-known/* on Monid API + MCP hosts
+host: https://api.monid.ai
+documents:
+- path: /.well-known/openid-configuration        # OIDC discovery
+  status: 200
+  file: monid-openid-configuration.json
+- path: /.well-known/oauth-authorization-server   # RFC 8414
+  status: 200
+  file: monid-oauth-authorization-server.json
+- path: /.well-known/oauth-protected-resource     # RFC 9728
+  status: 200
+  file: monid-oauth-protected-resource.json
+- path: /.well-known/security.txt                  # RFC 9116
+  status: 404
+- path: /.well-known/api-catalog                   # RFC 9727
+  status: 404
+- path: /.well-known/ai-plugin.json
+  status: 404
+other_hosts:
+- host: https://mcp.monid.ai
+  note: >-
+    The hosted MCP server exposes the same anonymous OAuth discovery surface
+    (/.well-known/openid-configuration, /.well-known/oauth-authorization-server,
+    /.well-known/oauth-protected-resource all 200) so MCP clients can perform the
+    OAuth 2.0 authorization-code + PKCE handshake automatically.
+- host: https://monid.ai
+  note: Marketing/registry host — no /.well-known/* documents (all 404).
+notes: >-
+  OAuth authorization + token endpoints are Clerk-hosted
+  (https://clerk.app.monid.ai/oauth/authorize + /oauth/token); the issuer is
+  https://api.monid.ai and the protected resource is https://api.monid.ai/v1.

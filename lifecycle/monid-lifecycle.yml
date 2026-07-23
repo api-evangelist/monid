@@ -1,0 +1,21 @@
+generated: '2026-07-23'
+method: searched
+source: https://monid.ai/docs + live host probes
+versioning:
+  scheme: uri-path
+  current: v1
+  note: >-
+    All authenticated routes are under /v1/*; a public/v1 registry surface is
+    also served from https://monid.ai without auth.
+status_page: https://status.monid.ai
+deprecation:
+  policy_url: null
+  sunset_header: false
+  note: No published deprecation/sunset policy found (2026-07-23).
+sla:
+  url: null
+deprecated_operations: []
+notes: >-
+  A live status page is published at https://status.monid.ai (HTTP 200). No
+  formal versioning-policy, deprecation-policy, or SLA page was found on the docs
+  host at probe time.

@@ -1,0 +1,53 @@
+generated: '2026-07-23'
+method: searched
+source: https://monid.ai/docs/api/overview.md
+authentication:
+  style: bearer
+  header: "Authorization: Bearer <token>"
+  token_types:
+  - Monid API key (prefix `monid_live_`)
+  - Clerk-issued JWT access token (OAuth 2.0)
+  workspace_context:
+    header: x-workspace-id
+    when: >-
+      Required only with OAuth/JWT tokens that lack organization context; scopes
+      a request to a specific workspace (org_...). List via GET /v1/auth/workspaces.
+  see: authentication/monid-authentication.yml
+pagination:
+  style: cursor
+  request_params:
+  - limit    # requested page size (server-side cap applies per endpoint)
+  - cursor   # opaque forward cursor
+  response_fields:
+  - items    # result array
+  - cursor   # next-page cursor; null or absent = last page
+  note: Consult each operation schema for its exact last-page cursor encoding.
+idempotency:
+  supported: false
+  note: >-
+    No Idempotency-Key header or idempotent-retry contract is documented. Run
+    creation (POST /v1/run) is not idempotent; use budgets/run-caps and GET
+    /v1/runs to reconcile rather than blind retries.
+request_tracing:
+  header: x-request-id
+  note: Unique per-request id; include it when reporting issues.
+content_type: application/json
+error_envelope:
+  shape: '{ "code": <int http status>, "message": <string> }'
+  note: >-
+    Flat JSON envelope (NOT RFC 9457 problem+json). `code` duplicates the HTTP
+    status. A 402 always means the workspace wallet balance is insufficient; an
+    upstream provider's own 402 surfaces as 502. See errors/monid-problem-types.yml.
+rate_limiting:
+  documented_headers: false
+  note: >-
+    No per-response rate-limit headers are documented. Monid pools rate limits
+    across upstream providers and retries on the next-best provider when one is
+    throttled ("one rate-limit envelope").
+versioning:
+  scheme: uri-path
+  current: v1
+  public_alias: >-
+    https://monid.ai exposes the public/v1 registry routes (stats, providers,
+    search) without auth; https://api.monid.ai serves the full /v1 surface.
+  see: lifecycle/monid-lifecycle.yml

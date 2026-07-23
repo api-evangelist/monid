@@ -1,0 +1,23 @@
+generated: '2026-07-23'
+method: searched
+source: https://www.npmjs.com/package/@monid-ai/cli
+packages:
+- language: javascript
+  registry: npm
+  name: "@monid-ai/cli"
+  version: 0.1.4
+  url: https://www.npmjs.com/package/@monid-ai/cli
+  install: npm install -g @monid-ai/cli
+  binary: monid
+  repository: https://github.com/monid-ai/cli
+  official: true
+  kind: cli
+  description: >-
+    Official Monid CLI — discover, inspect, and run data endpoints across
+    hundreds of tools from the command line. Provides the `monid` binary
+    (see cli/monid-cli.yml for the command surface).
+notes: >-
+  Monid ships a first-party CLI on npm but no standalone server-side client
+  library (SDK) — programmatic access is via the HTTP API (bearer key), the
+  hosted MCP server, or this CLI. No PyPI / Maven / NuGet / RubyGems / crates.io
+  first-party package found (probed 2026-07-23).

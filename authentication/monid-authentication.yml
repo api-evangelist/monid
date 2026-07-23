@@ -1,13 +1,44 @@
 generated: '2026-07-23'
-method: derived
-source: openapi/monid-openapi.json
+method: searched
+source: openapi/monid-openapi.json + https://monid.ai/docs/integrations/oauth.md + /.well-known/openid-configuration
+docs: https://monid.ai/docs/integrations/oauth.md
 summary:
   types:
   - http
+  - oauth2
+  http_schemes:
+  - bearer
+  oauth2_flows:
+  - authorizationCode
 schemes:
 - name: Bearer
   type: http
   scheme: bearer
-  description: 'Monid API key (`Authorization: Bearer mk_...`) or Clerk-issued JWT.'
+  description: >-
+    Monid API key (`Authorization: Bearer monid_live_...`) or a Clerk-issued JWT
+    access token. Used for direct/server-to-server and proxy integrations.
   sources:
   - openapi/monid-openapi.json
+- name: OAuth2
+  type: oauth2
+  provider: Clerk (clerk.app.monid.ai)
+  description: >-
+    OAuth 2.0 authorization-code flow with PKCE (S256) and refresh tokens, for
+    user-delegated access to a caller's own workspace. Issuer https://api.monid.ai;
+    protected resource https://api.monid.ai/v1. Advertised via the anonymous
+    /.well-known/openid-configuration + oauth-authorization-server documents.
+  flows:
+  - flow: authorizationCode
+    authorizationUrl: https://clerk.app.monid.ai/oauth/authorize
+    tokenUrl: https://clerk.app.monid.ai/oauth/token
+    revocationUrl: https://clerk.app.monid.ai/oauth/token/revoke
+    scopes: [openid, profile, email, offline_access, "user:org:read"]
+    pkce: S256
+  sources:
+  - https://api.monid.ai/.well-known/openid-configuration
+  see: scopes/monid-scopes.yml
+notes: >-
+  Three documented integration modes: direct (single master API key), OAuth
+  (user brings their own Monid account/workspace), and proxy (self-hosted in
+  front of the API). Workspace scoping via the x-workspace-id header when an
+  OAuth/JWT token lacks org context.

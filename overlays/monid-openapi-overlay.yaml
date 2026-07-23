@@ -1,0 +1,40 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for Monid API
+  version: 1.0.0
+extends: openapi/monid-openapi.json
+actions:
+- target: $.info
+  update:
+    x-apievangelist-enriched: '2026-07-23'
+    x-apievangelist-conventions: conventions/monid-conventions.yml
+    x-apievangelist-error-catalog: errors/monid-problem-types.yml
+    x-apievangelist-authentication: authentication/monid-authentication.yml
+    x-apievangelist-scopes: scopes/monid-scopes.yml
+    x-apievangelist-data-model: data-model/monid-data-model.yml
+    x-apievangelist-agentic-access: agentic-access/monid-agentic-access.yml
+- target: $.info
+  update:
+    x-apievangelist-notes: >-
+      Monid exposes a discover/inspect/run loop over a metered catalog of external
+      provider endpoints. Auth is HTTP bearer (monid_live_ key or Clerk JWT); OAuth
+      2.0 authorization-code + PKCE is available for user-delegated access (see
+      scopes/). Errors use a flat { code, message } envelope, not RFC 9457. A 402
+      means wallet-insufficient; an upstream provider 402 surfaces as 502.
+- target: $.components.securitySchemes
+  update:
+    OAuth2:
+      type: oauth2
+      description: >-
+        OAuth 2.0 user-delegated access (Clerk-backed). Advertised via
+        /.well-known/oauth-authorization-server; not declared in the upstream spec.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://clerk.app.monid.ai/oauth/authorize
+          tokenUrl: https://clerk.app.monid.ai/oauth/token
+          scopes:
+            openid: Required for OIDC. Enables ID tokens.
+            profile: User's name and profile info.
+            email: User's email address.
+            offline_access: Return a refresh token to act while the user is offline.
+            'user:org:read': Read the user's organizations and workspaces.
