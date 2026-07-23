@@ -1,0 +1,15 @@
+generated: '2026-07-23'
+method: probed
+source: live DNS/TLS/HTTP probes of apis.yml + OpenAPI hosts
+hosts:
+- host: monid.ai
+  https: true
+  tls_version: TLSv1.3
+  cert_expires: Oct  1 23:59:59 2026 GMT
+  hsts: false
+domains:
+- domain: monid.ai
+  dnssec: true
+  caa: []
+  spf: false
+  dmarc: false

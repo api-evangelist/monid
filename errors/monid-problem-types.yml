@@ -1,0 +1,186 @@
+generated: '2026-07-23'
+method: derived
+source: openapi/monid-openapi.json
+problem_types:
+- status: 400
+  format: json
+  title: Bad request — input failed validation
+  operations:
+  - POST /v1/discover
+  - GET /v1/endpoints
+  - POST /v1/inspect
+  - POST /v1/run
+  - GET /v1/runs
+  - GET /v1/resources
+  - GET /v1/resources/{resourceId}/events
+  - GET /v1/controls/workspace/budgets
+  - GET /v1/controls/workspace/budgets/{budgetControlId}
+  - PATCH /v1/controls/workspace/budgets/{budgetControlId}
+  - GET /v1/controls/workspace/budgets/{budgetControlId}/runs
+  - GET /v1/controls/workspace/run-caps
+  - GET /v1/controls/workspace/run-caps/{runCapControlId}
+  - PATCH /v1/controls/workspace/run-caps/{runCapControlId}
+  - GET /v1/controls/workspace/run-caps/{runCapControlId}/runs
+  - GET /v1/api-keys
+  - PATCH /v1/api-keys/{label}
+  - DELETE /v1/api-keys/{label}
+  - GET /public/v1/providers
+  - GET /public/v1/providers/{provider}/endpoints
+  - GET /public/v1/search
+- status: 401
+  format: json
+  title: Unauthorized — missing or invalid credentials
+  operations:
+  - GET /v1/auth/whoami
+  - GET /v1/auth/workspaces
+  - POST /v1/discover
+  - GET /v1/endpoints
+  - POST /v1/inspect
+  - POST /v1/run
+  - GET /v1/runs
+  - GET /v1/runs/{runId}
+  - GET /v1/runs/{runId}/controls
+  - POST /v1/runs/{runId}/stop
+  - GET /v1/resources
+  - GET /v1/resources/{resourceId}/external/{kind}
+  - GET /v1/resources/{resourceId}/events
+  - POST /v1/resources/{resourceId}/release
+  - GET /v1/resources/{resourceId}
+  - GET /v1/wallet/balance
+  - GET /v1/wallet/topup
+  - GET /v1/controls/workspace/budgets
+  - GET /v1/controls/workspace/budgets/{budgetControlId}
+  - PATCH /v1/controls/workspace/budgets/{budgetControlId}
+  - GET /v1/controls/workspace/budgets/{budgetControlId}/runs
+  - GET /v1/controls/workspace/run-caps
+  - GET /v1/controls/workspace/run-caps/{runCapControlId}
+  - PATCH /v1/controls/workspace/run-caps/{runCapControlId}
+  - GET /v1/controls/workspace/run-caps/{runCapControlId}/runs
+  - GET /v1/api-keys
+  - PATCH /v1/api-keys/{label}
+  - DELETE /v1/api-keys/{label}
+- status: 402
+  format: json
+  title: Payment required — workspace wallet balance insufficient. (A 402 from this API is ALWAYS about
+    your wallet; an upstream provider's own 402 surfaces as 502.)
+  operations:
+  - POST /v1/run
+- status: 403
+  format: json
+  title: Forbidden — caller has no workspace or no access
+  operations:
+  - GET /v1/auth/whoami
+  - GET /v1/auth/workspaces
+  - POST /v1/discover
+  - GET /v1/endpoints
+  - POST /v1/inspect
+  - POST /v1/run
+  - GET /v1/runs
+  - GET /v1/runs/{runId}
+  - GET /v1/runs/{runId}/controls
+  - POST /v1/runs/{runId}/stop
+  - GET /v1/resources
+  - GET /v1/resources/{resourceId}/external/{kind}
+  - GET /v1/resources/{resourceId}/events
+  - POST /v1/resources/{resourceId}/release
+  - GET /v1/resources/{resourceId}
+  - GET /v1/wallet/balance
+  - GET /v1/wallet/topup
+  - GET /v1/controls/workspace/budgets
+  - GET /v1/controls/workspace/budgets/{budgetControlId}
+  - PATCH /v1/controls/workspace/budgets/{budgetControlId}
+  - GET /v1/controls/workspace/budgets/{budgetControlId}/runs
+  - GET /v1/controls/workspace/run-caps
+  - GET /v1/controls/workspace/run-caps/{runCapControlId}
+  - PATCH /v1/controls/workspace/run-caps/{runCapControlId}
+  - GET /v1/controls/workspace/run-caps/{runCapControlId}/runs
+  - GET /v1/api-keys
+  - PATCH /v1/api-keys/{label}
+  - DELETE /v1/api-keys/{label}
+- status: 404
+  format: json
+  title: Endpoint not found for provider
+  operations:
+  - POST /v1/inspect
+  - POST /v1/run
+  - GET /v1/runs/{runId}
+  - GET /v1/runs/{runId}/controls
+  - POST /v1/runs/{runId}/stop
+  - GET /v1/resources/{resourceId}/external/{kind}
+  - GET /v1/resources/{resourceId}/events
+  - POST /v1/resources/{resourceId}/release
+  - GET /v1/resources/{resourceId}
+  - GET /v1/controls/workspace/budgets/{budgetControlId}
+  - PATCH /v1/controls/workspace/budgets/{budgetControlId}
+  - GET /v1/controls/workspace/budgets/{budgetControlId}/runs
+  - GET /v1/controls/workspace/run-caps/{runCapControlId}
+  - PATCH /v1/controls/workspace/run-caps/{runCapControlId}
+  - GET /v1/controls/workspace/run-caps/{runCapControlId}/runs
+  - PATCH /v1/api-keys/{label}
+  - DELETE /v1/api-keys/{label}
+  - GET /public/v1/providers/{provider}/endpoints
+  - GET /public/v1/providers/{provider}/endpoints/{endpoint}
+- status: 408
+  format: json
+  title: TIMED_OUT — the run exceeded its time budget (run deadline or provider request timeout). Terminal,
+    zero-billed; the body is the full run with status TIMED_OUT.
+  operations:
+  - POST /v1/run
+- status: 409
+  format: json
+  title: Run is terminal, not stoppable, or no longer running
+  operations:
+  - POST /v1/runs/{runId}/stop
+  - POST /v1/resources/{resourceId}/release
+- status: 500
+  format: json
+  title: Internal server error
+  operations:
+  - GET /v1/auth/whoami
+  - GET /v1/auth/workspaces
+  - POST /v1/discover
+  - GET /v1/endpoints
+  - POST /v1/inspect
+  - POST /v1/run
+  - GET /v1/runs
+  - GET /v1/runs/{runId}
+  - GET /v1/runs/{runId}/controls
+  - POST /v1/runs/{runId}/stop
+  - GET /v1/resources
+  - GET /v1/resources/{resourceId}/external/{kind}
+  - GET /v1/resources/{resourceId}/events
+  - POST /v1/resources/{resourceId}/release
+  - GET /v1/resources/{resourceId}
+  - GET /v1/wallet/balance
+  - GET /v1/wallet/topup
+  - GET /v1/controls/workspace/budgets
+  - GET /v1/controls/workspace/budgets/{budgetControlId}
+  - PATCH /v1/controls/workspace/budgets/{budgetControlId}
+  - GET /v1/controls/workspace/budgets/{budgetControlId}/runs
+  - GET /v1/controls/workspace/run-caps
+  - GET /v1/controls/workspace/run-caps/{runCapControlId}
+  - PATCH /v1/controls/workspace/run-caps/{runCapControlId}
+  - GET /v1/controls/workspace/run-caps/{runCapControlId}/runs
+  - GET /v1/api-keys
+  - PATCH /v1/api-keys/{label}
+  - DELETE /v1/api-keys/{label}
+  - GET /public/v1/stats
+  - GET /public/v1/providers
+  - GET /public/v1/providers/{provider}/endpoints
+  - GET /public/v1/search
+  - GET /public/v1/providers/{provider}/endpoints/{endpoint}
+- status: 502
+  format: json
+  title: Upstream provider payment/quota failure — the provider returned 402 (its account problem, not
+    your wallet). The body is the full COMPLETED run with the provider's error in providerResponse.error;
+    the run is not charged.
+  operations:
+  - POST /v1/run
+  - GET /v1/resources/{resourceId}/external/{kind}
+- status: 503
+  format: json
+  title: Wallet not ACTIVE (provisioning, failed, or being set up). Transient states include a Retry-After
+    header (seconds).
+  operations:
+  - GET /v1/wallet/balance
+  - GET /v1/wallet/topup

@@ -1,0 +1,41 @@
+# Monid
+
+## Docs
+
+- [Who Am I](https://monid.ai/docs/api/auth/whoami.md): Return the identity behind the current API key or OAuth access token.
+- [List Workspaces](https://monid.ai/docs/api/auth/workspaces.md): List the workspaces your API key or OAuth token has access to.
+- [Discover](https://monid.ai/docs/api/discover.md): Search for data endpoints using natural language.
+- [Inspect](https://monid.ai/docs/api/inspect.md): Get full details for a specific data endpoint.
+- [API Overview](https://monid.ai/docs/api/overview.md): Discover, inspect, and run data endpoints programmatically.
+- [Run](https://monid.ai/docs/api/run.md): Execute a data endpoint.
+- [Get Run](https://monid.ai/docs/api/runs/get.md): Get the status and results of a specific run.
+- [List Runs](https://monid.ai/docs/api/runs/list.md): List runs for your workspace.
+- [Stop Run](https://monid.ai/docs/api/runs/stop.md): Stop a running run.
+- [List Activities](https://monid.ai/docs/api/wallet/activities.md): List wallet transactions.
+- [Get Balance](https://monid.ai/docs/api/wallet/balance.md): Get the current wallet balance.
+- [monid discover](https://monid.ai/docs/cli/discover.md): Search for data endpoints using natural language.
+- [Examples](https://monid.ai/docs/cli/examples.md): Complete end-to-end examples using the Monid CLI.
+- [monid inspect](https://monid.ai/docs/cli/inspect.md): Get full details for a specific data endpoint.
+- [monid keys activate](https://monid.ai/docs/cli/keys/activate.md): Switch the active API key.
+- [monid keys add](https://monid.ai/docs/cli/keys/add.md): Add an API key to your local credential store.
+- [monid keys list](https://monid.ai/docs/cli/keys/list.md): List all locally stored API keys.
+- [monid keys remove](https://monid.ai/docs/cli/keys/remove.md): Remove an API key from your local credential store.
+- [CLI Overview](https://monid.ai/docs/cli/overview.md): The Monid CLI lets you discover, inspect, and run data endpoints from the command line.
+- [monid run](https://monid.ai/docs/cli/run.md): Execute a data endpoint and retrieve results.
+- [monid runs get](https://monid.ai/docs/cli/runs/get.md): Get the status and results of a specific run.
+- [monid runs list](https://monid.ai/docs/cli/runs/list.md): List recent runs.
+- [monid runs stop](https://monid.ai/docs/cli/runs/stop.md): Stop a queued or running run.
+- [How It Works](https://monid.ai/docs/guide/how-it-works.md): How Monid works, and how you (or your agent) pay for what you use.
+- [Pay with x402](https://monid.ai/docs/guide/pay-with-x402.md): Pay per run with a crypto wallet (USDC) using the x402 protocol instead of a prepaid Monid workspace balance.
+- [Set Up with API](https://monid.ai/docs/guide/quickstart-api.md): Call the Monid HTTP API directly with your own code.
+- [Set Up with CLI](https://monid.ai/docs/guide/quickstart-cli.md): Install the Monid CLI and start querying data from the command line.
+- [Set Up with MCP](https://monid.ai/docs/guide/quickstart-mcp.md): Connect your AI client to Monid via MCP (Streamable HTTP).
+- [Set Up with Skill](https://monid.ai/docs/guide/quickstart-skill.md): Give your AI agent the ability to discover and run data endpoints across the web.
+- [Welcome](https://monid.ai/docs/index.md)
+- [Set Up Direct Access](https://monid.ai/docs/integrations/direct/setup.md): Call Monid server-to-server with a single API key for internal, user-invisible workflows.
+- [When to Use Monid Directly](https://monid.ai/docs/integrations/direct/when-to-use.md): Use Monid directly when it's an internal building block of your product, not something users see.
+- [Set Up OAuth](https://monid.ai/docs/integrations/oauth.md): Let your users sign in with Monid and act on their own workspace via OAuth 2.0.
+- [When to Use OAuth](https://monid.ai/docs/integrations/oauth/when-to-use.md): Use OAuth when your users bring their own Monid account and act on their own workspace.
+- [Integrations Overview](https://monid.ai/docs/integrations/overview.md): Integrate Monid into your own product so your users can discover and run data endpoints.
+- [Set Up Your Own Proxy](https://monid.ai/docs/integrations/proxy.md): Run a proxy in front of the Monid API to control validation, billing, and endpoint access.
+- [When to Use a Proxy](https://monid.ai/docs/integrations/proxy/when-to-use.md): Run your own proxy when you want full control over billing, validation, and endpoint access.

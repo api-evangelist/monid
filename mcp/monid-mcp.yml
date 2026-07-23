@@ -1,0 +1,147 @@
+generated: '2026-07-23'
+method: searched
+source: https://monid.ai/docs/guide/quickstart-mcp.md
+name: Monid MCP Server
+status: hosted
+transport: streamable-http
+url: https://mcp.monid.ai/v1
+auth: OAuth / Bearer (Monid API key)
+description: Official hosted Monid MCP server (Streamable HTTP). Gives an AI client tools to discover,
+  inspect, and run hundreds of data endpoints across the web, with pay-per-use billing against a Monid
+  workspace balance.
+install:
+  claude-code: claude mcp add --transport http monid https://mcp.monid.ai/v1
+  codex: codex mcp add monid --url https://mcp.monid.ai/v1
+operations_backing_tools:
+- method: GET
+  path: /v1/auth/whoami
+  tag: Auth
+  summary: Get the authenticated user and workspace
+- method: GET
+  path: /v1/auth/workspaces
+  tag: Auth
+  summary: List the caller's workspaces
+- method: POST
+  path: /v1/discover
+  tag: Discover
+  summary: Search for data endpoints
+- method: GET
+  path: /v1/endpoints
+  tag: Endpoints
+  summary: Browse the endpoint catalog
+- method: POST
+  path: /v1/inspect
+  tag: Inspect
+  summary: Get full endpoint details
+- method: POST
+  path: /v1/run
+  tag: Runs
+  summary: Start an endpoint run
+- method: GET
+  path: /v1/runs
+  tag: Runs
+  summary: List runs
+- method: GET
+  path: /v1/runs/{runId}
+  tag: Runs
+  summary: Get a run
+- method: GET
+  path: /v1/runs/{runId}/controls
+  tag: Runs
+  summary: List a run's control records
+- method: POST
+  path: /v1/runs/{runId}/stop
+  tag: Runs
+  summary: Stop a run
+- method: GET
+  path: /v1/resources
+  tag: Resources
+  summary: List resources
+- method: GET
+  path: /v1/resources/{resourceId}/external/{kind}
+  tag: Resources
+  summary: Get a resource's live external detail
+- method: GET
+  path: /v1/resources/{resourceId}/events
+  tag: Resources
+  summary: List a resource's lifecycle events
+- method: POST
+  path: /v1/resources/{resourceId}/release
+  tag: Resources
+  summary: Release a resource
+- method: GET
+  path: /v1/resources/{resourceId}
+  tag: Resources
+  summary: Get a resource
+- method: GET
+  path: /v1/wallet/balance
+  tag: Wallet
+  summary: Get the live wallet balance
+- method: GET
+  path: /v1/wallet/topup
+  tag: Wallet
+  summary: Get top-up configuration
+- method: GET
+  path: /v1/controls/workspace/budgets
+  tag: Controls
+  summary: List workspace budget controls
+- method: GET
+  path: /v1/controls/workspace/budgets/{budgetControlId}
+  tag: Controls
+  summary: Get a workspace budget control
+- method: PATCH
+  path: /v1/controls/workspace/budgets/{budgetControlId}
+  tag: Controls
+  summary: Update a workspace budget control
+- method: GET
+  path: /v1/controls/workspace/budgets/{budgetControlId}/runs
+  tag: Controls
+  summary: List runs linked to a budget control
+- method: GET
+  path: /v1/controls/workspace/run-caps
+  tag: Controls
+  summary: List workspace run cap controls
+- method: GET
+  path: /v1/controls/workspace/run-caps/{runCapControlId}
+  tag: Controls
+  summary: Get a workspace run cap control
+- method: PATCH
+  path: /v1/controls/workspace/run-caps/{runCapControlId}
+  tag: Controls
+  summary: Update a workspace run cap control
+- method: GET
+  path: /v1/controls/workspace/run-caps/{runCapControlId}/runs
+  tag: Controls
+  summary: List runs linked to a run cap control
+- method: GET
+  path: /v1/api-keys
+  tag: API Keys
+  summary: List API keys
+- method: PATCH
+  path: /v1/api-keys/{label}
+  tag: API Keys
+  summary: Update an API key
+- method: DELETE
+  path: /v1/api-keys/{label}
+  tag: API Keys
+  summary: Delete an API key
+- method: GET
+  path: /public/v1/stats
+  tag: Public Registry
+  summary: Catalog-wide aggregate counts
+- method: GET
+  path: /public/v1/providers
+  tag: Public Registry
+  summary: List providers
+- method: GET
+  path: /public/v1/providers/{provider}/endpoints
+  tag: Public Registry
+  summary: List a provider's endpoints
+- method: GET
+  path: /public/v1/search
+  tag: Public Registry
+  summary: Keyword search over the catalog
+- method: GET
+  path: /public/v1/providers/{provider}/endpoints/{endpoint}
+  tag: Public Registry
+  summary: Get one endpoint

@@ -18,6 +18,16 @@ specificationVersion: "0.20"
 created: 2026-07-23
 modified: 2026-07-23
 image: ""
+x-enrichment:
+  date: 2026-07-23
+  status: enriched
+  artifacts_added: 6
+  pass: local-v1-manual
+  note: >-
+    Classifier outage blocked the agent workflow; this pass was run inline via Bash/curl. Real
+    OpenAPI 3.1 (33 ops / 10 tags) discovered and saved verbatim; auth, domain-security, hosted MCP
+    server, llms.txt, and derived error catalog wired. Remaining generative artifacts (skills,
+    conventions, packages/CLI, changelog, well-known) left for a full agent pass.
 tags:
 - Company
 - Agents
@@ -31,12 +41,44 @@ maintainers:
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: Authentication
+  url: authentication/monid-authentication.yml
+- type: DomainSecurity
+  url: security/monid-domain-security.yml
+- type: MCPServer
+  url: mcp/monid-mcp.yml
+- type: ErrorCatalog
+  url: errors/monid-problem-types.yml
+- type: LLMsTxt
+  url: llms/monid-llms.txt
 - type: Website
   url: https://monid.ai
 - type: Documentation
   url: https://monid.ai/docs
 - type: APIReference
   url: https://monid.ai/docs
+- type: GettingStarted
+  url: https://monid.ai/docs/guide/quickstart-api.md
 - type: SignUp
   url: https://app.monid.ai
-apis: []
+apis:
+- name: Monid API
+  description: >-
+    The Monid HTTP API lets developers and AI agents discover data endpoints with natural language,
+    inspect their details, run them, and manage runs, wallet balance, spend controls (budgets and
+    run-caps), resources, and API keys — plus a public registry of providers and endpoints. Bearer
+    authentication with a Monid API key (monid_live_...) or an OAuth/JWT access token.
+  humanURL: https://monid.ai/docs/api/overview.md
+  baseURL: https://api.monid.ai
+  tags:
+  - Agents
+  - Tools
+  - Data
+  - Discovery
+  - Wallet
+  - MCP
+  properties:
+  - type: OpenAPI
+    url: openapi/monid-openapi.json
+  - type: Documentation
+    url: https://monid.ai/docs/api/overview.md

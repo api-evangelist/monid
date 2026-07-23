@@ -1,0 +1,13 @@
+generated: '2026-07-23'
+method: derived
+source: openapi/monid-openapi.json
+summary:
+  types:
+  - http
+schemes:
+- name: Bearer
+  type: http
+  scheme: bearer
+  description: 'Monid API key (`Authorization: Bearer mk_...`) or Clerk-issued JWT.'
+  sources:
+  - openapi/monid-openapi.json

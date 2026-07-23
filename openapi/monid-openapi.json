@@ -1,0 +1,6311 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Monid API",
+    "version": "0.1.0",
+    "description": "Agentic payment platform for data — agents discover and buy data on demand. Authenticated `/v1/*` routes accept a Monid API key or Clerk JWT as a Bearer token. All errors return `{ code, message }`. List endpoints use cursor pagination; consult each operation schema for its last-page cursor encoding."
+  },
+  "servers": [
+    {
+      "url": "https://api.monid.ai",
+      "description": "Production"
+    },
+    {
+      "url": "https://monid.ai",
+      "description": "Public registry alias (public/v1 only)"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Monid API key (`Authorization: Bearer mk_...`) or Clerk-issued JWT."
+      }
+    },
+    "schemas": {
+      "WhoamiResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/AuthUser"
+          },
+          "workspace": {
+            "$ref": "#/components/schemas/AuthWorkspace"
+          }
+        },
+        "required": [
+          "user"
+        ]
+      },
+      "AuthUser": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Clerk user id.",
+            "example": "user_2abcDEFghiJKLmnop"
+          },
+          "username": {
+            "type": "string",
+            "description": "Username from Clerk (may be empty)."
+          },
+          "email": {
+            "type": "string",
+            "description": "Primary email, when known.",
+            "example": "dev@example.com"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {},
+            "description": "Free-form user metadata record."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Record creation time (ISO-8601)."
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Record last-update time (ISO-8601)."
+          }
+        },
+        "required": [
+          "userId",
+          "username",
+          "metadata",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "AuthWorkspace": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Workspace (Clerk organization) id.",
+            "example": "org_2abcDEFghiJKLmnop"
+          },
+          "name": {
+            "type": "string",
+            "description": "Organization display name (may be empty)."
+          },
+          "slug": {
+            "type": "string",
+            "description": "Organization slug (may be empty).",
+            "example": "acme-inc"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {},
+            "description": "Free-form workspace metadata record."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Record creation time (ISO-8601)."
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Record last-update time (ISO-8601)."
+          }
+        },
+        "required": [
+          "workspaceId",
+          "name",
+          "slug",
+          "metadata",
+          "createdAt",
+          "updatedAt"
+        ],
+        "description": "Absent when the caller is not part of a workspace."
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "HTTP status code, duplicated in the body.",
+            "example": 400
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable error description.",
+            "example": "Bad Request"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "WorkspaceListResponse": {
+        "type": "object",
+        "properties": {
+          "workspaces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceListItem"
+            }
+          }
+        },
+        "required": [
+          "workspaces"
+        ]
+      },
+      "WorkspaceListItem": {
+        "type": "object",
+        "properties": {
+          "workspaceId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Workspace (Clerk organization) id.",
+            "example": "org_2abcDEFghiJKLmnop"
+          },
+          "slug": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Organization slug from Clerk. `null` when the organization has no slug.",
+            "example": "acme-inc"
+          }
+        },
+        "required": [
+          "workspaceId",
+          "slug"
+        ]
+      },
+      "DiscoverResponse": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DiscoverResult"
+            }
+          },
+          "query": {
+            "type": "string"
+          },
+          "count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "results",
+          "query",
+          "count"
+        ]
+      },
+      "DiscoverResult": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "description": "Provider slug.",
+            "example": "exa"
+          },
+          "providerName": {
+            "type": "string",
+            "description": "Human-readable provider name."
+          },
+          "endpoint": {
+            "type": "string",
+            "description": "Endpoint path.",
+            "example": "/search"
+          },
+          "description": {
+            "type": "string"
+          },
+          "price": {
+            "$ref": "#/components/schemas/DiscoverPrice"
+          },
+          "score": {
+            "type": "number",
+            "description": "Final composed reranker score. Opaque sort context — not a fixed-range relevance probability."
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "User-facing tags (e.g. `[\"verified\"]`)."
+          },
+          "scoreBreakdown": {
+            "type": "object",
+            "properties": {
+              "querierScore": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "querierScore"
+            ],
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "description": "Per-signal breakdown of the reranker's final score (`querierScore` plus one raw log-odds shift per signal)."
+          },
+          "hints": {
+            "type": "object",
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "command",
+                        "discover",
+                        "inspect",
+                        "run",
+                        "getRun",
+                        "stop",
+                        "releaseResource"
+                      ]
+                    },
+                    "command": {
+                      "type": "string"
+                    },
+                    "query": {
+                      "type": "string"
+                    },
+                    "provider": {
+                      "type": "string"
+                    },
+                    "endpoint": {
+                      "type": "string"
+                    },
+                    "runId": {
+                      "type": "string"
+                    },
+                    "resourceId": {
+                      "type": "string"
+                    },
+                    "comment": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                }
+              ]
+            },
+            "description": "Endpoint-authored workflow hints, polymorphic by client (rendered command string for cli/api/mcp; structured target for web). Omitted for unknown clients and endpoints without authored hints."
+          }
+        },
+        "required": [
+          "provider",
+          "endpoint",
+          "description",
+          "price",
+          "score",
+          "tags",
+          "scoreBreakdown"
+        ]
+      },
+      "DiscoverPrice": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "number"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "enum": [
+                      "USD"
+                    ]
+                  }
+                },
+                "required": [
+                  "value",
+                  "currency"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "PER_TOKEN"
+                    ]
+                  },
+                  "amount": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "type": "number"
+                      },
+                      "currency": {
+                        "type": "string",
+                        "enum": [
+                          "USD"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "currency"
+                    ]
+                  },
+                  "per": {
+                    "type": "number"
+                  },
+                  "unit": {
+                    "type": "string",
+                    "enum": [
+                      "token",
+                      "character"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "amount",
+                  "per",
+                  "unit"
+                ]
+              }
+            ]
+          },
+          "flatFee": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "number"
+              },
+              "currency": {
+                "type": "string",
+                "enum": [
+                  "USD"
+                ]
+              }
+            },
+            "required": [
+              "value",
+              "currency"
+            ]
+          },
+          "period": {
+            "type": "object",
+            "properties": {
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "MINUTE",
+                  "DAY",
+                  "MONTH"
+                ]
+              },
+              "count": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              }
+            },
+            "required": [
+              "unit",
+              "count"
+            ]
+          },
+          "per": {
+            "type": "object",
+            "properties": {
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "MINUTE",
+                  "DAY",
+                  "MONTH"
+                ]
+              },
+              "count": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              }
+            },
+            "required": [
+              "unit",
+              "count"
+            ]
+          },
+          "selectors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "key": {
+                  "type": "string"
+                },
+                "in": {
+                  "type": "string",
+                  "enum": [
+                    "body",
+                    "queryParam",
+                    "pathParam"
+                  ]
+                }
+              },
+              "required": [
+                "label",
+                "key",
+                "in"
+              ]
+            }
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "when": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  }
+                },
+                "amount": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "type": "number"
+                        },
+                        "currency": {
+                          "type": "string",
+                          "enum": [
+                            "USD"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "value",
+                        "currency"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "PER_TOKEN"
+                          ]
+                        },
+                        "amount": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "number"
+                            },
+                            "currency": {
+                              "type": "string",
+                              "enum": [
+                                "USD"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "value",
+                            "currency"
+                          ]
+                        },
+                        "per": {
+                          "type": "number"
+                        },
+                        "unit": {
+                          "type": "string",
+                          "enum": [
+                            "token",
+                            "character"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "amount",
+                        "per",
+                        "unit"
+                      ]
+                    }
+                  ]
+                },
+                "label": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "when",
+                "amount"
+              ]
+            }
+          }
+        },
+        "required": [
+          "type",
+          "amount"
+        ],
+        "description": "User-facing price (markup applied, no notes)."
+      },
+      "DiscoverRequest": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000,
+            "description": "Natural-language search query for data endpoints.",
+            "example": "twitter posts"
+          },
+          "limit": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "default": 5,
+            "description": "Requested result count. A config-driven server-side cap (`service.discover.max_results`) applies.",
+            "example": 5
+          },
+          "minScore": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 2,
+            "description": "Per-call override for the post-rerank score floor. Results scoring below this are filtered out before truncation to `limit`. Falls back to the configured default when omitted.",
+            "example": 0.2
+          }
+        },
+        "required": [
+          "query"
+        ]
+      },
+      "PublicEndpointInfo": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "description": "Provider slug.",
+            "example": "exa"
+          },
+          "providerDisplayName": {
+            "type": "string",
+            "description": "Resolved provider display name (curation > slug)."
+          },
+          "providerDisplayDescription": {
+            "type": "string",
+            "description": "Resolved provider display blurb."
+          },
+          "endpoint": {
+            "type": "string",
+            "description": "Endpoint path.",
+            "example": "/search"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Resolved endpoint display label. Always populated."
+          },
+          "displayDescription": {
+            "type": "string",
+            "description": "Resolved endpoint display blurb. May be empty."
+          },
+          "price": {
+            "$ref": "#/components/schemas/PublicPrice"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "User-facing tags (e.g. `[\"verified\"]`). Always an array; empty when no tags are set on the indexed wrapper."
+          }
+        },
+        "required": [
+          "provider",
+          "providerDisplayName",
+          "endpoint",
+          "displayName",
+          "displayDescription",
+          "price",
+          "tags"
+        ]
+      },
+      "PublicPrice": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "number"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "enum": [
+                      "USD"
+                    ]
+                  }
+                },
+                "required": [
+                  "value",
+                  "currency"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "PER_TOKEN"
+                    ]
+                  },
+                  "amount": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "type": "number"
+                      },
+                      "currency": {
+                        "type": "string",
+                        "enum": [
+                          "USD"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "currency"
+                    ]
+                  },
+                  "per": {
+                    "type": "number"
+                  },
+                  "unit": {
+                    "type": "string",
+                    "enum": [
+                      "token",
+                      "character"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "amount",
+                  "per",
+                  "unit"
+                ]
+              }
+            ]
+          },
+          "flatFee": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "number"
+              },
+              "currency": {
+                "type": "string",
+                "enum": [
+                  "USD"
+                ]
+              }
+            },
+            "required": [
+              "value",
+              "currency"
+            ]
+          },
+          "period": {
+            "type": "object",
+            "properties": {
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "MINUTE",
+                  "DAY",
+                  "MONTH"
+                ]
+              },
+              "count": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              }
+            },
+            "required": [
+              "unit",
+              "count"
+            ]
+          },
+          "per": {
+            "type": "object",
+            "properties": {
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "MINUTE",
+                  "DAY",
+                  "MONTH"
+                ]
+              },
+              "count": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              }
+            },
+            "required": [
+              "unit",
+              "count"
+            ]
+          },
+          "selectors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "key": {
+                  "type": "string"
+                },
+                "in": {
+                  "type": "string",
+                  "enum": [
+                    "body",
+                    "queryParam",
+                    "pathParam"
+                  ]
+                }
+              },
+              "required": [
+                "label",
+                "key",
+                "in"
+              ]
+            }
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "when": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  }
+                },
+                "amount": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "type": "number"
+                        },
+                        "currency": {
+                          "type": "string",
+                          "enum": [
+                            "USD"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "value",
+                        "currency"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "PER_TOKEN"
+                          ]
+                        },
+                        "amount": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "number"
+                            },
+                            "currency": {
+                              "type": "string",
+                              "enum": [
+                                "USD"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "value",
+                            "currency"
+                          ]
+                        },
+                        "per": {
+                          "type": "number"
+                        },
+                        "unit": {
+                          "type": "string",
+                          "enum": [
+                            "token",
+                            "character"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "amount",
+                        "per",
+                        "unit"
+                      ]
+                    }
+                  ]
+                },
+                "label": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "when",
+                "amount"
+              ]
+            }
+          }
+        },
+        "required": [
+          "type",
+          "amount"
+        ],
+        "description": "User-facing price (markup applied)."
+      },
+      "InspectResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Opaque inspection id (ULID)."
+          },
+          "provider": {
+            "type": "string",
+            "description": "Provider slug (e.g., \"apify\")."
+          },
+          "providerName": {
+            "type": "string",
+            "description": "Human-readable provider name (e.g., \"Apify\")."
+          },
+          "endpoint": {
+            "type": "string",
+            "description": "Endpoint path."
+          },
+          "description": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "GET",
+              "POST",
+              "PUT",
+              "DELETE",
+              "PATCH"
+            ],
+            "description": "HTTP method for this endpoint."
+          },
+          "price": {
+            "$ref": "#/components/schemas/Price"
+          },
+          "docUrl": {
+            "type": "string",
+            "description": "Provider documentation URL."
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Operator-curated notes for agents — quirks, pitfalls, best practices."
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Tags for scoring and filtering (e.g., [\"verified\"])."
+          },
+          "hints": {
+            "type": "object",
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "command",
+                        "discover",
+                        "inspect",
+                        "run",
+                        "getRun",
+                        "stop",
+                        "releaseResource"
+                      ]
+                    },
+                    "command": {
+                      "type": "string"
+                    },
+                    "query": {
+                      "type": "string"
+                    },
+                    "provider": {
+                      "type": "string"
+                    },
+                    "endpoint": {
+                      "type": "string"
+                    },
+                    "runId": {
+                      "type": "string"
+                    },
+                    "resourceId": {
+                      "type": "string"
+                    },
+                    "comment": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                }
+              ]
+            },
+            "description": "Agent guidance map (phrase → hint), polymorphic by client: rendered command string for cli/api/mcp, structured target for web. Omitted for unknown clients."
+          },
+          "input": {
+            "$ref": "#/components/schemas/EndpointInput"
+          }
+        },
+        "required": [
+          "id",
+          "provider",
+          "endpoint",
+          "description",
+          "tags"
+        ]
+      },
+      "Price": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "amount": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "number"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "enum": [
+                      "USD"
+                    ]
+                  }
+                },
+                "required": [
+                  "value",
+                  "currency"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "PER_TOKEN"
+                    ]
+                  },
+                  "amount": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "type": "number"
+                      },
+                      "currency": {
+                        "type": "string",
+                        "enum": [
+                          "USD"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "currency"
+                    ]
+                  },
+                  "per": {
+                    "type": "number"
+                  },
+                  "unit": {
+                    "type": "string",
+                    "enum": [
+                      "token",
+                      "character"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "amount",
+                  "per",
+                  "unit"
+                ]
+              }
+            ]
+          },
+          "flatFee": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "number"
+              },
+              "currency": {
+                "type": "string",
+                "enum": [
+                  "USD"
+                ]
+              }
+            },
+            "required": [
+              "value",
+              "currency"
+            ]
+          },
+          "period": {
+            "type": "object",
+            "properties": {
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "MINUTE",
+                  "DAY",
+                  "MONTH"
+                ]
+              },
+              "count": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              }
+            },
+            "required": [
+              "unit",
+              "count"
+            ]
+          },
+          "per": {
+            "type": "object",
+            "properties": {
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "MINUTE",
+                  "DAY",
+                  "MONTH"
+                ]
+              },
+              "count": {
+                "type": "integer",
+                "exclusiveMinimum": 0
+              }
+            },
+            "required": [
+              "unit",
+              "count"
+            ]
+          },
+          "selectors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string"
+                },
+                "key": {
+                  "type": "string"
+                },
+                "in": {
+                  "type": "string",
+                  "enum": [
+                    "body",
+                    "queryParam",
+                    "pathParam"
+                  ]
+                }
+              },
+              "required": [
+                "label",
+                "key",
+                "in"
+              ]
+            }
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "when": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  }
+                },
+                "amount": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "type": "number"
+                        },
+                        "currency": {
+                          "type": "string",
+                          "enum": [
+                            "USD"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "value",
+                        "currency"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "PER_TOKEN"
+                          ]
+                        },
+                        "amount": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "number"
+                            },
+                            "currency": {
+                              "type": "string",
+                              "enum": [
+                                "USD"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "value",
+                            "currency"
+                          ]
+                        },
+                        "per": {
+                          "type": "number"
+                        },
+                        "unit": {
+                          "type": "string",
+                          "enum": [
+                            "token",
+                            "character"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "amount",
+                        "per",
+                        "unit"
+                      ]
+                    }
+                  ]
+                },
+                "label": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "when",
+                "amount"
+              ]
+            }
+          },
+          "notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "type",
+          "amount"
+        ],
+        "description": "User-facing price (markup applied)."
+      },
+      "EndpointInput": {
+        "type": "object",
+        "properties": {
+          "pathParams": {
+            "type": "object",
+            "additionalProperties": {},
+            "description": "JSON Schema for URL path parameters (e.g. /users/{id})."
+          },
+          "queryParams": {
+            "type": "object",
+            "additionalProperties": {},
+            "description": "JSON Schema for query string parameters."
+          },
+          "body": {
+            "type": "object",
+            "additionalProperties": {},
+            "description": "JSON Schema for the request body (POST/PUT/PATCH)."
+          },
+          "bodyType": {
+            "type": "string",
+            "enum": [
+              "json",
+              "form",
+              "multipart"
+            ],
+            "description": "Body content type (when body is present)."
+          }
+        },
+        "description": "Structured input — JSON Schema per param location (path, query, body)."
+      },
+      "InspectRequest": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Provider slug.",
+            "example": "exa"
+          },
+          "endpoint": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Endpoint path.",
+            "example": "/search"
+          }
+        },
+        "required": [
+          "provider",
+          "endpoint"
+        ]
+      },
+      "RunCompleted": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "endpoint": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "READY",
+              "RUNNING",
+              "STOPPING",
+              "COMPLETED",
+              "FAILED",
+              "BLOCKED",
+              "STOPPED",
+              "TIMED_OUT"
+            ]
+          },
+          "output": {
+            "description": "Provider output data (may be null)."
+          },
+          "providerResponse": {
+            "$ref": "#/components/schemas/ProviderResponse"
+          },
+          "price": {
+            "$ref": "#/components/schemas/Price"
+          },
+          "billing": {
+            "type": "object",
+            "properties": {
+              "calculatedCost": {
+                "type": "object",
+                "properties": {
+                  "currency": {
+                    "type": "string",
+                    "enum": [
+                      "USD"
+                    ]
+                  },
+                  "value": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "unit": {
+                    "type": "string",
+                    "enum": [
+                      "MICRO_DOLLAR",
+                      "CENT",
+                      "DOLLAR"
+                    ]
+                  }
+                },
+                "required": [
+                  "currency",
+                  "value",
+                  "unit"
+                ]
+              },
+              "actualCost": {
+                "type": "object",
+                "properties": {
+                  "currency": {
+                    "type": "string",
+                    "enum": [
+                      "USD"
+                    ]
+                  },
+                  "value": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "unit": {
+                    "type": "string",
+                    "enum": [
+                      "MICRO_DOLLAR",
+                      "CENT",
+                      "DOLLAR"
+                    ]
+                  }
+                },
+                "required": [
+                  "currency",
+                  "value",
+                  "unit"
+                ]
+              },
+              "reportedCost": {
+                "type": "object",
+                "properties": {
+                  "currency": {
+                    "type": "string",
+                    "enum": [
+                      "USD"
+                    ]
+                  },
+                  "value": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "unit": {
+                    "type": "string",
+                    "enum": [
+                      "MICRO_DOLLAR",
+                      "CENT",
+                      "DOLLAR"
+                    ]
+                  }
+                },
+                "required": [
+                  "currency",
+                  "value",
+                  "unit"
+                ]
+              }
+            },
+            "required": [
+              "calculatedCost",
+              "actualCost",
+              "reportedCost"
+            ]
+          },
+          "resultCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "billedUnits": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "resources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string",
+                  "enum": [
+                    "PROVISIONED",
+                    "PROVISION_FAILED",
+                    "RELEASED",
+                    "RELEASE_FAILED"
+                  ]
+                },
+                "resourceId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "resourceType": {
+                  "type": "string",
+                  "enum": [
+                    "phone_number"
+                  ]
+                },
+                "identifier": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "action",
+                "resourceId",
+                "resourceType",
+                "identifier"
+              ]
+            }
+          },
+          "stopRequestedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "hints": {
+            "type": "object",
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "command",
+                        "discover",
+                        "inspect",
+                        "run",
+                        "getRun",
+                        "stop",
+                        "releaseResource"
+                      ]
+                    },
+                    "command": {
+                      "type": "string"
+                    },
+                    "query": {
+                      "type": "string"
+                    },
+                    "provider": {
+                      "type": "string"
+                    },
+                    "endpoint": {
+                      "type": "string"
+                    },
+                    "runId": {
+                      "type": "string"
+                    },
+                    "resourceId": {
+                      "type": "string"
+                    },
+                    "comment": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "runId",
+          "provider",
+          "endpoint",
+          "status",
+          "providerResponse",
+          "price",
+          "createdAt"
+        ]
+      },
+      "ProviderResponse": {
+        "type": "object",
+        "properties": {
+          "httpStatus": {
+            "type": "integer",
+            "description": "HTTP status from the provider (e.g. 200, 400, 404, 429, 500).",
+            "example": 200
+          },
+          "error": {
+            "description": "Provider error body, passed through faithfully on failure."
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {},
+            "description": "Provider-specific debug metadata lifted from the raw response."
+          }
+        }
+      },
+      "RunBlocked": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "BLOCKED"
+            ]
+          },
+          "provider": {
+            "type": "string"
+          },
+          "endpoint": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "price": {
+            "$ref": "#/components/schemas/Price"
+          },
+          "controls": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "controlId": {
+                  "type": "string"
+                },
+                "controlType": {
+                  "type": "string"
+                },
+                "requiredAmount": {
+                  "type": "number",
+                  "description": "The gate's pre-flight cost hold/estimate (dollars)."
+                },
+                "snapshot": {
+                  "type": "object",
+                  "additionalProperties": {},
+                  "description": "Dollarized control state snapshot at gate time (same shape as /v1/runs/{runId}/controls)."
+                }
+              },
+              "required": [
+                "controlId",
+                "controlType",
+                "snapshot"
+              ]
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "hints": {
+            "type": "object",
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "command",
+                        "discover",
+                        "inspect",
+                        "run",
+                        "getRun",
+                        "stop",
+                        "releaseResource"
+                      ]
+                    },
+                    "command": {
+                      "type": "string"
+                    },
+                    "query": {
+                      "type": "string"
+                    },
+                    "provider": {
+                      "type": "string"
+                    },
+                    "endpoint": {
+                      "type": "string"
+                    },
+                    "runId": {
+                      "type": "string"
+                    },
+                    "resourceId": {
+                      "type": "string"
+                    },
+                    "comment": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "runId",
+          "status",
+          "provider",
+          "endpoint",
+          "reason",
+          "price",
+          "controls",
+          "createdAt",
+          "completedAt"
+        ]
+      },
+      "RunAccepted": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "endpoint": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "READY",
+              "RUNNING",
+              "STOPPING",
+              "COMPLETED",
+              "FAILED",
+              "BLOCKED",
+              "STOPPED",
+              "TIMED_OUT"
+            ]
+          },
+          "price": {
+            "$ref": "#/components/schemas/Price"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "hints": {
+            "type": "object",
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "command",
+                        "discover",
+                        "inspect",
+                        "run",
+                        "getRun",
+                        "stop",
+                        "releaseResource"
+                      ]
+                    },
+                    "command": {
+                      "type": "string"
+                    },
+                    "query": {
+                      "type": "string"
+                    },
+                    "provider": {
+                      "type": "string"
+                    },
+                    "endpoint": {
+                      "type": "string"
+                    },
+                    "runId": {
+                      "type": "string"
+                    },
+                    "resourceId": {
+                      "type": "string"
+                    },
+                    "comment": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "runId",
+          "provider",
+          "endpoint",
+          "status",
+          "price",
+          "createdAt"
+        ]
+      },
+      "RunRequest": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Provider slug.",
+            "example": "exa"
+          },
+          "endpoint": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Endpoint path within the provider.",
+            "example": "search"
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "body": {
+                "type": "object",
+                "additionalProperties": {},
+                "description": "Request body fields."
+              },
+              "queryParams": {
+                "type": "object",
+                "additionalProperties": {},
+                "description": "URL query string parameters."
+              },
+              "pathParams": {
+                "type": "object",
+                "additionalProperties": {},
+                "description": "URL path placeholder substitutions (e.g. {id} in `/users/{id}`)."
+              }
+            },
+            "additionalProperties": false,
+            "description": "Composite endpoint input — body + URL query + URL path. All sub-fields optional."
+          }
+        },
+        "required": [
+          "provider",
+          "endpoint"
+        ],
+        "additionalProperties": false
+      },
+      "RunListItem": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string",
+            "description": "Run identifier (ULID).",
+            "example": "01JGXYZABCDEFGHJKMNPQRSTVW"
+          },
+          "caller": {
+            "type": "string",
+            "description": "Prefixed polymorphic caller id (e.g. `USER#<userId>`)."
+          },
+          "provider": {
+            "type": "string"
+          },
+          "providerName": {
+            "type": "string"
+          },
+          "endpoint": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "READY",
+              "RUNNING",
+              "STOPPING",
+              "COMPLETED",
+              "FAILED",
+              "BLOCKED",
+              "STOPPED",
+              "TIMED_OUT"
+            ]
+          },
+          "stoppable": {
+            "type": "boolean"
+          },
+          "providerResponse": {
+            "$ref": "#/components/schemas/ProviderResponse"
+          },
+          "price": {
+            "$ref": "#/components/schemas/Price"
+          },
+          "cost": {
+            "$ref": "#/components/schemas/Cost"
+          },
+          "resultCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "billedUnits": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "runId",
+          "caller",
+          "provider",
+          "endpoint",
+          "status",
+          "price",
+          "createdAt"
+        ]
+      },
+      "Cost": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD"
+            ]
+          }
+        },
+        "required": [
+          "value",
+          "currency"
+        ]
+      },
+      "Run": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string",
+            "description": "Run identifier (ULID).",
+            "example": "01JGXYZABCDEFGHJKMNPQRSTVW"
+          },
+          "caller": {
+            "type": "string",
+            "description": "Prefixed polymorphic caller id (e.g. `USER#<userId>`)."
+          },
+          "provider": {
+            "type": "string"
+          },
+          "providerName": {
+            "type": "string"
+          },
+          "endpoint": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "READY",
+              "RUNNING",
+              "STOPPING",
+              "COMPLETED",
+              "FAILED",
+              "BLOCKED",
+              "STOPPED",
+              "TIMED_OUT"
+            ],
+            "description": "Run lifecycle status. COMPLETED means the provider responded (any HTTP status); FAILED means an infrastructure failure."
+          },
+          "stoppable": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "controls": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": {}
+            }
+          },
+          "input": {
+            "type": "object",
+            "properties": {
+              "body": {
+                "type": "object",
+                "additionalProperties": {},
+                "description": "Request body fields."
+              },
+              "queryParams": {
+                "type": "object",
+                "additionalProperties": {},
+                "description": "URL query string parameters."
+              },
+              "pathParams": {
+                "type": "object",
+                "additionalProperties": {},
+                "description": "URL path placeholder substitutions (e.g. {id} in `/users/{id}`)."
+              }
+            },
+            "additionalProperties": false,
+            "description": "Composite endpoint input — body + URL query + URL path. All sub-fields optional."
+          },
+          "output": {
+            "description": "Provider output data (terminal runs only; may be null)."
+          },
+          "providerResponse": {
+            "$ref": "#/components/schemas/ProviderResponse"
+          },
+          "price": {
+            "$ref": "#/components/schemas/Price"
+          },
+          "cost": {
+            "$ref": "#/components/schemas/Cost"
+          },
+          "resultCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "billedUnits": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "resources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "action": {
+                  "type": "string",
+                  "enum": [
+                    "PROVISIONED",
+                    "PROVISION_FAILED",
+                    "RELEASED",
+                    "RELEASE_FAILED"
+                  ]
+                },
+                "resourceId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "resourceType": {
+                  "type": "string",
+                  "enum": [
+                    "phone_number"
+                  ]
+                },
+                "identifier": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "action",
+                "resourceId",
+                "resourceType",
+                "identifier"
+              ]
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "hints": {
+            "type": "object",
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "command",
+                        "discover",
+                        "inspect",
+                        "run",
+                        "getRun",
+                        "stop",
+                        "releaseResource"
+                      ]
+                    },
+                    "command": {
+                      "type": "string"
+                    },
+                    "query": {
+                      "type": "string"
+                    },
+                    "provider": {
+                      "type": "string"
+                    },
+                    "endpoint": {
+                      "type": "string"
+                    },
+                    "runId": {
+                      "type": "string"
+                    },
+                    "resourceId": {
+                      "type": "string"
+                    },
+                    "comment": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "runId",
+          "caller",
+          "provider",
+          "endpoint",
+          "status",
+          "input",
+          "price",
+          "createdAt"
+        ]
+      },
+      "ControlRun": {
+        "type": "object",
+        "additionalProperties": {}
+      },
+      "RunStopAccepted": {
+        "type": "object",
+        "properties": {
+          "runId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "STOPPING"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "runId",
+          "status",
+          "message"
+        ]
+      },
+      "Resource": {
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string",
+            "description": "Resource identifier (ULID)."
+          },
+          "provider": {
+            "type": "string"
+          },
+          "resourceSlug": {
+            "type": "string"
+          },
+          "resourceType": {
+            "type": "string"
+          },
+          "externalId": {
+            "type": "string"
+          },
+          "identifier": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "READY",
+              "PROVISIONING",
+              "ACTIVE",
+              "EXPIRING",
+              "SUSPENDED",
+              "RELEASED",
+              "PROVISION_FAILED"
+            ],
+            "description": "Lifecycle state."
+          },
+          "provisionedBy": {
+            "type": "string"
+          },
+          "releasedBy": {
+            "type": "string"
+          },
+          "renewal": {
+            "$ref": "#/components/schemas/ResourceRenewal"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "releasedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "releaseReasonCode": {
+            "type": "string"
+          },
+          "releaseReason": {
+            "type": "string"
+          },
+          "phoneNumber": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "numberType": {
+            "type": "string"
+          },
+          "externalResources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExternalResourceSummary"
+            }
+          },
+          "syncedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "resourceId",
+          "provider",
+          "resourceSlug",
+          "resourceType",
+          "externalId",
+          "identifier",
+          "state",
+          "provisionedBy",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ResourceRenewal": {
+        "type": "object",
+        "properties": {
+          "price": {
+            "$ref": "#/components/schemas/Price"
+          },
+          "renewLead": {
+            "type": "object",
+            "properties": {
+              "unit": {
+                "type": "string"
+              },
+              "count": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "unit",
+              "count"
+            ],
+            "description": "How long before `currentPeriodEnd` charging starts."
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "currentPeriodStart": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "currentPeriodEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "renewAttemptAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "cycle": {
+            "type": "number"
+          },
+          "lastAttempt": {
+            "type": "object",
+            "properties": {
+              "at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "outcome": {
+                "type": "string",
+                "enum": [
+                  "SUCCEEDED",
+                  "FAILED"
+                ]
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "at",
+              "outcome"
+            ]
+          },
+          "cancelledAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "price",
+          "renewLead",
+          "startedAt",
+          "currentPeriodStart",
+          "currentPeriodEnd",
+          "renewAttemptAt",
+          "cycle"
+        ]
+      },
+      "ExternalResourceSummary": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "displayName"
+        ]
+      },
+      "ExternalResourceDetail": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "kind",
+          "displayName",
+          "data"
+        ]
+      },
+      "ResourceEvent": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "cycle": {
+            "type": "number"
+          },
+          "amount": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "number"
+              },
+              "currency": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "value",
+              "currency"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "eventId",
+          "type",
+          "at"
+        ]
+      },
+      "ResourceReleaseAccepted": {
+        "type": "object",
+        "properties": {
+          "resourceId": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "EXPIRING"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "resourceId",
+          "state",
+          "message"
+        ]
+      },
+      "WalletBalanceResponse": {
+        "type": "object",
+        "properties": {
+          "balance": {
+            "$ref": "#/components/schemas/WalletMonetaryAmount"
+          },
+          "held": {
+            "$ref": "#/components/schemas/WalletMonetaryAmount"
+          }
+        },
+        "required": [
+          "balance",
+          "held"
+        ]
+      },
+      "WalletMonetaryAmount": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "number",
+            "description": "Amount in dollars (float).",
+            "example": 25.5
+          },
+          "currency": {
+            "type": "string",
+            "description": "ISO currency code.",
+            "example": "USD"
+          }
+        },
+        "required": [
+          "value",
+          "currency"
+        ]
+      },
+      "WalletUnavailableError": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "HTTP status code, duplicated in the body.",
+            "example": 503
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable error description.",
+            "example": "Wallet is being provisioned."
+          },
+          "walletStatus": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Wallet provisioning status (e.g. PROVISIONING, FAILED). Null when the wallet does not exist yet.",
+            "example": "PROVISIONING"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "WalletTopupConfigResponse": {
+        "type": "object",
+        "properties": {
+          "minAmount": {
+            "type": "number",
+            "description": "Minimum top-up amount in dollars.",
+            "example": 5
+          },
+          "maxAmount": {
+            "type": "number",
+            "description": "Maximum top-up amount in dollars. Omitted when no app-level cap is configured.",
+            "example": 1000
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD"
+            ],
+            "description": "Top-up currency (currently always USD)."
+          },
+          "processingFee": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "PERCENTAGE"
+                ]
+              },
+              "rate": {
+                "type": "number",
+                "description": "Processing fee rate (e.g. 0.05 for 5%).",
+                "example": 0.05
+              },
+              "description": {
+                "type": "string",
+                "example": "Processing fee (5%)"
+              }
+            },
+            "required": [
+              "type",
+              "rate",
+              "description"
+            ]
+          }
+        },
+        "required": [
+          "minAmount",
+          "currency",
+          "processingFee"
+        ]
+      },
+      "WorkspaceBudget": {
+        "type": "object",
+        "properties": {
+          "budgetControlId": {
+            "type": "string",
+            "description": "Budget control ID (ULID).",
+            "example": "01JC2Z0A9V8Q4R6T8Y0B2D4F6H"
+          },
+          "workspaceId": {
+            "type": "string"
+          },
+          "period": {
+            "type": "string",
+            "enum": [
+              "HOUR",
+              "DAY",
+              "WEEK",
+              "MONTH"
+            ]
+          },
+          "limitAmount": {
+            "type": "number",
+            "description": "Budget cap for the window, in dollars.",
+            "example": 100
+          },
+          "spentAmount": {
+            "type": "number",
+            "description": "Settled spend in the current window, in dollars."
+          },
+          "heldAmount": {
+            "type": "number",
+            "description": "Outstanding holds for in-flight runs, in dollars."
+          },
+          "availableAmount": {
+            "type": "number",
+            "description": "limitAmount - spentAmount - heldAmount, in dollars."
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD"
+            ]
+          },
+          "windowStart": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 — which window the counters represent."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "PAUSED"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "budgetControlId",
+          "workspaceId",
+          "period",
+          "limitAmount",
+          "spentAmount",
+          "heldAmount",
+          "availableAmount",
+          "currency",
+          "windowStart",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "WorkspaceBudgetPatchRequest": {
+        "type": "object",
+        "properties": {
+          "limitAmount": {
+            "type": "object",
+            "properties": {
+              "currency": {
+                "type": "string",
+                "enum": [
+                  "USD"
+                ]
+              },
+              "value": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "MICRO_DOLLAR",
+                  "CENT",
+                  "DOLLAR"
+                ]
+              }
+            },
+            "required": [
+              "currency",
+              "value",
+              "unit"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "PAUSED"
+            ]
+          }
+        }
+      },
+      "WorkspaceBudgetRun": {
+        "type": "object",
+        "properties": {
+          "budgetControlId": {
+            "type": "string"
+          },
+          "runId": {
+            "type": "string",
+            "description": "Run ID (ULID).",
+            "example": "01JC2Z0A9V8Q4R6T8Y0B2D4F6H"
+          },
+          "holdAmount": {
+            "type": "number",
+            "description": "Estimated cost reserved at run start, in dollars."
+          },
+          "settledAmount": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "Actual cost at settlement, in dollars. Null while HELD."
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "HELD",
+              "SETTLED",
+              "RELEASED",
+              "ABORTED",
+              "BLOCKED"
+            ]
+          },
+          "snapshot": {
+            "type": "object",
+            "properties": {
+              "period": {
+                "type": "string",
+                "enum": [
+                  "HOUR",
+                  "DAY",
+                  "WEEK",
+                  "MONTH"
+                ]
+              },
+              "limitAmount": {
+                "type": "number"
+              },
+              "windowStart": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "period",
+              "limitAmount",
+              "windowStart"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "settledAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "budgetControlId",
+          "runId",
+          "holdAmount",
+          "settledAmount",
+          "currency",
+          "status",
+          "snapshot",
+          "createdAt",
+          "settledAt"
+        ]
+      },
+      "WorkspaceRunCap": {
+        "type": "object",
+        "properties": {
+          "runCapControlId": {
+            "type": "string",
+            "description": "Run cap control ID (ULID).",
+            "example": "01JC2Z0A9V8Q4R6T8Y0B2D4F6H"
+          },
+          "workspaceId": {
+            "type": "string"
+          },
+          "limitAmount": {
+            "type": "number",
+            "description": "Per-run spending cap, in dollars.",
+            "example": 5
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "PAUSED"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "runCapControlId",
+          "workspaceId",
+          "limitAmount",
+          "currency",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "WorkspaceRunCapPatchRequest": {
+        "type": "object",
+        "properties": {
+          "limitAmount": {
+            "type": "object",
+            "properties": {
+              "currency": {
+                "type": "string",
+                "enum": [
+                  "USD"
+                ]
+              },
+              "value": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "unit": {
+                "type": "string",
+                "enum": [
+                  "MICRO_DOLLAR",
+                  "CENT",
+                  "DOLLAR"
+                ]
+              }
+            },
+            "required": [
+              "currency",
+              "value",
+              "unit"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "PAUSED"
+            ]
+          }
+        }
+      },
+      "WorkspaceRunCapRun": {
+        "type": "object",
+        "properties": {
+          "runCapControlId": {
+            "type": "string"
+          },
+          "runId": {
+            "type": "string",
+            "description": "Run ID (ULID).",
+            "example": "01JC2Z0A9V8Q4R6T8Y0B2D4F6H"
+          },
+          "estimatedCost": {
+            "type": "number",
+            "description": "Estimated cost at check time, in dollars."
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD"
+            ]
+          },
+          "snapshot": {
+            "type": "object",
+            "properties": {
+              "limitAmount": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "limitAmount"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PASSED",
+              "BLOCKED"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "runCapControlId",
+          "runId",
+          "estimatedCost",
+          "currency",
+          "snapshot",
+          "status",
+          "createdAt"
+        ]
+      },
+      "ApiKey": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "Human-readable label. Unique per workspace.",
+            "example": "ci-runner"
+          },
+          "keyPrefix": {
+            "type": "string",
+            "description": "Display prefix of the key (e.g. \"monid_test_a1b2c3d4...\").",
+            "example": "monid_test_a1b2c3d4"
+          },
+          "createdBy": {
+            "type": "string",
+            "description": "User id of the creator."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation time (ISO 8601)."
+          },
+          "lastUsedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last time the key authenticated a request. Absent if never used."
+          }
+        },
+        "required": [
+          "label",
+          "keyPrefix",
+          "createdBy",
+          "createdAt"
+        ]
+      },
+      "UpdateApiKeyRequest": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "description": "New label for the key.",
+            "example": "ci-runner-renamed"
+          }
+        }
+      },
+      "PublicRegistryStats": {
+        "type": "object",
+        "properties": {
+          "endpointCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "providerCount": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "endpointCount",
+          "providerCount"
+        ]
+      },
+      "PublicProviderEntry": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "description": "Provider slug."
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Resolved display label (curation > slug)."
+          },
+          "displayDescription": {
+            "type": "string"
+          },
+          "endpointCount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of currently-enabled endpoints."
+          }
+        },
+        "required": [
+          "provider",
+          "displayName",
+          "endpointCount"
+        ]
+      },
+      "PublicSearchResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicEndpointInfo"
+            }
+          },
+          "query": {
+            "type": "string",
+            "description": "Echo of the `q` input."
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of items on THIS page (not the total)."
+          },
+          "cursor": {
+            "type": "string",
+            "description": "Cursor for the next page; absent when no more pages."
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total endpoints matching the query, irrespective of pagination. Capped — see `totalIsCapped`."
+          },
+          "totalIsCapped": {
+            "type": "boolean",
+            "description": "`true` when `total` met or exceeded the count cap; the real count is unknown but >= `total`."
+          }
+        },
+        "required": [
+          "items",
+          "query",
+          "count"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/v1/auth/whoami": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Get the authenticated user and workspace",
+        "description": "Returns the authenticated user and (when present) workspace from the auth context. Requires an authenticated user but NOT a workspace — `workspace` is omitted when the caller has none.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The caller's identity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WhoamiResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/workspaces": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "List the caller's workspaces",
+        "description": "All workspaces (Clerk organizations) the authenticated user belongs to. Requires an authenticated user but NOT a selected workspace — use this to discover which workspace to select.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The caller's workspace memberships",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/discover": {
+      "post": {
+        "tags": [
+          "Discover"
+        ],
+        "summary": "Search for data endpoints",
+        "description": "Semantic search over the endpoint catalog: registry kNN retrieval, signal-based reranking, relevance floors, and per-result pricing.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DiscoverRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ranked endpoint recommendations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoverResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — input failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/endpoints": {
+      "get": {
+        "tags": [
+          "Endpoints"
+        ],
+        "summary": "Browse the endpoint catalog",
+        "description": "Cursor-paginated, cross-provider browse of the whole endpoint catalog (verified-first). Card shape is shared with the public registry surface.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "description": "Max items per page (server-side cap applies).",
+              "example": 20
+            },
+            "required": false,
+            "description": "Max items per page (server-side cap applies).",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Cursor returned by the previous page."
+            },
+            "required": false,
+            "description": "Cursor returned by the previous page.",
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Catalog page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PublicEndpointInfo"
+                      }
+                    },
+                    "cursor": {
+                      "type": "string",
+                      "description": "Opaque cursor for the next page. Absent on the last page."
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "description": "Total number of enabled endpoints matching the underlying query, irrespective of pagination."
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — input failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/inspect": {
+      "post": {
+        "tags": [
+          "Inspect"
+        ],
+        "summary": "Get full endpoint details",
+        "description": "Full endpoint details including input schema, pricing, and documentation. The provider's endpoint detail is the single source of truth.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InspectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Endpoint details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — input failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Endpoint not found for provider",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/run": {
+      "post": {
+        "tags": [
+          "Runs"
+        ],
+        "summary": "Start an endpoint run",
+        "description": "Start an execution of an endpoint. For a sync COMPLETED run the HTTP status FAITHFULLY MIRRORS the provider's own status (2xx → 2xx, provider 4xx/5xx → 4xx/5xx, request-timeout → 504); the body always carries the full run. A control gate returns a 200 BLOCKED run, and a run that exceeds its time budget returns 408 (TIMED_OUT). Async endpoints return a 202 acceptance ack — poll GET /v1/runs/{runId} for the result.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Terminal run — COMPLETED (sync execution, when the provider responded 2xx) or BLOCKED (a workspace control gate rejected the run). A COMPLETED run with a non-2xx provider status is returned with that same HTTP status and this body shape — EXCEPT a provider 402 (the upstream vendor's payment/quota failure, not your wallet), which is returned as 502.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RunCompleted"
+                    },
+                    {
+                      "$ref": "#/components/schemas/RunBlocked"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Async run accepted — poll GET /v1/runs/{runId} for results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunAccepted"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — input failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Payment required — workspace wallet balance insufficient. (A 402 from this API is ALWAYS about your wallet; an upstream provider's own 402 surfaces as 502.)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Endpoint not found for provider",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "TIMED_OUT — the run exceeded its time budget (run deadline or provider request timeout). Terminal, zero-billed; the body is the full run with status TIMED_OUT.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunCompleted"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Upstream provider payment/quota failure — the provider returned 402 (its account problem, not your wallet). The body is the full COMPLETED run with the provider's error in providerResponse.error; the run is not charged.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunCompleted"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/runs": {
+      "get": {
+        "tags": [
+          "Runs"
+        ],
+        "summary": "List runs",
+        "description": "Cursor-paginated list of the workspace's runs, newest first. Optional `status` filter.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 100,
+              "description": "Max items per page (server-side cap applies).",
+              "example": 20
+            },
+            "required": false,
+            "description": "Max items per page (server-side cap applies).",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Cursor returned by the previous page."
+            },
+            "required": false,
+            "description": "Cursor returned by the previous page.",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "READY",
+                "RUNNING",
+                "STOPPING",
+                "COMPLETED",
+                "FAILED",
+                "BLOCKED",
+                "STOPPED",
+                "TIMED_OUT"
+              ],
+              "description": "Filter runs by lifecycle status."
+            },
+            "required": false,
+            "description": "Filter runs by lifecycle status.",
+            "name": "status",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Runs page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/RunListItem"
+                      }
+                    },
+                    "cursor": {
+                      "type": "string",
+                      "description": "Opaque cursor for the next page. Absent on the last page."
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — input failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/runs/{runId}": {
+      "get": {
+        "tags": [
+          "Runs"
+        ],
+        "summary": "Get a run",
+        "description": "Poll run status and retrieve results. Terminal runs include the resolved provider `output`.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Run identifier (ULID).",
+              "example": "01JGXYZABCDEFGHJKMNPQRSTVW"
+            },
+            "required": true,
+            "description": "Run identifier (ULID).",
+            "name": "runId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The run (with output when terminal)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Run"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/runs/{runId}/controls": {
+      "get": {
+        "tags": [
+          "Runs"
+        ],
+        "summary": "List a run's control records",
+        "description": "All control junction records for a run — budget controls (HELD/SETTLED/RELEASED/BLOCKED) and run cap controls (BLOCKED).",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Run identifier (ULID).",
+              "example": "01JGXYZABCDEFGHJKMNPQRSTVW"
+            },
+            "required": true,
+            "description": "Run identifier (ULID).",
+            "name": "runId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Max items per page (server-side cap applies).",
+              "example": "20"
+            },
+            "required": false,
+            "description": "Max items per page (server-side cap applies).",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Cursor returned by the previous page."
+            },
+            "required": false,
+            "description": "Cursor returned by the previous page.",
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Control records page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ControlRun"
+                      }
+                    },
+                    "cursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Opaque cursor for the next page; null on the last page."
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "cursor"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/runs/{runId}/stop": {
+      "post": {
+        "tags": [
+          "Runs"
+        ],
+        "summary": "Stop a run",
+        "description": "Request the platform stop a non-terminal, stoppable run. The stop is asynchronous — poll GET /v1/runs/{runId} to observe the terminal STOPPED status.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Run identifier (ULID).",
+              "example": "01JGXYZABCDEFGHJKMNPQRSTVW"
+            },
+            "required": true,
+            "description": "Run identifier (ULID).",
+            "name": "runId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Stop requested (asynchronous)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunStopAccepted"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Run is terminal, not stoppable, or no longer running",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/resources": {
+      "get": {
+        "tags": [
+          "Resources"
+        ],
+        "summary": "List resources",
+        "description": "Cursor-paginated list of the workspace's provider resources (durable, workspace-owned provider assets, e.g. phone numbers), newest first. Optional `provider`/`resourceType`/`state` filters (`resourceType` requires `provider`).",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 100,
+              "description": "Max items per page (server-side cap applies)."
+            },
+            "required": false,
+            "description": "Max items per page (server-side cap applies).",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Cursor returned by the previous page."
+            },
+            "required": false,
+            "description": "Cursor returned by the previous page.",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "apify",
+                "pdl",
+                "opoint",
+                "tikhub",
+                "exa",
+                "minimax",
+                "bytedance",
+                "suzanne",
+                "akta",
+                "saperly",
+                "apollo",
+                "censusdata.xyz",
+                "defillama",
+                "elevenlabs"
+              ],
+              "description": "Filter by provider slug (e.g. 'saperly')."
+            },
+            "required": false,
+            "description": "Filter by provider slug (e.g. 'saperly').",
+            "name": "provider",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "phone_number"
+              ],
+              "description": "Filter by resource type — requires `provider` (store SK prefix is ordered)."
+            },
+            "required": false,
+            "description": "Filter by resource type — requires `provider` (store SK prefix is ordered).",
+            "name": "resourceType",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "READY",
+                "PROVISIONING",
+                "ACTIVE",
+                "EXPIRING",
+                "SUSPENDED",
+                "RELEASED",
+                "PROVISION_FAILED"
+              ],
+              "description": "Filter by lifecycle state."
+            },
+            "required": false,
+            "description": "Filter by lifecycle state.",
+            "name": "state",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resources page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Resource"
+                      }
+                    },
+                    "cursor": {
+                      "type": "string",
+                      "description": "Opaque cursor for the next page; absent on the last page."
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — input failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/resources/{resourceId}/external/{kind}": {
+      "get": {
+        "tags": [
+          "Resources"
+        ],
+        "summary": "Get a resource's live external detail",
+        "description": "Live detail of one external kind (from the resource's `externalResources` summaries), fetched fresh from the provider and sanitized — never secrets or upstream ids. Nothing is persisted; the response is upstream truth at this moment.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Resource identifier (ULID)."
+            },
+            "required": true,
+            "description": "Resource identifier (ULID).",
+            "name": "resourceId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "External kind (from `externalResources[].kind`)."
+            },
+            "required": true,
+            "description": "External kind (from `externalResources[].kind`).",
+            "name": "kind",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Live external detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalResourceDetail"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource (or external kind) not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The provider could not be reached",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/resources/{resourceId}/events": {
+      "get": {
+        "tags": [
+          "Resources"
+        ],
+        "summary": "List a resource's lifecycle events",
+        "description": "Cursor-paginated lifecycle events for a resource, oldest first — the renew history IS these events.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Resource identifier (ULID)."
+            },
+            "required": true,
+            "description": "Resource identifier (ULID).",
+            "name": "resourceId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 100,
+              "description": "Max items per page (server-side cap applies)."
+            },
+            "required": false,
+            "description": "Max items per page (server-side cap applies).",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Cursor returned by the previous page."
+            },
+            "required": false,
+            "description": "Cursor returned by the previous page.",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "apify",
+                "pdl",
+                "opoint",
+                "tikhub",
+                "exa",
+                "minimax",
+                "bytedance",
+                "suzanne",
+                "akta",
+                "saperly",
+                "apollo",
+                "censusdata.xyz",
+                "defillama",
+                "elevenlabs"
+              ],
+              "description": "Filter by provider slug (e.g. 'saperly')."
+            },
+            "required": false,
+            "description": "Filter by provider slug (e.g. 'saperly').",
+            "name": "provider",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "phone_number"
+              ],
+              "description": "Filter by resource type — requires `provider` (store SK prefix is ordered)."
+            },
+            "required": false,
+            "description": "Filter by resource type — requires `provider` (store SK prefix is ordered).",
+            "name": "resourceType",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "READY",
+                "PROVISIONING",
+                "ACTIVE",
+                "EXPIRING",
+                "SUSPENDED",
+                "RELEASED",
+                "PROVISION_FAILED"
+              ],
+              "description": "Filter by lifecycle state."
+            },
+            "required": false,
+            "description": "Filter by lifecycle state.",
+            "name": "state",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lifecycle events page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ResourceEvent"
+                      }
+                    },
+                    "cursor": {
+                      "type": "string",
+                      "description": "Opaque cursor for the next page; absent on the last page."
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — input failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/resources/{resourceId}/release": {
+      "post": {
+        "tags": [
+          "Resources"
+        ],
+        "summary": "Release a resource",
+        "description": "Request the release of a workspace-owned resource. Asynchronous and idempotent: a renewable resource stays usable until its paid-through date, then is released upstream; a non-renewable one is released immediately. Poll GET /v1/resources/{resourceId} for the authoritative state.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Resource identifier (ULID)."
+            },
+            "required": true,
+            "description": "Resource identifier (ULID).",
+            "name": "resourceId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Release requested (asynchronous, idempotent)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceReleaseAccepted"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Resource is already released, or not releasable right now",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/resources/{resourceId}": {
+      "get": {
+        "tags": [
+          "Resources"
+        ],
+        "summary": "Get a resource",
+        "description": "Get a single workspace-owned resource. External detail is a separate on-demand live fetch — see GET /v1/resources/{resourceId}/external/{kind}.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Resource identifier (ULID)."
+            },
+            "required": true,
+            "description": "Resource identifier (ULID).",
+            "name": "resourceId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The resource",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Resource"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/wallet/balance": {
+      "get": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Get the live wallet balance",
+        "description": "Fetches the live balance from the wallet provider, reconciles the wallet-balance control, and returns spendable `balance` (live − held; may be negative) plus `held` (reserved for in-flight runs). Never cached.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Live wallet balance (dollars)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletBalanceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Wallet not ACTIVE (provisioning, failed, or being set up). Transient states include a Retry-After header (seconds).",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying (present for transient states).",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletUnavailableError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/wallet/topup": {
+      "get": {
+        "tags": [
+          "Wallet"
+        ],
+        "summary": "Get top-up configuration",
+        "description": "Fees and limits for wallet top-ups, so the frontend does not hardcode values.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Top-up fees and limits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletTopupConfigResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Wallet not ACTIVE (provisioning, failed, or being set up). Transient states include a Retry-After header (seconds).",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying (present for transient states).",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletUnavailableError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/controls/workspace/budgets": {
+      "get": {
+        "tags": [
+          "Controls"
+        ],
+        "summary": "List workspace budget controls",
+        "description": "Cursor-paginated list of the workspace's budget controls with live usage counters.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 100,
+              "description": "Max items per page (server-side cap applies).",
+              "example": 25
+            },
+            "required": false,
+            "description": "Max items per page (server-side cap applies).",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Cursor returned by the previous page."
+            },
+            "required": false,
+            "description": "Cursor returned by the previous page.",
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Budget controls page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/WorkspaceBudget"
+                      }
+                    },
+                    "cursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Opaque cursor for the next page. Null on the last page."
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "cursor"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — input failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/controls/workspace/budgets/{budgetControlId}": {
+      "get": {
+        "tags": [
+          "Controls"
+        ],
+        "summary": "Get a workspace budget control",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Budget control ID (ULID).",
+              "example": "01JC2Z0A9V8Q4R6T8Y0B2D4F6H"
+            },
+            "required": true,
+            "description": "Budget control ID (ULID).",
+            "name": "budgetControlId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Budget control",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceBudget"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — input failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Budget control not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Controls"
+        ],
+        "summary": "Update a workspace budget control",
+        "description": "Patch limitAmount and/or status. At least one field is required.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Budget control ID (ULID).",
+              "example": "01JC2Z0A9V8Q4R6T8Y0B2D4F6H"
+            },
+            "required": true,
+            "description": "Budget control ID (ULID).",
+            "name": "budgetControlId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceBudgetPatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated budget control",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceBudget"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — input failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Budget control not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/controls/workspace/budgets/{budgetControlId}/runs": {
+      "get": {
+        "tags": [
+          "Controls"
+        ],
+        "summary": "List runs linked to a budget control",
+        "description": "Cursor-paginated list of run junctions for a budget control. Defaults to the current time window when windowStart is omitted.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Budget control ID (ULID).",
+              "example": "01JC2Z0A9V8Q4R6T8Y0B2D4F6H"
+            },
+            "required": true,
+            "description": "Budget control ID (ULID).",
+            "name": "budgetControlId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "ISO 8601 timestamp selecting a specific window. Defaults to the current window when omitted.",
+              "example": "2026-07-01T00:00:00.000Z"
+            },
+            "required": false,
+            "description": "ISO 8601 timestamp selecting a specific window. Defaults to the current window when omitted.",
+            "name": "windowStart",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "HELD",
+                "SETTLED",
+                "RELEASED"
+              ],
+              "description": "Filter runs by junction status."
+            },
+            "required": false,
+            "description": "Filter runs by junction status.",
+            "name": "status",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 100,
+              "description": "Max items per page (server-side cap applies).",
+              "example": 25
+            },
+            "required": false,
+            "description": "Max items per page (server-side cap applies).",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Cursor returned by the previous page."
+            },
+            "required": false,
+            "description": "Cursor returned by the previous page.",
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Budget control runs page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/WorkspaceBudgetRun"
+                      }
+                    },
+                    "cursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Opaque cursor for the next page. Null on the last page."
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "cursor"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — input failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Budget control not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/controls/workspace/run-caps": {
+      "get": {
+        "tags": [
+          "Controls"
+        ],
+        "summary": "List workspace run cap controls",
+        "description": "Cursor-paginated list of the workspace's per-execution spending caps.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 100,
+              "description": "Max items per page (server-side cap applies).",
+              "example": 25
+            },
+            "required": false,
+            "description": "Max items per page (server-side cap applies).",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Cursor returned by the previous page."
+            },
+            "required": false,
+            "description": "Cursor returned by the previous page.",
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Run cap controls page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/WorkspaceRunCap"
+                      }
+                    },
+                    "cursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Opaque cursor for the next page. Null on the last page."
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "cursor"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — input failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/controls/workspace/run-caps/{runCapControlId}": {
+      "get": {
+        "tags": [
+          "Controls"
+        ],
+        "summary": "Get a workspace run cap control",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Run cap control ID (ULID).",
+              "example": "01JC2Z0A9V8Q4R6T8Y0B2D4F6H"
+            },
+            "required": true,
+            "description": "Run cap control ID (ULID).",
+            "name": "runCapControlId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Run cap control",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceRunCap"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — input failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run cap control not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Controls"
+        ],
+        "summary": "Update a workspace run cap control",
+        "description": "Patch limitAmount and/or status. At least one field is required.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Run cap control ID (ULID).",
+              "example": "01JC2Z0A9V8Q4R6T8Y0B2D4F6H"
+            },
+            "required": true,
+            "description": "Run cap control ID (ULID).",
+            "name": "runCapControlId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceRunCapPatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated run cap control",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceRunCap"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — input failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run cap control not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/controls/workspace/run-caps/{runCapControlId}/runs": {
+      "get": {
+        "tags": [
+          "Controls"
+        ],
+        "summary": "List runs linked to a run cap control",
+        "description": "Cursor-paginated list of run junctions for a run cap control.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Run cap control ID (ULID).",
+              "example": "01JC2Z0A9V8Q4R6T8Y0B2D4F6H"
+            },
+            "required": true,
+            "description": "Run cap control ID (ULID).",
+            "name": "runCapControlId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PASSED",
+                "BLOCKED"
+              ]
+            },
+            "required": false,
+            "name": "status",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 100,
+              "description": "Max items per page (server-side cap applies).",
+              "example": 25
+            },
+            "required": false,
+            "description": "Max items per page (server-side cap applies).",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Cursor returned by the previous page."
+            },
+            "required": false,
+            "description": "Cursor returned by the previous page.",
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Run cap control runs page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/WorkspaceRunCapRun"
+                      }
+                    },
+                    "cursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "description": "Opaque cursor for the next page. Null on the last page."
+                    }
+                  },
+                  "required": [
+                    "items",
+                    "cursor"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — input failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run cap control not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api-keys": {
+      "get": {
+        "tags": [
+          "API Keys"
+        ],
+        "summary": "List API keys",
+        "description": "Cursor-paginated list of the workspace's API keys. Returns metadata only — the full key value is never retrievable.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "description": "Max items per page (server-side cap applies).",
+              "example": 20
+            },
+            "required": false,
+            "description": "Max items per page (server-side cap applies).",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Cursor returned by the previous page."
+            },
+            "required": false,
+            "description": "Cursor returned by the previous page.",
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "API keys page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ApiKey"
+                      }
+                    },
+                    "cursor": {
+                      "type": "string",
+                      "description": "Opaque cursor for the next page. Absent on the last page."
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — input failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api-keys/{label}": {
+      "patch": {
+        "tags": [
+          "API Keys"
+        ],
+        "summary": "Update an API key",
+        "description": "Updates an API key's metadata (currently only the label).",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Current label of the API key.",
+              "example": "ci-runner"
+            },
+            "required": true,
+            "description": "Current label of the API key.",
+            "name": "label",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateApiKeyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated API key metadata (never the full key)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKey"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — input failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "API key not found in this workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "API Keys"
+        ],
+        "summary": "Delete an API key",
+        "description": "Permanently deletes an API key. Requests using the key stop authenticating immediately.",
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Label of the API key to delete.",
+              "example": "ci-runner"
+            },
+            "required": true,
+            "description": "Label of the API key to delete.",
+            "name": "label",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "API key deleted"
+          },
+          "400": {
+            "description": "Bad request — input failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — caller has no workspace or no access",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "API key not found in this workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public/v1/stats": {
+      "get": {
+        "tags": [
+          "Public Registry"
+        ],
+        "summary": "Catalog-wide aggregate counts",
+        "description": "Number of enabled endpoints and providers in the public catalog.",
+        "responses": {
+          "200": {
+            "description": "Aggregate counts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicRegistryStats"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public/v1/providers": {
+      "get": {
+        "tags": [
+          "Public Registry"
+        ],
+        "summary": "List providers",
+        "description": "Cursor-paginated list of providers with their enabled-endpoint counts.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "description": "Max items per page (server-side cap applies).",
+              "example": 20
+            },
+            "required": false,
+            "description": "Max items per page (server-side cap applies).",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Cursor returned by the previous page."
+            },
+            "required": false,
+            "description": "Cursor returned by the previous page.",
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Providers page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PublicProviderEntry"
+                      }
+                    },
+                    "cursor": {
+                      "type": "string",
+                      "description": "Opaque cursor for the next page. Absent on the last page."
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — input failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public/v1/providers/{provider}/endpoints": {
+      "get": {
+        "tags": [
+          "Public Registry"
+        ],
+        "summary": "List a provider's endpoints",
+        "description": "Cursor-paginated list of a provider's enabled endpoints (display copy + price). 404 when the provider has no enabled endpoints.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Provider slug.",
+              "example": "exa"
+            },
+            "required": true,
+            "description": "Provider slug.",
+            "name": "provider",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "description": "Max items per page (server-side cap applies).",
+              "example": 20
+            },
+            "required": false,
+            "description": "Max items per page (server-side cap applies).",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Cursor returned by the previous page."
+            },
+            "required": false,
+            "description": "Cursor returned by the previous page.",
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Endpoints page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/PublicEndpointInfo"
+                      }
+                    },
+                    "cursor": {
+                      "type": "string",
+                      "description": "Opaque cursor for the next page. Absent on the last page."
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "description": "Total number of enabled endpoints matching the underlying query, irrespective of pagination."
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — input failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Provider not found (or has no enabled endpoints)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public/v1/search": {
+      "get": {
+        "tags": [
+          "Public Registry"
+        ],
+        "summary": "Keyword search over the catalog",
+        "description": "Anonymous BM25 keyword search over the endpoint catalog.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "Free-text query. Required, 1..200 chars.",
+              "example": "twitter scraper"
+            },
+            "required": true,
+            "description": "Free-text query. Required, 1..200 chars.",
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "description": "Max results to return. Server caps this at the configured public search max (currently 20)."
+            },
+            "required": false,
+            "description": "Max results to return. Server caps this at the configured public search max (currently 20).",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Opaque pagination token from a previous response. Pass it back unchanged to fetch the next page."
+            },
+            "required": false,
+            "description": "Opaque pagination token from a previous response. Pass it back unchanged to fetch the next page.",
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicSearchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — input failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/public/v1/providers/{provider}/endpoints/{endpoint}": {
+      "get": {
+        "tags": [
+          "Public Registry"
+        ],
+        "summary": "Get one endpoint",
+        "description": "Fetch a single public endpoint card. `endpoint` is the endpoint path and may itself contain slashes (e.g. `apidojo/tweet-scraper`).",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "apify"
+            },
+            "required": true,
+            "name": "provider",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Endpoint path; may contain slashes.",
+              "example": "apidojo/tweet-scraper"
+            },
+            "required": true,
+            "description": "Endpoint path; may contain slashes.",
+            "name": "endpoint",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Endpoint card",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicEndpointInfo"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Endpoint not found (missing or disabled)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {}
+}
