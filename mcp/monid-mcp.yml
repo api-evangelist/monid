@@ -2,7 +2,8 @@ generated: '2026-07-23'
 method: searched
 source: https://monid.ai/docs/guide/quickstart-mcp.md
 name: Monid MCP Server
-status: hosted
+status: published
+status_raw: hosted
 transport: streamable-http
 url: https://mcp.monid.ai/v1
 auth: OAuth / Bearer (Monid API key)
