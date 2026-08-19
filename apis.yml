@@ -14,7 +14,7 @@ x-type: company
 x-source: manual:direct-request
 x-tier: stub
 x-tier-reason: manual
-specificationVersion: "0.20"
+specificationVersion: '0.23'
 created: 2026-07-23
 modified: 2026-07-23
 image: ""
