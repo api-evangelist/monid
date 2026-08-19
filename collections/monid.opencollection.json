@@ -1,0 +1,973 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Monid API",
+    "version": "0.1.0"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Auth",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get the authenticated user and workspace",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/v1/auth/whoami",
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Returns the authenticated user and (when present) workspace from the auth context. Requires an authenticated user but NOT a workspace — `workspace` is omitted when the caller has none."
+        },
+        {
+          "info": {
+            "name": "List the caller's workspaces",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/v1/auth/workspaces",
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "All workspaces (Clerk organizations) the authenticated user belongs to. Requires an authenticated user but NOT a selected workspace — use this to discover which workspace to select."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Discover",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Search for data endpoints",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.monid.ai/v1/discover",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Semantic search over the endpoint catalog: registry kNN retrieval, signal-based reranking, relevance floors, and per-result pricing."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Endpoints",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Browse the endpoint catalog",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/v1/endpoints",
+            "params": [
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Max items per page (server-side cap applies)."
+              },
+              {
+                "name": "cursor",
+                "value": "",
+                "type": "query",
+                "description": "Cursor returned by the previous page."
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Cursor-paginated, cross-provider browse of the whole endpoint catalog (verified-first). Card shape is shared with the public registry surface."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Inspect",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get full endpoint details",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.monid.ai/v1/inspect",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Full endpoint details including input schema, pricing, and documentation. The provider's endpoint detail is the single source of truth."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Runs",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Start an endpoint run",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.monid.ai/v1/run",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Start an execution of an endpoint. For a sync COMPLETED run the HTTP status FAITHFULLY MIRRORS the provider's own status (2xx → 2xx, provider 4xx/5xx → 4xx/5xx, request-timeout → 504); the body always carries the full run. A control gate returns a 200 BLOCKED run, and a run that exceeds its time budget returns 408 (TIMED_OUT). Async endpoints return a 202 acceptance ack — poll GET /v1/runs/{runId} for the result."
+        },
+        {
+          "info": {
+            "name": "List runs",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/v1/runs",
+            "params": [
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Max items per page (server-side cap applies)."
+              },
+              {
+                "name": "cursor",
+                "value": "",
+                "type": "query",
+                "description": "Cursor returned by the previous page."
+              },
+              {
+                "name": "status",
+                "value": "",
+                "type": "query",
+                "description": "Filter runs by lifecycle status."
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Cursor-paginated list of the workspace's runs, newest first. Optional `status` filter."
+        },
+        {
+          "info": {
+            "name": "Get a run",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/v1/runs/:runId",
+            "params": [
+              {
+                "name": "runId",
+                "value": "",
+                "type": "path",
+                "description": "Run identifier (ULID)."
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Poll run status and retrieve results. Terminal runs include the resolved provider `output`."
+        },
+        {
+          "info": {
+            "name": "List a run's control records",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/v1/runs/:runId/controls",
+            "params": [
+              {
+                "name": "runId",
+                "value": "",
+                "type": "path",
+                "description": "Run identifier (ULID)."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Max items per page (server-side cap applies)."
+              },
+              {
+                "name": "cursor",
+                "value": "",
+                "type": "query",
+                "description": "Cursor returned by the previous page."
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "All control junction records for a run — budget controls (HELD/SETTLED/RELEASED/BLOCKED) and run cap controls (BLOCKED)."
+        },
+        {
+          "info": {
+            "name": "Stop a run",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.monid.ai/v1/runs/:runId/stop",
+            "params": [
+              {
+                "name": "runId",
+                "value": "",
+                "type": "path",
+                "description": "Run identifier (ULID)."
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Request the platform stop a non-terminal, stoppable run. The stop is asynchronous — poll GET /v1/runs/{runId} to observe the terminal STOPPED status."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Resources",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List resources",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/v1/resources",
+            "params": [
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Max items per page (server-side cap applies)."
+              },
+              {
+                "name": "cursor",
+                "value": "",
+                "type": "query",
+                "description": "Cursor returned by the previous page."
+              },
+              {
+                "name": "provider",
+                "value": "",
+                "type": "query",
+                "description": "Filter by provider slug (e.g. 'saperly')."
+              },
+              {
+                "name": "resourceType",
+                "value": "",
+                "type": "query",
+                "description": "Filter by resource type — requires `provider` (store SK prefix is ordered)."
+              },
+              {
+                "name": "state",
+                "value": "",
+                "type": "query",
+                "description": "Filter by lifecycle state."
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Cursor-paginated list of the workspace's provider resources (durable, workspace-owned provider assets, e.g. phone numbers), newest first. Optional `provider`/`resourceType`/`state` filters (`resourceType` requires `provider`)."
+        },
+        {
+          "info": {
+            "name": "Get a resource's live external detail",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/v1/resources/:resourceId/external/:kind",
+            "params": [
+              {
+                "name": "resourceId",
+                "value": "",
+                "type": "path",
+                "description": "Resource identifier (ULID)."
+              },
+              {
+                "name": "kind",
+                "value": "",
+                "type": "path",
+                "description": "External kind (from `externalResources[].kind`)."
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Live detail of one external kind (from the resource's `externalResources` summaries), fetched fresh from the provider and sanitized — never secrets or upstream ids. Nothing is persisted; the response is upstream truth at this moment."
+        },
+        {
+          "info": {
+            "name": "List a resource's lifecycle events",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/v1/resources/:resourceId/events",
+            "params": [
+              {
+                "name": "resourceId",
+                "value": "",
+                "type": "path",
+                "description": "Resource identifier (ULID)."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Max items per page (server-side cap applies)."
+              },
+              {
+                "name": "cursor",
+                "value": "",
+                "type": "query",
+                "description": "Cursor returned by the previous page."
+              },
+              {
+                "name": "provider",
+                "value": "",
+                "type": "query",
+                "description": "Filter by provider slug (e.g. 'saperly')."
+              },
+              {
+                "name": "resourceType",
+                "value": "",
+                "type": "query",
+                "description": "Filter by resource type — requires `provider` (store SK prefix is ordered)."
+              },
+              {
+                "name": "state",
+                "value": "",
+                "type": "query",
+                "description": "Filter by lifecycle state."
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Cursor-paginated lifecycle events for a resource, oldest first — the renew history IS these events."
+        },
+        {
+          "info": {
+            "name": "Release a resource",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.monid.ai/v1/resources/:resourceId/release",
+            "params": [
+              {
+                "name": "resourceId",
+                "value": "",
+                "type": "path",
+                "description": "Resource identifier (ULID)."
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Request the release of a workspace-owned resource. Asynchronous and idempotent: a renewable resource stays usable until its paid-through date, then is released upstream; a non-renewable one is released immediately. Poll GET /v1/resources/{resourceId} for the authoritative state."
+        },
+        {
+          "info": {
+            "name": "Get a resource",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/v1/resources/:resourceId",
+            "params": [
+              {
+                "name": "resourceId",
+                "value": "",
+                "type": "path",
+                "description": "Resource identifier (ULID)."
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Get a single workspace-owned resource. External detail is a separate on-demand live fetch — see GET /v1/resources/{resourceId}/external/{kind}."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Wallet",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get the live wallet balance",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/v1/wallet/balance",
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Fetches the live balance from the wallet provider, reconciles the wallet-balance control, and returns spendable `balance` (live − held; may be negative) plus `held` (reserved for in-flight runs). Never cached."
+        },
+        {
+          "info": {
+            "name": "Get top-up configuration",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/v1/wallet/topup",
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Fees and limits for wallet top-ups, so the frontend does not hardcode values."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Controls",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List workspace budget controls",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/v1/controls/workspace/budgets",
+            "params": [
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Max items per page (server-side cap applies)."
+              },
+              {
+                "name": "cursor",
+                "value": "",
+                "type": "query",
+                "description": "Cursor returned by the previous page."
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Cursor-paginated list of the workspace's budget controls with live usage counters."
+        },
+        {
+          "info": {
+            "name": "Get a workspace budget control",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/v1/controls/workspace/budgets/:budgetControlId",
+            "params": [
+              {
+                "name": "budgetControlId",
+                "value": "",
+                "type": "path",
+                "description": "Budget control ID (ULID)."
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Get a workspace budget control"
+        },
+        {
+          "info": {
+            "name": "Update a workspace budget control",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "https://api.monid.ai/v1/controls/workspace/budgets/:budgetControlId",
+            "params": [
+              {
+                "name": "budgetControlId",
+                "value": "",
+                "type": "path",
+                "description": "Budget control ID (ULID)."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Patch limitAmount and/or status. At least one field is required."
+        },
+        {
+          "info": {
+            "name": "List runs linked to a budget control",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/v1/controls/workspace/budgets/:budgetControlId/runs",
+            "params": [
+              {
+                "name": "budgetControlId",
+                "value": "",
+                "type": "path",
+                "description": "Budget control ID (ULID)."
+              },
+              {
+                "name": "windowStart",
+                "value": "",
+                "type": "query",
+                "description": "ISO 8601 timestamp selecting a specific window. Defaults to the current window when omitted."
+              },
+              {
+                "name": "status",
+                "value": "",
+                "type": "query",
+                "description": "Filter runs by junction status."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Max items per page (server-side cap applies)."
+              },
+              {
+                "name": "cursor",
+                "value": "",
+                "type": "query",
+                "description": "Cursor returned by the previous page."
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Cursor-paginated list of run junctions for a budget control. Defaults to the current time window when windowStart is omitted."
+        },
+        {
+          "info": {
+            "name": "List workspace run cap controls",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/v1/controls/workspace/run-caps",
+            "params": [
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Max items per page (server-side cap applies)."
+              },
+              {
+                "name": "cursor",
+                "value": "",
+                "type": "query",
+                "description": "Cursor returned by the previous page."
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Cursor-paginated list of the workspace's per-execution spending caps."
+        },
+        {
+          "info": {
+            "name": "Get a workspace run cap control",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/v1/controls/workspace/run-caps/:runCapControlId",
+            "params": [
+              {
+                "name": "runCapControlId",
+                "value": "",
+                "type": "path",
+                "description": "Run cap control ID (ULID)."
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Get a workspace run cap control"
+        },
+        {
+          "info": {
+            "name": "Update a workspace run cap control",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "https://api.monid.ai/v1/controls/workspace/run-caps/:runCapControlId",
+            "params": [
+              {
+                "name": "runCapControlId",
+                "value": "",
+                "type": "path",
+                "description": "Run cap control ID (ULID)."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Patch limitAmount and/or status. At least one field is required."
+        },
+        {
+          "info": {
+            "name": "List runs linked to a run cap control",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/v1/controls/workspace/run-caps/:runCapControlId/runs",
+            "params": [
+              {
+                "name": "runCapControlId",
+                "value": "",
+                "type": "path",
+                "description": "Run cap control ID (ULID)."
+              },
+              {
+                "name": "status",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Max items per page (server-side cap applies)."
+              },
+              {
+                "name": "cursor",
+                "value": "",
+                "type": "query",
+                "description": "Cursor returned by the previous page."
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Cursor-paginated list of run junctions for a run cap control."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "API Keys",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List API keys",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/v1/api-keys",
+            "params": [
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Max items per page (server-side cap applies)."
+              },
+              {
+                "name": "cursor",
+                "value": "",
+                "type": "query",
+                "description": "Cursor returned by the previous page."
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Cursor-paginated list of the workspace's API keys. Returns metadata only — the full key value is never retrievable."
+        },
+        {
+          "info": {
+            "name": "Update an API key",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "https://api.monid.ai/v1/api-keys/:label",
+            "params": [
+              {
+                "name": "label",
+                "value": "",
+                "type": "path",
+                "description": "Current label of the API key."
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Updates an API key's metadata (currently only the label)."
+        },
+        {
+          "info": {
+            "name": "Delete an API key",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://api.monid.ai/v1/api-keys/:label",
+            "params": [
+              {
+                "name": "label",
+                "value": "",
+                "type": "path",
+                "description": "Label of the API key to delete."
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "token": "{{bearerToken}}"
+            }
+          },
+          "docs": "Permanently deletes an API key. Requests using the key stop authenticating immediately."
+        }
+      ]
+    },
+    {
+      "info": {
+        "name": "Public Registry",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Catalog-wide aggregate counts",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/public/v1/stats"
+          },
+          "docs": "Number of enabled endpoints and providers in the public catalog."
+        },
+        {
+          "info": {
+            "name": "List providers",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/public/v1/providers",
+            "params": [
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Max items per page (server-side cap applies)."
+              },
+              {
+                "name": "cursor",
+                "value": "",
+                "type": "query",
+                "description": "Cursor returned by the previous page."
+              }
+            ]
+          },
+          "docs": "Cursor-paginated list of providers with their enabled-endpoint counts."
+        },
+        {
+          "info": {
+            "name": "List a provider's endpoints",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/public/v1/providers/:provider/endpoints",
+            "params": [
+              {
+                "name": "provider",
+                "value": "",
+                "type": "path",
+                "description": "Provider slug."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Max items per page (server-side cap applies)."
+              },
+              {
+                "name": "cursor",
+                "value": "",
+                "type": "query",
+                "description": "Cursor returned by the previous page."
+              }
+            ]
+          },
+          "docs": "Cursor-paginated list of a provider's enabled endpoints (display copy + price). 404 when the provider has no enabled endpoints."
+        },
+        {
+          "info": {
+            "name": "Keyword search over the catalog",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/public/v1/search",
+            "params": [
+              {
+                "name": "q",
+                "value": "",
+                "type": "query",
+                "description": "Free-text query. Required, 1..200 chars."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Max results to return. Server caps this at the configured public search max (currently 20)."
+              },
+              {
+                "name": "cursor",
+                "value": "",
+                "type": "query",
+                "description": "Opaque pagination token from a previous response. Pass it back unchanged to fetch the next page."
+              }
+            ]
+          },
+          "docs": "Anonymous BM25 keyword search over the endpoint catalog."
+        },
+        {
+          "info": {
+            "name": "Get one endpoint",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.monid.ai/public/v1/providers/:provider/endpoints/:endpoint",
+            "params": [
+              {
+                "name": "provider",
+                "value": "",
+                "type": "path"
+              },
+              {
+                "name": "endpoint",
+                "value": "",
+                "type": "path",
+                "description": "Endpoint path; may contain slashes."
+              }
+            ]
+          },
+          "docs": "Fetch a single public endpoint card. `endpoint` is the endpoint path and may itself contain slashes (e.g. `apidojo/tweet-scraper`)."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

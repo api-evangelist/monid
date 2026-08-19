@@ -146,3 +146,10 @@ operations_backing_tools:
   path: /public/v1/providers/{provider}/endpoints/{endpoint}
   tag: Public Registry
   summary: Get one endpoint
+deployment:
+  mode: remote
+  endpoint: https://mcp.monid.ai/v1
+  verified: probed
+  probe: gated
+  checked: '2026-08-12'
+  source: catalog MCP census
