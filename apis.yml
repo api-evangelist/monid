@@ -108,6 +108,13 @@ apis:
   - Tools
   - Data
   - Discovery
+  - Wallets
+  - MCP
+  tags_raw:
+  - Agents
+  - Tools
+  - Data
+  - Discovery
   - Wallet
   - MCP
   properties:
