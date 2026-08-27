@@ -95,30 +95,123 @@ common:
 - type: SignUp
   url: https://app.monid.ai
 apis:
-- name: Monid API
-  description: >-
-    The Monid HTTP API lets developers and AI agents discover data endpoints with natural language,
-    inspect their details, run them, and manage runs, wallet balance, spend controls (budgets and
-    run-caps), resources, and API keys — plus a public registry of providers and endpoints. Bearer
-    authentication with a Monid API key (monid_live_...) or an OAuth/JWT access token.
+- aid: monid:monid-api-keys-api
+  name: Monid API Keys API
+  description: The API Keys API from Monid — 2 operation(s) for api keys.
   humanURL: https://monid.ai/docs/api/overview.md
   baseURL: https://api.monid.ai
   tags:
-  - Agents
-  - Tools
-  - Data
-  - Discovery
-  - Wallets
-  - MCP
-  tags_raw:
-  - Agents
-  - Tools
-  - Data
-  - Discovery
-  - Wallet
-  - MCP
+  - API Keys
   properties:
   - type: OpenAPI
-    url: openapi/monid-openapi.json
+    url: openapi/monid-api-keys-api-openapi.yml
+  - type: Documentation
+    url: https://monid.ai/docs/api/overview.md
+- aid: monid:monid-auth-api
+  name: Monid Auth API
+  description: The Auth API from Monid — 2 operation(s) for auth.
+  humanURL: https://monid.ai/docs/api/overview.md
+  baseURL: https://api.monid.ai
+  tags:
+  - Auth
+  properties:
+  - type: OpenAPI
+    url: openapi/monid-auth-api-openapi.yml
+  - type: Documentation
+    url: https://monid.ai/docs/api/overview.md
+- aid: monid:monid-controls-api
+  name: Monid Controls API
+  description: The Controls API from Monid — 6 operation(s) for controls.
+  humanURL: https://monid.ai/docs/api/overview.md
+  baseURL: https://api.monid.ai
+  tags:
+  - Controls
+  properties:
+  - type: OpenAPI
+    url: openapi/monid-controls-api-openapi.yml
+  - type: Documentation
+    url: https://monid.ai/docs/api/overview.md
+- aid: monid:monid-discover-api
+  name: Monid Discover API
+  description: The Discover API from Monid — 1 operation(s) for discover.
+  humanURL: https://monid.ai/docs/api/overview.md
+  baseURL: https://api.monid.ai
+  tags:
+  - Discover
+  properties:
+  - type: OpenAPI
+    url: openapi/monid-discover-api-openapi.yml
+  - type: Documentation
+    url: https://monid.ai/docs/api/overview.md
+- aid: monid:monid-endpoints-api
+  name: Monid Endpoints API
+  description: The Endpoints API from Monid — 1 operation(s) for endpoints.
+  humanURL: https://monid.ai/docs/api/overview.md
+  baseURL: https://api.monid.ai
+  tags:
+  - Endpoints
+  properties:
+  - type: OpenAPI
+    url: openapi/monid-endpoints-api-openapi.yml
+  - type: Documentation
+    url: https://monid.ai/docs/api/overview.md
+- aid: monid:monid-inspect-api
+  name: Monid Inspect API
+  description: The Inspect API from Monid — 1 operation(s) for inspect.
+  humanURL: https://monid.ai/docs/api/overview.md
+  baseURL: https://api.monid.ai
+  tags:
+  - Inspect
+  properties:
+  - type: OpenAPI
+    url: openapi/monid-inspect-api-openapi.yml
+  - type: Documentation
+    url: https://monid.ai/docs/api/overview.md
+- aid: monid:monid-public-registry-api
+  name: Monid Public Registry API
+  description: The Public Registry API from Monid — 5 operation(s) for public registry.
+  humanURL: https://monid.ai/docs/api/overview.md
+  baseURL: https://api.monid.ai
+  tags:
+  - Public Registry
+  properties:
+  - type: OpenAPI
+    url: openapi/monid-public-registry-api-openapi.yml
+  - type: Documentation
+    url: https://monid.ai/docs/api/overview.md
+- aid: monid:monid-resources-api
+  name: Monid Resources API
+  description: The Resources API from Monid — 5 operation(s) for resources.
+  humanURL: https://monid.ai/docs/api/overview.md
+  baseURL: https://api.monid.ai
+  tags:
+  - Resources
+  properties:
+  - type: OpenAPI
+    url: openapi/monid-resources-api-openapi.yml
+  - type: Documentation
+    url: https://monid.ai/docs/api/overview.md
+- aid: monid:monid-runs-api
+  name: Monid Runs API
+  description: The Runs API from Monid — 5 operation(s) for runs.
+  humanURL: https://monid.ai/docs/api/overview.md
+  baseURL: https://api.monid.ai
+  tags:
+  - Runs
+  properties:
+  - type: OpenAPI
+    url: openapi/monid-runs-api-openapi.yml
+  - type: Documentation
+    url: https://monid.ai/docs/api/overview.md
+- aid: monid:monid-wallet-api
+  name: Monid Wallet API
+  description: The Wallet API from Monid — 2 operation(s) for wallet.
+  humanURL: https://monid.ai/docs/api/overview.md
+  baseURL: https://api.monid.ai
+  tags:
+  - Wallet
+  properties:
+  - type: OpenAPI
+    url: openapi/monid-wallet-api-openapi.yml
   - type: Documentation
     url: https://monid.ai/docs/api/overview.md
