@@ -113,6 +113,8 @@ apis:
   humanURL: https://monid.ai/docs/api/overview.md
   baseURL: https://api.monid.ai
   tags:
+  - APIKeys
+  tags_raw:
   - API Keys
   properties:
   - type: OpenAPI
@@ -125,6 +127,8 @@ apis:
   humanURL: https://monid.ai/docs/api/overview.md
   baseURL: https://api.monid.ai
   tags:
+  - Authentication
+  tags_raw:
   - Auth
   properties:
   - type: OpenAPI
@@ -160,7 +164,8 @@ apis:
   description: The Endpoints API from Monid — 1 operation(s) for endpoints.
   humanURL: https://monid.ai/docs/api/overview.md
   baseURL: https://api.monid.ai
-  tags:
+  tags: []
+  tags_raw:
   - Endpoints
   properties:
   - type: OpenAPI
@@ -221,6 +226,8 @@ apis:
   humanURL: https://monid.ai/docs/api/overview.md
   baseURL: https://api.monid.ai
   tags:
+  - Wallets
+  tags_raw:
   - Wallet
   properties:
   - type: OpenAPI
