@@ -1,0 +1,204 @@
+openapi: 3.2.0
+info:
+  title: Monid Wallet API
+  version: 0.1.0
+  description: Agentic payment platform for data — agents discover and buy data on demand. Authenticated `/v1/*` routes accept a Monid API key or Clerk JWT as a Bearer token. All errors return `{ code, message }`. List endpoints use cursor pagination; consult each operation schema for its last-page cursor encoding.
+servers:
+- url: https://api.monid.ai
+  description: Production
+- url: https://monid.ai
+  description: Public registry alias (public/v1 only)
+tags:
+- name: Wallet
+paths:
+  /v1/wallet/balance:
+    get:
+      tags:
+      - Wallet
+      summary: Get the live wallet balance
+      description: Fetches the live balance from the wallet provider, reconciles the wallet-balance control, and returns spendable `balance` (live − held; may be negative) plus `held` (reserved for in-flight runs). Never cached.
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: Live wallet balance (dollars)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletBalanceResponse'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Wallet not ACTIVE (provisioning, failed, or being set up). Transient states include a Retry-After header (seconds).
+          headers:
+            Retry-After:
+              description: Seconds to wait before retrying (present for transient states).
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletUnavailableError'
+  /v1/wallet/topup:
+    get:
+      tags:
+      - Wallet
+      summary: Get top-up configuration
+      description: Fees and limits for wallet top-ups, so the frontend does not hardcode values.
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: Top-up fees and limits
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletTopupConfigResponse'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Wallet not ACTIVE (provisioning, failed, or being set up). Transient states include a Retry-After header (seconds).
+          headers:
+            Retry-After:
+              description: Seconds to wait before retrying (present for transient states).
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletUnavailableError'
+components:
+  schemas:
+    WalletBalanceResponse:
+      type: object
+      properties:
+        balance:
+          $ref: '#/components/schemas/WalletMonetaryAmount'
+        held:
+          $ref: '#/components/schemas/WalletMonetaryAmount'
+      required:
+      - balance
+      - held
+    WalletUnavailableError:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 503
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Wallet is being provisioned.
+        walletStatus:
+          type:
+          - string
+          - 'null'
+          description: Wallet provisioning status (e.g. PROVISIONING, FAILED). Null when the wallet does not exist yet.
+          example: PROVISIONING
+      required:
+      - code
+      - message
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+      required:
+      - code
+      - message
+    WalletMonetaryAmount:
+      type: object
+      properties:
+        value:
+          type: number
+          description: Amount in dollars (float).
+          example: 25.5
+        currency:
+          type: string
+          description: ISO currency code.
+          example: USD
+      required:
+      - value
+      - currency
+    WalletTopupConfigResponse:
+      type: object
+      properties:
+        minAmount:
+          type: number
+          description: Minimum top-up amount in dollars.
+          example: 5
+        maxAmount:
+          type: number
+          description: Maximum top-up amount in dollars. Omitted when no app-level cap is configured.
+          example: 1000
+        currency:
+          type: string
+          enum:
+          - USD
+          description: Top-up currency (currently always USD).
+        processingFee:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+              - PERCENTAGE
+            rate:
+              type: number
+              description: Processing fee rate (e.g. 0.05 for 5%).
+              example: 0.05
+            description:
+              type: string
+              example: Processing fee (5%)
+          required:
+          - type
+          - rate
+          - description
+      required:
+      - minAmount
+      - currency
+      - processingFee
+  securitySchemes:
+    Bearer:
+      type: http
+      scheme: bearer
+      description: 'Monid API key (`Authorization: Bearer mk_...`) or Clerk-issued JWT.'

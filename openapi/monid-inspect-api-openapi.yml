@@ -1,0 +1,385 @@
+openapi: 3.2.0
+info:
+  title: Monid Inspect API
+  version: 0.1.0
+  description: Agentic payment platform for data — agents discover and buy data on demand. Authenticated `/v1/*` routes accept a Monid API key or Clerk JWT as a Bearer token. All errors return `{ code, message }`. List endpoints use cursor pagination; consult each operation schema for its last-page cursor encoding.
+servers:
+- url: https://api.monid.ai
+  description: Production
+- url: https://monid.ai
+  description: Public registry alias (public/v1 only)
+tags:
+- name: Inspect
+paths:
+  /v1/inspect:
+    post:
+      tags:
+      - Inspect
+      summary: Get full endpoint details
+      description: Full endpoint details including input schema, pricing, and documentation. The provider's endpoint detail is the single source of truth.
+      security:
+      - Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InspectRequest'
+      responses:
+        '200':
+          description: Endpoint details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InspectResponse'
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Endpoint not found for provider
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+      required:
+      - code
+      - message
+    InspectResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Opaque inspection id (ULID).
+        provider:
+          type: string
+          description: Provider slug (e.g., "apify").
+        providerName:
+          type: string
+          description: Human-readable provider name (e.g., "Apify").
+        endpoint:
+          type: string
+          description: Endpoint path.
+        description:
+          type: string
+        summary:
+          type: string
+        method:
+          type: string
+          enum:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - PATCH
+          description: HTTP method for this endpoint.
+        price:
+          $ref: '#/components/schemas/Price'
+        docUrl:
+          type: string
+          description: Provider documentation URL.
+        notes:
+          type: array
+          items:
+            type: string
+          description: Operator-curated notes for agents — quirks, pitfalls, best practices.
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags for scoring and filtering (e.g., ["verified"]).
+        hints:
+          type: object
+          additionalProperties:
+            anyOf:
+            - type: string
+            - type: object
+              properties:
+                kind:
+                  type: string
+                  enum:
+                  - command
+                  - discover
+                  - inspect
+                  - run
+                  - getRun
+                  - stop
+                  - releaseResource
+                command:
+                  type: string
+                query:
+                  type: string
+                provider:
+                  type: string
+                endpoint:
+                  type: string
+                runId:
+                  type: string
+                resourceId:
+                  type: string
+                comment:
+                  type: string
+              required:
+              - kind
+          description: 'Agent guidance map (phrase → hint), polymorphic by client: rendered command string for cli/api/mcp, structured target for web. Omitted for unknown clients.'
+        input:
+          $ref: '#/components/schemas/EndpointInput'
+      required:
+      - id
+      - provider
+      - endpoint
+      - description
+      - tags
+    EndpointInput:
+      type: object
+      properties:
+        pathParams:
+          type: object
+          additionalProperties: {}
+          description: JSON Schema for URL path parameters (e.g. /users/{id}).
+        queryParams:
+          type: object
+          additionalProperties: {}
+          description: JSON Schema for query string parameters.
+        body:
+          type: object
+          additionalProperties: {}
+          description: JSON Schema for the request body (POST/PUT/PATCH).
+        bodyType:
+          type: string
+          enum:
+          - json
+          - form
+          - multipart
+          description: Body content type (when body is present).
+      description: Structured input — JSON Schema per param location (path, query, body).
+    Price:
+      type: object
+      properties:
+        type:
+          type: string
+        amount:
+          anyOf:
+          - type: object
+            properties:
+              value:
+                type: number
+              currency:
+                type: string
+                enum:
+                - USD
+            required:
+            - value
+            - currency
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - PER_TOKEN
+              amount:
+                type: object
+                properties:
+                  value:
+                    type: number
+                  currency:
+                    type: string
+                    enum:
+                    - USD
+                required:
+                - value
+                - currency
+              per:
+                type: number
+              unit:
+                type: string
+                enum:
+                - token
+                - character
+            required:
+            - type
+            - amount
+            - per
+            - unit
+        flatFee:
+          type: object
+          properties:
+            value:
+              type: number
+            currency:
+              type: string
+              enum:
+              - USD
+          required:
+          - value
+          - currency
+        period:
+          type: object
+          properties:
+            unit:
+              type: string
+              enum:
+              - MINUTE
+              - DAY
+              - MONTH
+            count:
+              type: integer
+              exclusiveMinimum: 0
+          required:
+          - unit
+          - count
+        per:
+          type: object
+          properties:
+            unit:
+              type: string
+              enum:
+              - MINUTE
+              - DAY
+              - MONTH
+            count:
+              type: integer
+              exclusiveMinimum: 0
+          required:
+          - unit
+          - count
+        selectors:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              key:
+                type: string
+              in:
+                type: string
+                enum:
+                - body
+                - queryParam
+                - pathParam
+            required:
+            - label
+            - key
+            - in
+        variants:
+          type: array
+          items:
+            type: object
+            properties:
+              when:
+                type: object
+                additionalProperties:
+                  anyOf:
+                  - type: string
+                  - type: number
+              amount:
+                anyOf:
+                - type: object
+                  properties:
+                    value:
+                      type: number
+                    currency:
+                      type: string
+                      enum:
+                      - USD
+                  required:
+                  - value
+                  - currency
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - PER_TOKEN
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                    per:
+                      type: number
+                    unit:
+                      type: string
+                      enum:
+                      - token
+                      - character
+                  required:
+                  - type
+                  - amount
+                  - per
+                  - unit
+              label:
+                type: string
+            required:
+            - when
+            - amount
+        notes:
+          type: array
+          items:
+            type: string
+      required:
+      - type
+      - amount
+      description: User-facing price (markup applied).
+    InspectRequest:
+      type: object
+      properties:
+        provider:
+          type: string
+          minLength: 1
+          description: Provider slug.
+          example: exa
+        endpoint:
+          type: string
+          minLength: 1
+          description: Endpoint path.
+          example: /search
+      required:
+      - provider
+      - endpoint
+  securitySchemes:
+    Bearer:
+      type: http
+      scheme: bearer
+      description: 'Monid API key (`Authorization: Bearer mk_...`) or Clerk-issued JWT.'

@@ -1,0 +1,246 @@
+openapi: 3.2.0
+info:
+  title: Monid API Keys API
+  version: 0.1.0
+  description: Agentic payment platform for data — agents discover and buy data on demand. Authenticated `/v1/*` routes accept a Monid API key or Clerk JWT as a Bearer token. All errors return `{ code, message }`. List endpoints use cursor pagination; consult each operation schema for its last-page cursor encoding.
+servers:
+- url: https://api.monid.ai
+  description: Production
+- url: https://monid.ai
+  description: Public registry alias (public/v1 only)
+tags:
+- name: API Keys
+paths:
+  /v1/api-keys:
+    get:
+      tags:
+      - API Keys
+      summary: List API keys
+      description: Cursor-paginated list of the workspace's API keys. Returns metadata only — the full key value is never retrievable.
+      security:
+      - Bearer: []
+      parameters:
+      - schema:
+          type: integer
+          exclusiveMinimum: 0
+          description: Max items per page (server-side cap applies).
+          example: 20
+        required: false
+        description: Max items per page (server-side cap applies).
+        name: limit
+        in: query
+      - schema:
+          type: string
+          description: Cursor returned by the previous page.
+        required: false
+        description: Cursor returned by the previous page.
+        name: cursor
+        in: query
+      responses:
+        '200':
+          description: API keys page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApiKey'
+                  cursor:
+                    type: string
+                    description: Opaque cursor for the next page. Absent on the last page.
+                required:
+                - items
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/api-keys/{label}:
+    patch:
+      tags:
+      - API Keys
+      summary: Update an API key
+      description: Updates an API key's metadata (currently only the label).
+      security:
+      - Bearer: []
+      parameters:
+      - schema:
+          type: string
+          minLength: 1
+          description: Current label of the API key.
+          example: ci-runner
+        required: true
+        description: Current label of the API key.
+        name: label
+        in: path
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateApiKeyRequest'
+      responses:
+        '200':
+          description: Updated API key metadata (never the full key)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKey'
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: API key not found in this workspace
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+      - API Keys
+      summary: Delete an API key
+      description: Permanently deletes an API key. Requests using the key stop authenticating immediately.
+      security:
+      - Bearer: []
+      parameters:
+      - schema:
+          type: string
+          minLength: 1
+          description: Label of the API key to delete.
+          example: ci-runner
+        required: true
+        description: Label of the API key to delete.
+        name: label
+        in: path
+      responses:
+        '204':
+          description: API key deleted
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: API key not found in this workspace
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    UpdateApiKeyRequest:
+      type: object
+      properties:
+        label:
+          type: string
+          minLength: 1
+          description: New label for the key.
+          example: ci-runner-renamed
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+      required:
+      - code
+      - message
+    ApiKey:
+      type: object
+      properties:
+        label:
+          type: string
+          description: Human-readable label. Unique per workspace.
+          example: ci-runner
+        keyPrefix:
+          type: string
+          description: Display prefix of the key (e.g. "monid_test_a1b2c3d4...").
+          example: monid_test_a1b2c3d4
+        createdBy:
+          type: string
+          description: User id of the creator.
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation time (ISO 8601).
+        lastUsedAt:
+          type: string
+          format: date-time
+          description: Last time the key authenticated a request. Absent if never used.
+      required:
+      - label
+      - keyPrefix
+      - createdBy
+      - createdAt
+  securitySchemes:
+    Bearer:
+      type: http
+      scheme: bearer
+      description: 'Monid API key (`Authorization: Bearer mk_...`) or Clerk-issued JWT.'

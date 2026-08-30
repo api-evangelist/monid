@@ -1,0 +1,1156 @@
+openapi: 3.2.0
+info:
+  title: Monid Runs API
+  version: 0.1.0
+  description: Agentic payment platform for data — agents discover and buy data on demand. Authenticated `/v1/*` routes accept a Monid API key or Clerk JWT as a Bearer token. All errors return `{ code, message }`. List endpoints use cursor pagination; consult each operation schema for its last-page cursor encoding.
+servers:
+- url: https://api.monid.ai
+  description: Production
+- url: https://monid.ai
+  description: Public registry alias (public/v1 only)
+tags:
+- name: Runs
+paths:
+  /v1/run:
+    post:
+      tags:
+      - Runs
+      summary: Start an endpoint run
+      description: Start an execution of an endpoint. For a sync COMPLETED run the HTTP status FAITHFULLY MIRRORS the provider's own status (2xx → 2xx, provider 4xx/5xx → 4xx/5xx, request-timeout → 504); the body always carries the full run. A control gate returns a 200 BLOCKED run, and a run that exceeds its time budget returns 408 (TIMED_OUT). Async endpoints return a 202 acceptance ack — poll GET /v1/runs/{runId} for the result.
+      security:
+      - Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunRequest'
+      responses:
+        '200':
+          description: Terminal run — COMPLETED (sync execution, when the provider responded 2xx) or BLOCKED (a workspace control gate rejected the run). A COMPLETED run with a non-2xx provider status is returned with that same HTTP status and this body shape — EXCEPT a provider 402 (the upstream vendor's payment/quota failure, not your wallet), which is returned as 502.
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/RunCompleted'
+                - $ref: '#/components/schemas/RunBlocked'
+        '202':
+          description: Async run accepted — poll GET /v1/runs/{runId} for results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunAccepted'
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '402':
+          description: Payment required — workspace wallet balance insufficient. (A 402 from this API is ALWAYS about your wallet; an upstream provider's own 402 surfaces as 502.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Endpoint not found for provider
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '408':
+          description: TIMED_OUT — the run exceeded its time budget (run deadline or provider request timeout). Terminal, zero-billed; the body is the full run with status TIMED_OUT.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunCompleted'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: Upstream provider payment/quota failure — the provider returned 402 (its account problem, not your wallet). The body is the full COMPLETED run with the provider's error in providerResponse.error; the run is not charged.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunCompleted'
+  /v1/runs:
+    get:
+      tags:
+      - Runs
+      summary: List runs
+      description: Cursor-paginated list of the workspace's runs, newest first. Optional `status` filter.
+      security:
+      - Bearer: []
+      parameters:
+      - schema:
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 100
+          description: Max items per page (server-side cap applies).
+          example: 20
+        required: false
+        description: Max items per page (server-side cap applies).
+        name: limit
+        in: query
+      - schema:
+          type: string
+          description: Cursor returned by the previous page.
+        required: false
+        description: Cursor returned by the previous page.
+        name: cursor
+        in: query
+      - schema:
+          type: string
+          enum:
+          - READY
+          - RUNNING
+          - STOPPING
+          - COMPLETED
+          - FAILED
+          - BLOCKED
+          - STOPPED
+          - TIMED_OUT
+          description: Filter runs by lifecycle status.
+        required: false
+        description: Filter runs by lifecycle status.
+        name: status
+        in: query
+      responses:
+        '200':
+          description: Runs page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RunListItem'
+                  cursor:
+                    type: string
+                    description: Opaque cursor for the next page. Absent on the last page.
+                required:
+                - items
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/runs/{runId}:
+    get:
+      tags:
+      - Runs
+      summary: Get a run
+      description: Poll run status and retrieve results. Terminal runs include the resolved provider `output`.
+      security:
+      - Bearer: []
+      parameters:
+      - schema:
+          type: string
+          description: Run identifier (ULID).
+          example: 01JGXYZABCDEFGHJKMNPQRSTVW
+        required: true
+        description: Run identifier (ULID).
+        name: runId
+        in: path
+      responses:
+        '200':
+          description: The run (with output when terminal)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Run'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Run not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/runs/{runId}/controls:
+    get:
+      tags:
+      - Runs
+      summary: List a run's control records
+      description: All control junction records for a run — budget controls (HELD/SETTLED/RELEASED/BLOCKED) and run cap controls (BLOCKED).
+      security:
+      - Bearer: []
+      parameters:
+      - schema:
+          type: string
+          description: Run identifier (ULID).
+          example: 01JGXYZABCDEFGHJKMNPQRSTVW
+        required: true
+        description: Run identifier (ULID).
+        name: runId
+        in: path
+      - schema:
+          type: string
+          description: Max items per page (server-side cap applies).
+          example: '20'
+        required: false
+        description: Max items per page (server-side cap applies).
+        name: limit
+        in: query
+      - schema:
+          type: string
+          description: Cursor returned by the previous page.
+        required: false
+        description: Cursor returned by the previous page.
+        name: cursor
+        in: query
+      responses:
+        '200':
+          description: Control records page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ControlRun'
+                  cursor:
+                    type:
+                    - string
+                    - 'null'
+                    description: Opaque cursor for the next page; null on the last page.
+                required:
+                - items
+                - cursor
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Run not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/runs/{runId}/stop:
+    post:
+      tags:
+      - Runs
+      summary: Stop a run
+      description: Request the platform stop a non-terminal, stoppable run. The stop is asynchronous — poll GET /v1/runs/{runId} to observe the terminal STOPPED status.
+      security:
+      - Bearer: []
+      parameters:
+      - schema:
+          type: string
+          description: Run identifier (ULID).
+          example: 01JGXYZABCDEFGHJKMNPQRSTVW
+        required: true
+        description: Run identifier (ULID).
+        name: runId
+        in: path
+      responses:
+        '202':
+          description: Stop requested (asynchronous)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunStopAccepted'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Run not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Run is terminal, not stoppable, or no longer running
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    RunStopAccepted:
+      type: object
+      properties:
+        runId:
+          type: string
+        status:
+          type: string
+          enum:
+          - STOPPING
+        message:
+          type: string
+      required:
+      - runId
+      - status
+      - message
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+      required:
+      - code
+      - message
+    Cost:
+      type: object
+      properties:
+        value:
+          type: number
+        currency:
+          type: string
+          enum:
+          - USD
+      required:
+      - value
+      - currency
+    RunListItem:
+      type: object
+      properties:
+        runId:
+          type: string
+          description: Run identifier (ULID).
+          example: 01JGXYZABCDEFGHJKMNPQRSTVW
+        caller:
+          type: string
+          description: Prefixed polymorphic caller id (e.g. `USER#<userId>`).
+        provider:
+          type: string
+        providerName:
+          type: string
+        endpoint:
+          type: string
+        status:
+          type: string
+          enum:
+          - READY
+          - RUNNING
+          - STOPPING
+          - COMPLETED
+          - FAILED
+          - BLOCKED
+          - STOPPED
+          - TIMED_OUT
+        stoppable:
+          type: boolean
+        providerResponse:
+          $ref: '#/components/schemas/ProviderResponse'
+        price:
+          $ref: '#/components/schemas/Price'
+        cost:
+          $ref: '#/components/schemas/Cost'
+        resultCount:
+          type: integer
+          minimum: 0
+        billedUnits:
+          type: integer
+          minimum: 0
+        createdAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+      required:
+      - runId
+      - caller
+      - provider
+      - endpoint
+      - status
+      - price
+      - createdAt
+    ProviderResponse:
+      type: object
+      properties:
+        httpStatus:
+          type: integer
+          description: HTTP status from the provider (e.g. 200, 400, 404, 429, 500).
+          example: 200
+        error:
+          description: Provider error body, passed through faithfully on failure.
+        metadata:
+          type: object
+          additionalProperties: {}
+          description: Provider-specific debug metadata lifted from the raw response.
+    Price:
+      type: object
+      properties:
+        type:
+          type: string
+        amount:
+          anyOf:
+          - type: object
+            properties:
+              value:
+                type: number
+              currency:
+                type: string
+                enum:
+                - USD
+            required:
+            - value
+            - currency
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - PER_TOKEN
+              amount:
+                type: object
+                properties:
+                  value:
+                    type: number
+                  currency:
+                    type: string
+                    enum:
+                    - USD
+                required:
+                - value
+                - currency
+              per:
+                type: number
+              unit:
+                type: string
+                enum:
+                - token
+                - character
+            required:
+            - type
+            - amount
+            - per
+            - unit
+        flatFee:
+          type: object
+          properties:
+            value:
+              type: number
+            currency:
+              type: string
+              enum:
+              - USD
+          required:
+          - value
+          - currency
+        period:
+          type: object
+          properties:
+            unit:
+              type: string
+              enum:
+              - MINUTE
+              - DAY
+              - MONTH
+            count:
+              type: integer
+              exclusiveMinimum: 0
+          required:
+          - unit
+          - count
+        per:
+          type: object
+          properties:
+            unit:
+              type: string
+              enum:
+              - MINUTE
+              - DAY
+              - MONTH
+            count:
+              type: integer
+              exclusiveMinimum: 0
+          required:
+          - unit
+          - count
+        selectors:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              key:
+                type: string
+              in:
+                type: string
+                enum:
+                - body
+                - queryParam
+                - pathParam
+            required:
+            - label
+            - key
+            - in
+        variants:
+          type: array
+          items:
+            type: object
+            properties:
+              when:
+                type: object
+                additionalProperties:
+                  anyOf:
+                  - type: string
+                  - type: number
+              amount:
+                anyOf:
+                - type: object
+                  properties:
+                    value:
+                      type: number
+                    currency:
+                      type: string
+                      enum:
+                      - USD
+                  required:
+                  - value
+                  - currency
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - PER_TOKEN
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                    per:
+                      type: number
+                    unit:
+                      type: string
+                      enum:
+                      - token
+                      - character
+                  required:
+                  - type
+                  - amount
+                  - per
+                  - unit
+              label:
+                type: string
+            required:
+            - when
+            - amount
+        notes:
+          type: array
+          items:
+            type: string
+      required:
+      - type
+      - amount
+      description: User-facing price (markup applied).
+    RunAccepted:
+      type: object
+      properties:
+        runId:
+          type: string
+        provider:
+          type: string
+        endpoint:
+          type: string
+        status:
+          type: string
+          enum:
+          - READY
+          - RUNNING
+          - STOPPING
+          - COMPLETED
+          - FAILED
+          - BLOCKED
+          - STOPPED
+          - TIMED_OUT
+        price:
+          $ref: '#/components/schemas/Price'
+        createdAt:
+          type: string
+          format: date-time
+        hints:
+          type: object
+          additionalProperties:
+            anyOf:
+            - type: string
+            - type: object
+              properties:
+                kind:
+                  type: string
+                  enum:
+                  - command
+                  - discover
+                  - inspect
+                  - run
+                  - getRun
+                  - stop
+                  - releaseResource
+                command:
+                  type: string
+                query:
+                  type: string
+                provider:
+                  type: string
+                endpoint:
+                  type: string
+                runId:
+                  type: string
+                resourceId:
+                  type: string
+                comment:
+                  type: string
+              required:
+              - kind
+      required:
+      - runId
+      - provider
+      - endpoint
+      - status
+      - price
+      - createdAt
+    Run:
+      type: object
+      properties:
+        runId:
+          type: string
+          description: Run identifier (ULID).
+          example: 01JGXYZABCDEFGHJKMNPQRSTVW
+        caller:
+          type: string
+          description: Prefixed polymorphic caller id (e.g. `USER#<userId>`).
+        provider:
+          type: string
+        providerName:
+          type: string
+        endpoint:
+          type: string
+        status:
+          type: string
+          enum:
+          - READY
+          - RUNNING
+          - STOPPING
+          - COMPLETED
+          - FAILED
+          - BLOCKED
+          - STOPPED
+          - TIMED_OUT
+          description: Run lifecycle status. COMPLETED means the provider responded (any HTTP status); FAILED means an infrastructure failure.
+        stoppable:
+          type: boolean
+        reason:
+          type: string
+        controls:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        input:
+          type: object
+          properties:
+            body:
+              type: object
+              additionalProperties: {}
+              description: Request body fields.
+            queryParams:
+              type: object
+              additionalProperties: {}
+              description: URL query string parameters.
+            pathParams:
+              type: object
+              additionalProperties: {}
+              description: URL path placeholder substitutions (e.g. {id} in `/users/{id}`).
+          additionalProperties: false
+          description: Composite endpoint input — body + URL query + URL path. All sub-fields optional.
+        output:
+          description: Provider output data (terminal runs only; may be null).
+        providerResponse:
+          $ref: '#/components/schemas/ProviderResponse'
+        price:
+          $ref: '#/components/schemas/Price'
+        cost:
+          $ref: '#/components/schemas/Cost'
+        resultCount:
+          type: integer
+          minimum: 0
+        billedUnits:
+          type: integer
+          minimum: 0
+        resources:
+          type: array
+          items:
+            type: object
+            properties:
+              action:
+                type: string
+                enum:
+                - PROVISIONED
+                - PROVISION_FAILED
+                - RELEASED
+                - RELEASE_FAILED
+              resourceId:
+                type: string
+                minLength: 1
+              resourceType:
+                type: string
+                enum:
+                - phone_number
+              identifier:
+                type: string
+                minLength: 1
+            required:
+            - action
+            - resourceId
+            - resourceType
+            - identifier
+        createdAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        hints:
+          type: object
+          additionalProperties:
+            anyOf:
+            - type: string
+            - type: object
+              properties:
+                kind:
+                  type: string
+                  enum:
+                  - command
+                  - discover
+                  - inspect
+                  - run
+                  - getRun
+                  - stop
+                  - releaseResource
+                command:
+                  type: string
+                query:
+                  type: string
+                provider:
+                  type: string
+                endpoint:
+                  type: string
+                runId:
+                  type: string
+                resourceId:
+                  type: string
+                comment:
+                  type: string
+              required:
+              - kind
+      required:
+      - runId
+      - caller
+      - provider
+      - endpoint
+      - status
+      - input
+      - price
+      - createdAt
+    RunBlocked:
+      type: object
+      properties:
+        runId:
+          type: string
+        status:
+          type: string
+          enum:
+          - BLOCKED
+        provider:
+          type: string
+        endpoint:
+          type: string
+        reason:
+          type: string
+        price:
+          $ref: '#/components/schemas/Price'
+        controls:
+          type: array
+          items:
+            type: object
+            properties:
+              controlId:
+                type: string
+              controlType:
+                type: string
+              requiredAmount:
+                type: number
+                description: The gate's pre-flight cost hold/estimate (dollars).
+              snapshot:
+                type: object
+                additionalProperties: {}
+                description: Dollarized control state snapshot at gate time (same shape as /v1/runs/{runId}/controls).
+            required:
+            - controlId
+            - controlType
+            - snapshot
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        hints:
+          type: object
+          additionalProperties:
+            anyOf:
+            - type: string
+            - type: object
+              properties:
+                kind:
+                  type: string
+                  enum:
+                  - command
+                  - discover
+                  - inspect
+                  - run
+                  - getRun
+                  - stop
+                  - releaseResource
+                command:
+                  type: string
+                query:
+                  type: string
+                provider:
+                  type: string
+                endpoint:
+                  type: string
+                runId:
+                  type: string
+                resourceId:
+                  type: string
+                comment:
+                  type: string
+              required:
+              - kind
+      required:
+      - runId
+      - status
+      - provider
+      - endpoint
+      - reason
+      - price
+      - controls
+      - createdAt
+      - completedAt
+    ControlRun:
+      type: object
+      additionalProperties: {}
+    RunRequest:
+      type: object
+      properties:
+        provider:
+          type: string
+          minLength: 1
+          description: Provider slug.
+          example: exa
+        endpoint:
+          type: string
+          minLength: 1
+          description: Endpoint path within the provider.
+          example: search
+        input:
+          type: object
+          properties:
+            body:
+              type: object
+              additionalProperties: {}
+              description: Request body fields.
+            queryParams:
+              type: object
+              additionalProperties: {}
+              description: URL query string parameters.
+            pathParams:
+              type: object
+              additionalProperties: {}
+              description: URL path placeholder substitutions (e.g. {id} in `/users/{id}`).
+          additionalProperties: false
+          description: Composite endpoint input — body + URL query + URL path. All sub-fields optional.
+      required:
+      - provider
+      - endpoint
+      additionalProperties: false
+    RunCompleted:
+      type: object
+      properties:
+        runId:
+          type: string
+        provider:
+          type: string
+        endpoint:
+          type: string
+        status:
+          type: string
+          enum:
+          - READY
+          - RUNNING
+          - STOPPING
+          - COMPLETED
+          - FAILED
+          - BLOCKED
+          - STOPPED
+          - TIMED_OUT
+        output:
+          description: Provider output data (may be null).
+        providerResponse:
+          $ref: '#/components/schemas/ProviderResponse'
+        price:
+          $ref: '#/components/schemas/Price'
+        billing:
+          type: object
+          properties:
+            calculatedCost:
+              type: object
+              properties:
+                currency:
+                  type: string
+                  enum:
+                  - USD
+                value:
+                  type: integer
+                  minimum: 0
+                unit:
+                  type: string
+                  enum:
+                  - MICRO_DOLLAR
+                  - CENT
+                  - DOLLAR
+              required:
+              - currency
+              - value
+              - unit
+            actualCost:
+              type: object
+              properties:
+                currency:
+                  type: string
+                  enum:
+                  - USD
+                value:
+                  type: integer
+                  minimum: 0
+                unit:
+                  type: string
+                  enum:
+                  - MICRO_DOLLAR
+                  - CENT
+                  - DOLLAR
+              required:
+              - currency
+              - value
+              - unit
+            reportedCost:
+              type: object
+              properties:
+                currency:
+                  type: string
+                  enum:
+                  - USD
+                value:
+                  type: integer
+                  minimum: 0
+                unit:
+                  type: string
+                  enum:
+                  - MICRO_DOLLAR
+                  - CENT
+                  - DOLLAR
+              required:
+              - currency
+              - value
+              - unit
+          required:
+          - calculatedCost
+          - actualCost
+          - reportedCost
+        resultCount:
+          type: integer
+          minimum: 0
+        billedUnits:
+          type: integer
+          minimum: 0
+        resources:
+          type: array
+          items:
+            type: object
+            properties:
+              action:
+                type: string
+                enum:
+                - PROVISIONED
+                - PROVISION_FAILED
+                - RELEASED
+                - RELEASE_FAILED
+              resourceId:
+                type: string
+                minLength: 1
+              resourceType:
+                type: string
+                enum:
+                - phone_number
+              identifier:
+                type: string
+                minLength: 1
+            required:
+            - action
+            - resourceId
+            - resourceType
+            - identifier
+        stopRequestedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        hints:
+          type: object
+          additionalProperties:
+            anyOf:
+            - type: string
+            - type: object
+              properties:
+                kind:
+                  type: string
+                  enum:
+                  - command
+                  - discover
+                  - inspect
+                  - run
+                  - getRun
+                  - stop
+                  - releaseResource
+                command:
+                  type: string
+                query:
+                  type: string
+                provider:
+                  type: string
+                endpoint:
+                  type: string
+                runId:
+                  type: string
+                resourceId:
+                  type: string
+                comment:
+                  type: string
+              required:
+              - kind
+      required:
+      - runId
+      - provider
+      - endpoint
+      - status
+      - providerResponse
+      - price
+      - createdAt
+  securitySchemes:
+    Bearer:
+      type: http
+      scheme: bearer
+      description: 'Monid API key (`Authorization: Bearer mk_...`) or Clerk-issued JWT.'

@@ -1,0 +1,536 @@
+openapi: 3.2.0
+info:
+  title: Monid Public Registry API
+  version: 0.1.0
+  description: Agentic payment platform for data — agents discover and buy data on demand. Authenticated `/v1/*` routes accept a Monid API key or Clerk JWT as a Bearer token. All errors return `{ code, message }`. List endpoints use cursor pagination; consult each operation schema for its last-page cursor encoding.
+servers:
+- url: https://api.monid.ai
+  description: Production
+- url: https://monid.ai
+  description: Public registry alias (public/v1 only)
+tags:
+- name: Public Registry
+paths:
+  /public/v1/stats:
+    get:
+      tags:
+      - Public Registry
+      summary: Catalog-wide aggregate counts
+      description: Number of enabled endpoints and providers in the public catalog.
+      responses:
+        '200':
+          description: Aggregate counts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicRegistryStats'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /public/v1/providers:
+    get:
+      tags:
+      - Public Registry
+      summary: List providers
+      description: Cursor-paginated list of providers with their enabled-endpoint counts.
+      parameters:
+      - schema:
+          type: integer
+          exclusiveMinimum: 0
+          description: Max items per page (server-side cap applies).
+          example: 20
+        required: false
+        description: Max items per page (server-side cap applies).
+        name: limit
+        in: query
+      - schema:
+          type: string
+          description: Cursor returned by the previous page.
+        required: false
+        description: Cursor returned by the previous page.
+        name: cursor
+        in: query
+      responses:
+        '200':
+          description: Providers page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PublicProviderEntry'
+                  cursor:
+                    type: string
+                    description: Opaque cursor for the next page. Absent on the last page.
+                required:
+                - items
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /public/v1/providers/{provider}/endpoints:
+    get:
+      tags:
+      - Public Registry
+      summary: List a provider's endpoints
+      description: Cursor-paginated list of a provider's enabled endpoints (display copy + price). 404 when the provider has no enabled endpoints.
+      parameters:
+      - schema:
+          type: string
+          minLength: 1
+          description: Provider slug.
+          example: exa
+        required: true
+        description: Provider slug.
+        name: provider
+        in: path
+      - schema:
+          type: integer
+          exclusiveMinimum: 0
+          description: Max items per page (server-side cap applies).
+          example: 20
+        required: false
+        description: Max items per page (server-side cap applies).
+        name: limit
+        in: query
+      - schema:
+          type: string
+          description: Cursor returned by the previous page.
+        required: false
+        description: Cursor returned by the previous page.
+        name: cursor
+        in: query
+      responses:
+        '200':
+          description: Endpoints page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PublicEndpointInfo'
+                  cursor:
+                    type: string
+                    description: Opaque cursor for the next page. Absent on the last page.
+                  total:
+                    type: integer
+                    minimum: 0
+                    description: Total number of enabled endpoints matching the underlying query, irrespective of pagination.
+                required:
+                - items
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Provider not found (or has no enabled endpoints)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /public/v1/search:
+    get:
+      tags:
+      - Public Registry
+      summary: Keyword search over the catalog
+      description: Anonymous BM25 keyword search over the endpoint catalog.
+      parameters:
+      - schema:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Free-text query. Required, 1..200 chars.
+          example: twitter scraper
+        required: true
+        description: Free-text query. Required, 1..200 chars.
+        name: q
+        in: query
+      - schema:
+          type: integer
+          exclusiveMinimum: 0
+          description: Max results to return. Server caps this at the configured public search max (currently 20).
+        required: false
+        description: Max results to return. Server caps this at the configured public search max (currently 20).
+        name: limit
+        in: query
+      - schema:
+          type: string
+          description: Opaque pagination token from a previous response. Pass it back unchanged to fetch the next page.
+        required: false
+        description: Opaque pagination token from a previous response. Pass it back unchanged to fetch the next page.
+        name: cursor
+        in: query
+      responses:
+        '200':
+          description: Search results page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicSearchResponse'
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /public/v1/providers/{provider}/endpoints/{endpoint}:
+    get:
+      tags:
+      - Public Registry
+      summary: Get one endpoint
+      description: Fetch a single public endpoint card. `endpoint` is the endpoint path and may itself contain slashes (e.g. `apidojo/tweet-scraper`).
+      parameters:
+      - schema:
+          type: string
+          example: apify
+        required: true
+        name: provider
+        in: path
+      - schema:
+          type: string
+          description: Endpoint path; may contain slashes.
+          example: apidojo/tweet-scraper
+        required: true
+        description: Endpoint path; may contain slashes.
+        name: endpoint
+        in: path
+      responses:
+        '200':
+          description: Endpoint card
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicEndpointInfo'
+        '404':
+          description: Endpoint not found (missing or disabled)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    PublicProviderEntry:
+      type: object
+      properties:
+        provider:
+          type: string
+          description: Provider slug.
+        displayName:
+          type: string
+          description: Resolved display label (curation > slug).
+        displayDescription:
+          type: string
+        endpointCount:
+          type: integer
+          minimum: 0
+          description: Number of currently-enabled endpoints.
+      required:
+      - provider
+      - displayName
+      - endpointCount
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+      required:
+      - code
+      - message
+    PublicEndpointInfo:
+      type: object
+      properties:
+        provider:
+          type: string
+          description: Provider slug.
+          example: exa
+        providerDisplayName:
+          type: string
+          description: Resolved provider display name (curation > slug).
+        providerDisplayDescription:
+          type: string
+          description: Resolved provider display blurb.
+        endpoint:
+          type: string
+          description: Endpoint path.
+          example: /search
+        displayName:
+          type: string
+          description: Resolved endpoint display label. Always populated.
+        displayDescription:
+          type: string
+          description: Resolved endpoint display blurb. May be empty.
+        price:
+          $ref: '#/components/schemas/PublicPrice'
+        tags:
+          type: array
+          items:
+            type: string
+          description: User-facing tags (e.g. `["verified"]`). Always an array; empty when no tags are set on the indexed wrapper.
+      required:
+      - provider
+      - providerDisplayName
+      - endpoint
+      - displayName
+      - displayDescription
+      - price
+      - tags
+    PublicPrice:
+      type: object
+      properties:
+        type:
+          type: string
+        amount:
+          anyOf:
+          - type: object
+            properties:
+              value:
+                type: number
+              currency:
+                type: string
+                enum:
+                - USD
+            required:
+            - value
+            - currency
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - PER_TOKEN
+              amount:
+                type: object
+                properties:
+                  value:
+                    type: number
+                  currency:
+                    type: string
+                    enum:
+                    - USD
+                required:
+                - value
+                - currency
+              per:
+                type: number
+              unit:
+                type: string
+                enum:
+                - token
+                - character
+            required:
+            - type
+            - amount
+            - per
+            - unit
+        flatFee:
+          type: object
+          properties:
+            value:
+              type: number
+            currency:
+              type: string
+              enum:
+              - USD
+          required:
+          - value
+          - currency
+        period:
+          type: object
+          properties:
+            unit:
+              type: string
+              enum:
+              - MINUTE
+              - DAY
+              - MONTH
+            count:
+              type: integer
+              exclusiveMinimum: 0
+          required:
+          - unit
+          - count
+        per:
+          type: object
+          properties:
+            unit:
+              type: string
+              enum:
+              - MINUTE
+              - DAY
+              - MONTH
+            count:
+              type: integer
+              exclusiveMinimum: 0
+          required:
+          - unit
+          - count
+        selectors:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              key:
+                type: string
+              in:
+                type: string
+                enum:
+                - body
+                - queryParam
+                - pathParam
+            required:
+            - label
+            - key
+            - in
+        variants:
+          type: array
+          items:
+            type: object
+            properties:
+              when:
+                type: object
+                additionalProperties:
+                  anyOf:
+                  - type: string
+                  - type: number
+              amount:
+                anyOf:
+                - type: object
+                  properties:
+                    value:
+                      type: number
+                    currency:
+                      type: string
+                      enum:
+                      - USD
+                  required:
+                  - value
+                  - currency
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - PER_TOKEN
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                    per:
+                      type: number
+                    unit:
+                      type: string
+                      enum:
+                      - token
+                      - character
+                  required:
+                  - type
+                  - amount
+                  - per
+                  - unit
+              label:
+                type: string
+            required:
+            - when
+            - amount
+      required:
+      - type
+      - amount
+      description: User-facing price (markup applied).
+    PublicRegistryStats:
+      type: object
+      properties:
+        endpointCount:
+          type: integer
+          minimum: 0
+        providerCount:
+          type: integer
+          minimum: 0
+      required:
+      - endpointCount
+      - providerCount
+    PublicSearchResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicEndpointInfo'
+        query:
+          type: string
+          description: Echo of the `q` input.
+        count:
+          type: integer
+          minimum: 0
+          description: Number of items on THIS page (not the total).
+        cursor:
+          type: string
+          description: Cursor for the next page; absent when no more pages.
+        total:
+          type: integer
+          minimum: 0
+          description: Total endpoints matching the query, irrespective of pagination. Capped — see `totalIsCapped`.
+        totalIsCapped:
+          type: boolean
+          description: '`true` when `total` met or exceeded the count cap; the real count is unknown but >= `total`.'
+      required:
+      - items
+      - query
+      - count
+  securitySchemes:
+    Bearer:
+      type: http
+      scheme: bearer
+      description: 'Monid API key (`Authorization: Bearer mk_...`) or Clerk-issued JWT.'

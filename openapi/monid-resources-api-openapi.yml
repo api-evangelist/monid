@@ -1,0 +1,805 @@
+openapi: 3.2.0
+info:
+  title: Monid Resources API
+  version: 0.1.0
+  description: Agentic payment platform for data — agents discover and buy data on demand. Authenticated `/v1/*` routes accept a Monid API key or Clerk JWT as a Bearer token. All errors return `{ code, message }`. List endpoints use cursor pagination; consult each operation schema for its last-page cursor encoding.
+servers:
+- url: https://api.monid.ai
+  description: Production
+- url: https://monid.ai
+  description: Public registry alias (public/v1 only)
+tags:
+- name: Resources
+paths:
+  /v1/resources:
+    get:
+      tags:
+      - Resources
+      summary: List resources
+      description: Cursor-paginated list of the workspace's provider resources (durable, workspace-owned provider assets, e.g. phone numbers), newest first. Optional `provider`/`resourceType`/`state` filters (`resourceType` requires `provider`).
+      security:
+      - Bearer: []
+      parameters:
+      - schema:
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 100
+          description: Max items per page (server-side cap applies).
+        required: false
+        description: Max items per page (server-side cap applies).
+        name: limit
+        in: query
+      - schema:
+          type: string
+          description: Cursor returned by the previous page.
+        required: false
+        description: Cursor returned by the previous page.
+        name: cursor
+        in: query
+      - schema:
+          type: string
+          enum:
+          - apify
+          - pdl
+          - opoint
+          - tikhub
+          - exa
+          - minimax
+          - bytedance
+          - suzanne
+          - akta
+          - saperly
+          - apollo
+          - censusdata.xyz
+          - defillama
+          - elevenlabs
+          description: Filter by provider slug (e.g. 'saperly').
+        required: false
+        description: Filter by provider slug (e.g. 'saperly').
+        name: provider
+        in: query
+      - schema:
+          type: string
+          enum:
+          - phone_number
+          description: Filter by resource type — requires `provider` (store SK prefix is ordered).
+        required: false
+        description: Filter by resource type — requires `provider` (store SK prefix is ordered).
+        name: resourceType
+        in: query
+      - schema:
+          type: string
+          enum:
+          - READY
+          - PROVISIONING
+          - ACTIVE
+          - EXPIRING
+          - SUSPENDED
+          - RELEASED
+          - PROVISION_FAILED
+          description: Filter by lifecycle state.
+        required: false
+        description: Filter by lifecycle state.
+        name: state
+        in: query
+      responses:
+        '200':
+          description: Resources page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Resource'
+                  cursor:
+                    type: string
+                    description: Opaque cursor for the next page; absent on the last page.
+                required:
+                - items
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/resources/{resourceId}/external/{kind}:
+    get:
+      tags:
+      - Resources
+      summary: Get a resource's live external detail
+      description: Live detail of one external kind (from the resource's `externalResources` summaries), fetched fresh from the provider and sanitized — never secrets or upstream ids. Nothing is persisted; the response is upstream truth at this moment.
+      security:
+      - Bearer: []
+      parameters:
+      - schema:
+          type: string
+          description: Resource identifier (ULID).
+        required: true
+        description: Resource identifier (ULID).
+        name: resourceId
+        in: path
+      - schema:
+          type: string
+          description: External kind (from `externalResources[].kind`).
+        required: true
+        description: External kind (from `externalResources[].kind`).
+        name: kind
+        in: path
+      responses:
+        '200':
+          description: Live external detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExternalResourceDetail'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Resource (or external kind) not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: The provider could not be reached
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/resources/{resourceId}/events:
+    get:
+      tags:
+      - Resources
+      summary: List a resource's lifecycle events
+      description: Cursor-paginated lifecycle events for a resource, oldest first — the renew history IS these events.
+      security:
+      - Bearer: []
+      parameters:
+      - schema:
+          type: string
+          description: Resource identifier (ULID).
+        required: true
+        description: Resource identifier (ULID).
+        name: resourceId
+        in: path
+      - schema:
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 100
+          description: Max items per page (server-side cap applies).
+        required: false
+        description: Max items per page (server-side cap applies).
+        name: limit
+        in: query
+      - schema:
+          type: string
+          description: Cursor returned by the previous page.
+        required: false
+        description: Cursor returned by the previous page.
+        name: cursor
+        in: query
+      - schema:
+          type: string
+          enum:
+          - apify
+          - pdl
+          - opoint
+          - tikhub
+          - exa
+          - minimax
+          - bytedance
+          - suzanne
+          - akta
+          - saperly
+          - apollo
+          - censusdata.xyz
+          - defillama
+          - elevenlabs
+          description: Filter by provider slug (e.g. 'saperly').
+        required: false
+        description: Filter by provider slug (e.g. 'saperly').
+        name: provider
+        in: query
+      - schema:
+          type: string
+          enum:
+          - phone_number
+          description: Filter by resource type — requires `provider` (store SK prefix is ordered).
+        required: false
+        description: Filter by resource type — requires `provider` (store SK prefix is ordered).
+        name: resourceType
+        in: query
+      - schema:
+          type: string
+          enum:
+          - READY
+          - PROVISIONING
+          - ACTIVE
+          - EXPIRING
+          - SUSPENDED
+          - RELEASED
+          - PROVISION_FAILED
+          description: Filter by lifecycle state.
+        required: false
+        description: Filter by lifecycle state.
+        name: state
+        in: query
+      responses:
+        '200':
+          description: Lifecycle events page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ResourceEvent'
+                  cursor:
+                    type: string
+                    description: Opaque cursor for the next page; absent on the last page.
+                required:
+                - items
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/resources/{resourceId}/release:
+    post:
+      tags:
+      - Resources
+      summary: Release a resource
+      description: 'Request the release of a workspace-owned resource. Asynchronous and idempotent: a renewable resource stays usable until its paid-through date, then is released upstream; a non-renewable one is released immediately. Poll GET /v1/resources/{resourceId} for the authoritative state.'
+      security:
+      - Bearer: []
+      parameters:
+      - schema:
+          type: string
+          description: Resource identifier (ULID).
+        required: true
+        description: Resource identifier (ULID).
+        name: resourceId
+        in: path
+      responses:
+        '202':
+          description: Release requested (asynchronous, idempotent)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceReleaseAccepted'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Resource is already released, or not releasable right now
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/resources/{resourceId}:
+    get:
+      tags:
+      - Resources
+      summary: Get a resource
+      description: Get a single workspace-owned resource. External detail is a separate on-demand live fetch — see GET /v1/resources/{resourceId}/external/{kind}.
+      security:
+      - Bearer: []
+      parameters:
+      - schema:
+          type: string
+          description: Resource identifier (ULID).
+        required: true
+        description: Resource identifier (ULID).
+        name: resourceId
+        in: path
+      responses:
+        '200':
+          description: The resource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+      required:
+      - code
+      - message
+    Resource:
+      type: object
+      properties:
+        resourceId:
+          type: string
+          description: Resource identifier (ULID).
+        provider:
+          type: string
+        resourceSlug:
+          type: string
+        resourceType:
+          type: string
+        externalId:
+          type: string
+        identifier:
+          type: string
+        state:
+          type: string
+          enum:
+          - READY
+          - PROVISIONING
+          - ACTIVE
+          - EXPIRING
+          - SUSPENDED
+          - RELEASED
+          - PROVISION_FAILED
+          description: Lifecycle state.
+        provisionedBy:
+          type: string
+        releasedBy:
+          type: string
+        renewal:
+          $ref: '#/components/schemas/ResourceRenewal'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        releasedAt:
+          type: string
+          format: date-time
+        releaseReasonCode:
+          type: string
+        releaseReason:
+          type: string
+        phoneNumber:
+          type: string
+        country:
+          type: string
+        numberType:
+          type: string
+        externalResources:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExternalResourceSummary'
+        syncedAt:
+          type: string
+          format: date-time
+      required:
+      - resourceId
+      - provider
+      - resourceSlug
+      - resourceType
+      - externalId
+      - identifier
+      - state
+      - provisionedBy
+      - createdAt
+      - updatedAt
+    ResourceReleaseAccepted:
+      type: object
+      properties:
+        resourceId:
+          type: string
+        state:
+          type: string
+          enum:
+          - EXPIRING
+        message:
+          type: string
+      required:
+      - resourceId
+      - state
+      - message
+    Price:
+      type: object
+      properties:
+        type:
+          type: string
+        amount:
+          anyOf:
+          - type: object
+            properties:
+              value:
+                type: number
+              currency:
+                type: string
+                enum:
+                - USD
+            required:
+            - value
+            - currency
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - PER_TOKEN
+              amount:
+                type: object
+                properties:
+                  value:
+                    type: number
+                  currency:
+                    type: string
+                    enum:
+                    - USD
+                required:
+                - value
+                - currency
+              per:
+                type: number
+              unit:
+                type: string
+                enum:
+                - token
+                - character
+            required:
+            - type
+            - amount
+            - per
+            - unit
+        flatFee:
+          type: object
+          properties:
+            value:
+              type: number
+            currency:
+              type: string
+              enum:
+              - USD
+          required:
+          - value
+          - currency
+        period:
+          type: object
+          properties:
+            unit:
+              type: string
+              enum:
+              - MINUTE
+              - DAY
+              - MONTH
+            count:
+              type: integer
+              exclusiveMinimum: 0
+          required:
+          - unit
+          - count
+        per:
+          type: object
+          properties:
+            unit:
+              type: string
+              enum:
+              - MINUTE
+              - DAY
+              - MONTH
+            count:
+              type: integer
+              exclusiveMinimum: 0
+          required:
+          - unit
+          - count
+        selectors:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              key:
+                type: string
+              in:
+                type: string
+                enum:
+                - body
+                - queryParam
+                - pathParam
+            required:
+            - label
+            - key
+            - in
+        variants:
+          type: array
+          items:
+            type: object
+            properties:
+              when:
+                type: object
+                additionalProperties:
+                  anyOf:
+                  - type: string
+                  - type: number
+              amount:
+                anyOf:
+                - type: object
+                  properties:
+                    value:
+                      type: number
+                    currency:
+                      type: string
+                      enum:
+                      - USD
+                  required:
+                  - value
+                  - currency
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - PER_TOKEN
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                    per:
+                      type: number
+                    unit:
+                      type: string
+                      enum:
+                      - token
+                      - character
+                  required:
+                  - type
+                  - amount
+                  - per
+                  - unit
+              label:
+                type: string
+            required:
+            - when
+            - amount
+        notes:
+          type: array
+          items:
+            type: string
+      required:
+      - type
+      - amount
+      description: User-facing price (markup applied).
+    ResourceEvent:
+      type: object
+      properties:
+        eventId:
+          type: string
+        type:
+          type: string
+        cycle:
+          type: number
+        amount:
+          type: object
+          properties:
+            value:
+              type: number
+            currency:
+              type: string
+          required:
+          - value
+          - currency
+        reason:
+          type: string
+        at:
+          type: string
+          format: date-time
+      required:
+      - eventId
+      - type
+      - at
+    ExternalResourceDetail:
+      type: object
+      properties:
+        kind:
+          type: string
+        displayName:
+          type: string
+        label:
+          type: string
+        data:
+          type: object
+          additionalProperties: {}
+      required:
+      - kind
+      - displayName
+      - data
+    ResourceRenewal:
+      type: object
+      properties:
+        price:
+          $ref: '#/components/schemas/Price'
+        renewLead:
+          type: object
+          properties:
+            unit:
+              type: string
+            count:
+              type: number
+          required:
+          - unit
+          - count
+          description: How long before `currentPeriodEnd` charging starts.
+        startedAt:
+          type: string
+          format: date-time
+        currentPeriodStart:
+          type: string
+          format: date-time
+        currentPeriodEnd:
+          type: string
+          format: date-time
+        renewAttemptAt:
+          type: string
+          format: date-time
+        cycle:
+          type: number
+        lastAttempt:
+          type: object
+          properties:
+            at:
+              type: string
+              format: date-time
+            outcome:
+              type: string
+              enum:
+              - SUCCEEDED
+              - FAILED
+            reason:
+              type: string
+          required:
+          - at
+          - outcome
+        cancelledAt:
+          type: string
+          format: date-time
+      required:
+      - price
+      - renewLead
+      - startedAt
+      - currentPeriodStart
+      - currentPeriodEnd
+      - renewAttemptAt
+      - cycle
+    ExternalResourceSummary:
+      type: object
+      properties:
+        kind:
+          type: string
+        displayName:
+          type: string
+        label:
+          type: string
+      required:
+      - kind
+      - displayName
+  securitySchemes:
+    Bearer:
+      type: http
+      scheme: bearer
+      description: 'Monid API key (`Authorization: Bearer mk_...`) or Clerk-issued JWT.'

@@ -1,0 +1,851 @@
+openapi: 3.2.0
+info:
+  title: Monid Controls API
+  version: 0.1.0
+  description: Agentic payment platform for data — agents discover and buy data on demand. Authenticated `/v1/*` routes accept a Monid API key or Clerk JWT as a Bearer token. All errors return `{ code, message }`. List endpoints use cursor pagination; consult each operation schema for its last-page cursor encoding.
+servers:
+- url: https://api.monid.ai
+  description: Production
+- url: https://monid.ai
+  description: Public registry alias (public/v1 only)
+tags:
+- name: Controls
+paths:
+  /v1/controls/workspace/budgets:
+    get:
+      tags:
+      - Controls
+      summary: List workspace budget controls
+      description: Cursor-paginated list of the workspace's budget controls with live usage counters.
+      security:
+      - Bearer: []
+      parameters:
+      - schema:
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 100
+          description: Max items per page (server-side cap applies).
+          example: 25
+        required: false
+        description: Max items per page (server-side cap applies).
+        name: limit
+        in: query
+      - schema:
+          type: string
+          description: Cursor returned by the previous page.
+        required: false
+        description: Cursor returned by the previous page.
+        name: cursor
+        in: query
+      responses:
+        '200':
+          description: Budget controls page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WorkspaceBudget'
+                  cursor:
+                    type:
+                    - string
+                    - 'null'
+                    description: Opaque cursor for the next page. Null on the last page.
+                required:
+                - items
+                - cursor
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/controls/workspace/budgets/{budgetControlId}:
+    get:
+      tags:
+      - Controls
+      summary: Get a workspace budget control
+      security:
+      - Bearer: []
+      parameters:
+      - schema:
+          type: string
+          description: Budget control ID (ULID).
+          example: 01JC2Z0A9V8Q4R6T8Y0B2D4F6H
+        required: true
+        description: Budget control ID (ULID).
+        name: budgetControlId
+        in: path
+      responses:
+        '200':
+          description: Budget control
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceBudget'
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Budget control not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      tags:
+      - Controls
+      summary: Update a workspace budget control
+      description: Patch limitAmount and/or status. At least one field is required.
+      security:
+      - Bearer: []
+      parameters:
+      - schema:
+          type: string
+          description: Budget control ID (ULID).
+          example: 01JC2Z0A9V8Q4R6T8Y0B2D4F6H
+        required: true
+        description: Budget control ID (ULID).
+        name: budgetControlId
+        in: path
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkspaceBudgetPatchRequest'
+      responses:
+        '200':
+          description: Updated budget control
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceBudget'
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Budget control not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/controls/workspace/budgets/{budgetControlId}/runs:
+    get:
+      tags:
+      - Controls
+      summary: List runs linked to a budget control
+      description: Cursor-paginated list of run junctions for a budget control. Defaults to the current time window when windowStart is omitted.
+      security:
+      - Bearer: []
+      parameters:
+      - schema:
+          type: string
+          description: Budget control ID (ULID).
+          example: 01JC2Z0A9V8Q4R6T8Y0B2D4F6H
+        required: true
+        description: Budget control ID (ULID).
+        name: budgetControlId
+        in: path
+      - schema:
+          type: string
+          description: ISO 8601 timestamp selecting a specific window. Defaults to the current window when omitted.
+          example: '2026-07-01T00:00:00.000Z'
+        required: false
+        description: ISO 8601 timestamp selecting a specific window. Defaults to the current window when omitted.
+        name: windowStart
+        in: query
+      - schema:
+          type: string
+          enum:
+          - HELD
+          - SETTLED
+          - RELEASED
+          description: Filter runs by junction status.
+        required: false
+        description: Filter runs by junction status.
+        name: status
+        in: query
+      - schema:
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 100
+          description: Max items per page (server-side cap applies).
+          example: 25
+        required: false
+        description: Max items per page (server-side cap applies).
+        name: limit
+        in: query
+      - schema:
+          type: string
+          description: Cursor returned by the previous page.
+        required: false
+        description: Cursor returned by the previous page.
+        name: cursor
+        in: query
+      responses:
+        '200':
+          description: Budget control runs page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WorkspaceBudgetRun'
+                  cursor:
+                    type:
+                    - string
+                    - 'null'
+                    description: Opaque cursor for the next page. Null on the last page.
+                required:
+                - items
+                - cursor
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Budget control not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/controls/workspace/run-caps:
+    get:
+      tags:
+      - Controls
+      summary: List workspace run cap controls
+      description: Cursor-paginated list of the workspace's per-execution spending caps.
+      security:
+      - Bearer: []
+      parameters:
+      - schema:
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 100
+          description: Max items per page (server-side cap applies).
+          example: 25
+        required: false
+        description: Max items per page (server-side cap applies).
+        name: limit
+        in: query
+      - schema:
+          type: string
+          description: Cursor returned by the previous page.
+        required: false
+        description: Cursor returned by the previous page.
+        name: cursor
+        in: query
+      responses:
+        '200':
+          description: Run cap controls page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WorkspaceRunCap'
+                  cursor:
+                    type:
+                    - string
+                    - 'null'
+                    description: Opaque cursor for the next page. Null on the last page.
+                required:
+                - items
+                - cursor
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/controls/workspace/run-caps/{runCapControlId}:
+    get:
+      tags:
+      - Controls
+      summary: Get a workspace run cap control
+      security:
+      - Bearer: []
+      parameters:
+      - schema:
+          type: string
+          description: Run cap control ID (ULID).
+          example: 01JC2Z0A9V8Q4R6T8Y0B2D4F6H
+        required: true
+        description: Run cap control ID (ULID).
+        name: runCapControlId
+        in: path
+      responses:
+        '200':
+          description: Run cap control
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceRunCap'
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Run cap control not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    patch:
+      tags:
+      - Controls
+      summary: Update a workspace run cap control
+      description: Patch limitAmount and/or status. At least one field is required.
+      security:
+      - Bearer: []
+      parameters:
+      - schema:
+          type: string
+          description: Run cap control ID (ULID).
+          example: 01JC2Z0A9V8Q4R6T8Y0B2D4F6H
+        required: true
+        description: Run cap control ID (ULID).
+        name: runCapControlId
+        in: path
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkspaceRunCapPatchRequest'
+      responses:
+        '200':
+          description: Updated run cap control
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceRunCap'
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Run cap control not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/controls/workspace/run-caps/{runCapControlId}/runs:
+    get:
+      tags:
+      - Controls
+      summary: List runs linked to a run cap control
+      description: Cursor-paginated list of run junctions for a run cap control.
+      security:
+      - Bearer: []
+      parameters:
+      - schema:
+          type: string
+          description: Run cap control ID (ULID).
+          example: 01JC2Z0A9V8Q4R6T8Y0B2D4F6H
+        required: true
+        description: Run cap control ID (ULID).
+        name: runCapControlId
+        in: path
+      - schema:
+          type: string
+          enum:
+          - PASSED
+          - BLOCKED
+        required: false
+        name: status
+        in: query
+      - schema:
+          type: integer
+          exclusiveMinimum: 0
+          maximum: 100
+          description: Max items per page (server-side cap applies).
+          example: 25
+        required: false
+        description: Max items per page (server-side cap applies).
+        name: limit
+        in: query
+      - schema:
+          type: string
+          description: Cursor returned by the previous page.
+        required: false
+        description: Cursor returned by the previous page.
+        name: cursor
+        in: query
+      responses:
+        '200':
+          description: Run cap control runs page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WorkspaceRunCapRun'
+                  cursor:
+                    type:
+                    - string
+                    - 'null'
+                    description: Opaque cursor for the next page. Null on the last page.
+                required:
+                - items
+                - cursor
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Run cap control not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+      required:
+      - code
+      - message
+    WorkspaceRunCapRun:
+      type: object
+      properties:
+        runCapControlId:
+          type: string
+        runId:
+          type: string
+          description: Run ID (ULID).
+          example: 01JC2Z0A9V8Q4R6T8Y0B2D4F6H
+        estimatedCost:
+          type: number
+          description: Estimated cost at check time, in dollars.
+        currency:
+          type: string
+          enum:
+          - USD
+        snapshot:
+          type: object
+          properties:
+            limitAmount:
+              type: number
+          required:
+          - limitAmount
+        status:
+          type: string
+          enum:
+          - PASSED
+          - BLOCKED
+        createdAt:
+          type: string
+          format: date-time
+      required:
+      - runCapControlId
+      - runId
+      - estimatedCost
+      - currency
+      - snapshot
+      - status
+      - createdAt
+    WorkspaceBudget:
+      type: object
+      properties:
+        budgetControlId:
+          type: string
+          description: Budget control ID (ULID).
+          example: 01JC2Z0A9V8Q4R6T8Y0B2D4F6H
+        workspaceId:
+          type: string
+        period:
+          type: string
+          enum:
+          - HOUR
+          - DAY
+          - WEEK
+          - MONTH
+        limitAmount:
+          type: number
+          description: Budget cap for the window, in dollars.
+          example: 100
+        spentAmount:
+          type: number
+          description: Settled spend in the current window, in dollars.
+        heldAmount:
+          type: number
+          description: Outstanding holds for in-flight runs, in dollars.
+        availableAmount:
+          type: number
+          description: limitAmount - spentAmount - heldAmount, in dollars.
+        currency:
+          type: string
+          enum:
+          - USD
+        windowStart:
+          type: string
+          format: date-time
+          description: ISO 8601 — which window the counters represent.
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - PAUSED
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+      - budgetControlId
+      - workspaceId
+      - period
+      - limitAmount
+      - spentAmount
+      - heldAmount
+      - availableAmount
+      - currency
+      - windowStart
+      - status
+      - createdAt
+      - updatedAt
+    WorkspaceBudgetRun:
+      type: object
+      properties:
+        budgetControlId:
+          type: string
+        runId:
+          type: string
+          description: Run ID (ULID).
+          example: 01JC2Z0A9V8Q4R6T8Y0B2D4F6H
+        holdAmount:
+          type: number
+          description: Estimated cost reserved at run start, in dollars.
+        settledAmount:
+          type:
+          - number
+          - 'null'
+          description: Actual cost at settlement, in dollars. Null while HELD.
+        currency:
+          type: string
+          enum:
+          - USD
+        status:
+          type: string
+          enum:
+          - HELD
+          - SETTLED
+          - RELEASED
+          - ABORTED
+          - BLOCKED
+        snapshot:
+          type: object
+          properties:
+            period:
+              type: string
+              enum:
+              - HOUR
+              - DAY
+              - WEEK
+              - MONTH
+            limitAmount:
+              type: number
+            windowStart:
+              type: string
+              format: date-time
+          required:
+          - period
+          - limitAmount
+          - windowStart
+        createdAt:
+          type: string
+          format: date-time
+        settledAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+      required:
+      - budgetControlId
+      - runId
+      - holdAmount
+      - settledAmount
+      - currency
+      - status
+      - snapshot
+      - createdAt
+      - settledAt
+    WorkspaceRunCap:
+      type: object
+      properties:
+        runCapControlId:
+          type: string
+          description: Run cap control ID (ULID).
+          example: 01JC2Z0A9V8Q4R6T8Y0B2D4F6H
+        workspaceId:
+          type: string
+        limitAmount:
+          type: number
+          description: Per-run spending cap, in dollars.
+          example: 5
+        currency:
+          type: string
+          enum:
+          - USD
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - PAUSED
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+      - runCapControlId
+      - workspaceId
+      - limitAmount
+      - currency
+      - status
+      - createdAt
+      - updatedAt
+    WorkspaceBudgetPatchRequest:
+      type: object
+      properties:
+        limitAmount:
+          type: object
+          properties:
+            currency:
+              type: string
+              enum:
+              - USD
+            value:
+              type: integer
+              minimum: 0
+            unit:
+              type: string
+              enum:
+              - MICRO_DOLLAR
+              - CENT
+              - DOLLAR
+          required:
+          - currency
+          - value
+          - unit
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - PAUSED
+    WorkspaceRunCapPatchRequest:
+      type: object
+      properties:
+        limitAmount:
+          type: object
+          properties:
+            currency:
+              type: string
+              enum:
+              - USD
+            value:
+              type: integer
+              minimum: 0
+            unit:
+              type: string
+              enum:
+              - MICRO_DOLLAR
+              - CENT
+              - DOLLAR
+          required:
+          - currency
+          - value
+          - unit
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - PAUSED
+  securitySchemes:
+    Bearer:
+      type: http
+      scheme: bearer
+      description: 'Monid API key (`Authorization: Bearer mk_...`) or Clerk-issued JWT.'

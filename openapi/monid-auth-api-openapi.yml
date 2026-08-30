@@ -1,0 +1,203 @@
+openapi: 3.2.0
+info:
+  title: Monid Auth API
+  version: 0.1.0
+  description: Agentic payment platform for data — agents discover and buy data on demand. Authenticated `/v1/*` routes accept a Monid API key or Clerk JWT as a Bearer token. All errors return `{ code, message }`. List endpoints use cursor pagination; consult each operation schema for its last-page cursor encoding.
+servers:
+- url: https://api.monid.ai
+  description: Production
+- url: https://monid.ai
+  description: Public registry alias (public/v1 only)
+tags:
+- name: Auth
+paths:
+  /v1/auth/whoami:
+    get:
+      tags:
+      - Auth
+      summary: Get the authenticated user and workspace
+      description: Returns the authenticated user and (when present) workspace from the auth context. Requires an authenticated user but NOT a workspace — `workspace` is omitted when the caller has none.
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: The caller's identity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WhoamiResponse'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/auth/workspaces:
+    get:
+      tags:
+      - Auth
+      summary: List the caller's workspaces
+      description: All workspaces (Clerk organizations) the authenticated user belongs to. Requires an authenticated user but NOT a selected workspace — use this to discover which workspace to select.
+      security:
+      - Bearer: []
+      responses:
+        '200':
+          description: The caller's workspace memberships
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkspaceListResponse'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+      required:
+      - code
+      - message
+    WorkspaceListItem:
+      type: object
+      properties:
+        workspaceId:
+          type: string
+          minLength: 1
+          description: Workspace (Clerk organization) id.
+          example: org_2abcDEFghiJKLmnop
+        slug:
+          type:
+          - string
+          - 'null'
+          description: Organization slug from Clerk. `null` when the organization has no slug.
+          example: acme-inc
+      required:
+      - workspaceId
+      - slug
+    AuthWorkspace:
+      type: object
+      properties:
+        workspaceId:
+          type: string
+          minLength: 1
+          description: Workspace (Clerk organization) id.
+          example: org_2abcDEFghiJKLmnop
+        name:
+          type: string
+          description: Organization display name (may be empty).
+        slug:
+          type: string
+          description: Organization slug (may be empty).
+          example: acme-inc
+        metadata:
+          type: object
+          additionalProperties: {}
+          description: Free-form workspace metadata record.
+        createdAt:
+          type: string
+          format: date-time
+          description: Record creation time (ISO-8601).
+        updatedAt:
+          type: string
+          format: date-time
+          description: Record last-update time (ISO-8601).
+      required:
+      - workspaceId
+      - name
+      - slug
+      - metadata
+      - createdAt
+      - updatedAt
+      description: Absent when the caller is not part of a workspace.
+    WhoamiResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/AuthUser'
+        workspace:
+          $ref: '#/components/schemas/AuthWorkspace'
+      required:
+      - user
+    WorkspaceListResponse:
+      type: object
+      properties:
+        workspaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkspaceListItem'
+      required:
+      - workspaces
+    AuthUser:
+      type: object
+      properties:
+        userId:
+          type: string
+          minLength: 1
+          description: Clerk user id.
+          example: user_2abcDEFghiJKLmnop
+        username:
+          type: string
+          description: Username from Clerk (may be empty).
+        email:
+          type: string
+          description: Primary email, when known.
+          example: dev@example.com
+        metadata:
+          type: object
+          additionalProperties: {}
+          description: Free-form user metadata record.
+        createdAt:
+          type: string
+          format: date-time
+          description: Record creation time (ISO-8601).
+        updatedAt:
+          type: string
+          format: date-time
+          description: Record last-update time (ISO-8601).
+      required:
+      - userId
+      - username
+      - metadata
+      - createdAt
+      - updatedAt
+  securitySchemes:
+    Bearer:
+      type: http
+      scheme: bearer
+      description: 'Monid API key (`Authorization: Bearer mk_...`) or Clerk-issued JWT.'

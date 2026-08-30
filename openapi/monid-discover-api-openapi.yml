@@ -1,0 +1,369 @@
+openapi: 3.2.0
+info:
+  title: Monid Discover API
+  version: 0.1.0
+  description: Agentic payment platform for data — agents discover and buy data on demand. Authenticated `/v1/*` routes accept a Monid API key or Clerk JWT as a Bearer token. All errors return `{ code, message }`. List endpoints use cursor pagination; consult each operation schema for its last-page cursor encoding.
+servers:
+- url: https://api.monid.ai
+  description: Production
+- url: https://monid.ai
+  description: Public registry alias (public/v1 only)
+tags:
+- name: Discover
+paths:
+  /v1/discover:
+    post:
+      tags:
+      - Discover
+      summary: Search for data endpoints
+      description: 'Semantic search over the endpoint catalog: registry kNN retrieval, signal-based reranking, relevance floors, and per-result pricing.'
+      security:
+      - Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscoverRequest'
+      responses:
+        '200':
+          description: Ranked endpoint recommendations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoverResponse'
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    DiscoverRequest:
+      type: object
+      properties:
+        query:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: Natural-language search query for data endpoints.
+          example: twitter posts
+        limit:
+          type: integer
+          exclusiveMinimum: 0
+          default: 5
+          description: Requested result count. A config-driven server-side cap (`service.discover.max_results`) applies.
+          example: 5
+        minScore:
+          type: number
+          minimum: 0
+          maximum: 2
+          description: Per-call override for the post-rerank score floor. Results scoring below this are filtered out before truncation to `limit`. Falls back to the configured default when omitted.
+          example: 0.2
+      required:
+      - query
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+      required:
+      - code
+      - message
+    DiscoverResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiscoverResult'
+        query:
+          type: string
+        count:
+          type: number
+      required:
+      - results
+      - query
+      - count
+    DiscoverPrice:
+      type: object
+      properties:
+        type:
+          type: string
+        amount:
+          anyOf:
+          - type: object
+            properties:
+              value:
+                type: number
+              currency:
+                type: string
+                enum:
+                - USD
+            required:
+            - value
+            - currency
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - PER_TOKEN
+              amount:
+                type: object
+                properties:
+                  value:
+                    type: number
+                  currency:
+                    type: string
+                    enum:
+                    - USD
+                required:
+                - value
+                - currency
+              per:
+                type: number
+              unit:
+                type: string
+                enum:
+                - token
+                - character
+            required:
+            - type
+            - amount
+            - per
+            - unit
+        flatFee:
+          type: object
+          properties:
+            value:
+              type: number
+            currency:
+              type: string
+              enum:
+              - USD
+          required:
+          - value
+          - currency
+        period:
+          type: object
+          properties:
+            unit:
+              type: string
+              enum:
+              - MINUTE
+              - DAY
+              - MONTH
+            count:
+              type: integer
+              exclusiveMinimum: 0
+          required:
+          - unit
+          - count
+        per:
+          type: object
+          properties:
+            unit:
+              type: string
+              enum:
+              - MINUTE
+              - DAY
+              - MONTH
+            count:
+              type: integer
+              exclusiveMinimum: 0
+          required:
+          - unit
+          - count
+        selectors:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              key:
+                type: string
+              in:
+                type: string
+                enum:
+                - body
+                - queryParam
+                - pathParam
+            required:
+            - label
+            - key
+            - in
+        variants:
+          type: array
+          items:
+            type: object
+            properties:
+              when:
+                type: object
+                additionalProperties:
+                  anyOf:
+                  - type: string
+                  - type: number
+              amount:
+                anyOf:
+                - type: object
+                  properties:
+                    value:
+                      type: number
+                    currency:
+                      type: string
+                      enum:
+                      - USD
+                  required:
+                  - value
+                  - currency
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - PER_TOKEN
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                    per:
+                      type: number
+                    unit:
+                      type: string
+                      enum:
+                      - token
+                      - character
+                  required:
+                  - type
+                  - amount
+                  - per
+                  - unit
+              label:
+                type: string
+            required:
+            - when
+            - amount
+      required:
+      - type
+      - amount
+      description: User-facing price (markup applied, no notes).
+    DiscoverResult:
+      type: object
+      properties:
+        provider:
+          type: string
+          description: Provider slug.
+          example: exa
+        providerName:
+          type: string
+          description: Human-readable provider name.
+        endpoint:
+          type: string
+          description: Endpoint path.
+          example: /search
+        description:
+          type: string
+        price:
+          $ref: '#/components/schemas/DiscoverPrice'
+        score:
+          type: number
+          description: Final composed reranker score. Opaque sort context — not a fixed-range relevance probability.
+        tags:
+          type: array
+          items:
+            type: string
+          description: User-facing tags (e.g. `["verified"]`).
+        scoreBreakdown:
+          type: object
+          properties:
+            querierScore:
+              type: number
+          required:
+          - querierScore
+          additionalProperties:
+            anyOf:
+            - type: number
+            - type: 'null'
+          description: Per-signal breakdown of the reranker's final score (`querierScore` plus one raw log-odds shift per signal).
+        hints:
+          type: object
+          additionalProperties:
+            anyOf:
+            - type: string
+            - type: object
+              properties:
+                kind:
+                  type: string
+                  enum:
+                  - command
+                  - discover
+                  - inspect
+                  - run
+                  - getRun
+                  - stop
+                  - releaseResource
+                command:
+                  type: string
+                query:
+                  type: string
+                provider:
+                  type: string
+                endpoint:
+                  type: string
+                runId:
+                  type: string
+                resourceId:
+                  type: string
+                comment:
+                  type: string
+              required:
+              - kind
+          description: Endpoint-authored workflow hints, polymorphic by client (rendered command string for cli/api/mcp; structured target for web). Omitted for unknown clients and endpoints without authored hints.
+      required:
+      - provider
+      - endpoint
+      - description
+      - price
+      - score
+      - tags
+      - scoreBreakdown
+  securitySchemes:
+    Bearer:
+      type: http
+      scheme: bearer
+      description: 'Monid API key (`Authorization: Bearer mk_...`) or Clerk-issued JWT.'
