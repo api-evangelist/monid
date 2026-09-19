@@ -155,6 +155,8 @@ apis:
   humanURL: https://monid.ai/docs/api/overview.md
   baseURL: https://api.monid.ai
   tags:
+  - Control
+  tags_raw:
   - Controls
   properties:
   - type: OpenAPI
