@@ -81,60 +81,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: getV1Endpoints
+      x-operation-id-source: derived
 components:
   schemas:
-    PublicEndpointInfo:
-      type: object
-      properties:
-        provider:
-          type: string
-          description: Provider slug.
-          example: exa
-        providerDisplayName:
-          type: string
-          description: Resolved provider display name (curation > slug).
-        providerDisplayDescription:
-          type: string
-          description: Resolved provider display blurb.
-        endpoint:
-          type: string
-          description: Endpoint path.
-          example: /search
-        displayName:
-          type: string
-          description: Resolved endpoint display label. Always populated.
-        displayDescription:
-          type: string
-          description: Resolved endpoint display blurb. May be empty.
-        price:
-          $ref: '#/components/schemas/PublicPrice'
-        tags:
-          type: array
-          items:
-            type: string
-          description: User-facing tags (e.g. `["verified"]`). Always an array; empty when no tags are set on the indexed wrapper.
-      required:
-      - provider
-      - providerDisplayName
-      - endpoint
-      - displayName
-      - displayDescription
-      - price
-      - tags
-    Error:
-      type: object
-      properties:
-        code:
-          type: integer
-          description: HTTP status code, duplicated in the body.
-          example: 400
-        message:
-          type: string
-          description: Human-readable error description.
-          example: Bad Request
-      required:
-      - code
-      - message
     PublicPrice:
       type: object
       properties:
@@ -307,6 +257,58 @@ components:
       - type
       - amount
       description: User-facing price (markup applied).
+    PublicEndpointInfo:
+      type: object
+      properties:
+        provider:
+          type: string
+          description: Provider slug.
+          example: exa
+        providerDisplayName:
+          type: string
+          description: Resolved provider display name (curation > slug).
+        providerDisplayDescription:
+          type: string
+          description: Resolved provider display blurb.
+        endpoint:
+          type: string
+          description: Endpoint path.
+          example: /search
+        displayName:
+          type: string
+          description: Resolved endpoint display label. Always populated.
+        displayDescription:
+          type: string
+          description: Resolved endpoint display blurb. May be empty.
+        price:
+          $ref: '#/components/schemas/PublicPrice'
+        tags:
+          type: array
+          items:
+            type: string
+          description: User-facing tags (e.g. `["verified"]`). Always an array; empty when no tags are set on the indexed wrapper.
+      required:
+      - provider
+      - providerDisplayName
+      - endpoint
+      - displayName
+      - displayDescription
+      - price
+      - tags
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+      required:
+      - code
+      - message
   securitySchemes:
     Bearer:
       type: http

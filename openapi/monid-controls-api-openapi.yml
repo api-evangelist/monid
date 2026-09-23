@@ -81,6 +81,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: getV1ControlsWorkspaceBudgets
+      x-operation-id-source: derived
   /v1/controls/workspace/budgets/{budgetControlId}:
     get:
       tags:
@@ -134,6 +136,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: getV1ControlsWorkspaceBudgetsByBudgetControlId
+      x-operation-id-source: derived
     patch:
       tags:
       - Controls
@@ -193,6 +197,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: patchV1ControlsWorkspaceBudgetsByBudgetControlId
+      x-operation-id-source: derived
   /v1/controls/workspace/budgets/{budgetControlId}/runs:
     get:
       tags:
@@ -296,6 +302,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: getV1ControlsWorkspaceBudgetsByBudgetControlIdRuns
+      x-operation-id-source: derived
   /v1/controls/workspace/run-caps:
     get:
       tags:
@@ -366,6 +374,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: getV1ControlsWorkspaceRunCaps
+      x-operation-id-source: derived
   /v1/controls/workspace/run-caps/{runCapControlId}:
     get:
       tags:
@@ -419,6 +429,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: getV1ControlsWorkspaceRunCapsByRunCapControlId
+      x-operation-id-source: derived
     patch:
       tags:
       - Controls
@@ -478,6 +490,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: patchV1ControlsWorkspaceRunCapsByRunCapControlId
+      x-operation-id-source: derived
   /v1/controls/workspace/run-caps/{runCapControlId}/runs:
     get:
       tags:
@@ -570,122 +584,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: getV1ControlsWorkspaceRunCapsByRunCapControlIdRuns
+      x-operation-id-source: derived
 components:
   schemas:
-    Error:
+    WorkspaceBudgetPatchRequest:
       type: object
       properties:
-        code:
-          type: integer
-          description: HTTP status code, duplicated in the body.
-          example: 400
-        message:
-          type: string
-          description: Human-readable error description.
-          example: Bad Request
-      required:
-      - code
-      - message
-    WorkspaceRunCapRun:
-      type: object
-      properties:
-        runCapControlId:
-          type: string
-        runId:
-          type: string
-          description: Run ID (ULID).
-          example: 01JC2Z0A9V8Q4R6T8Y0B2D4F6H
-        estimatedCost:
-          type: number
-          description: Estimated cost at check time, in dollars.
-        currency:
-          type: string
-          enum:
-          - USD
-        snapshot:
+        limitAmount:
           type: object
           properties:
-            limitAmount:
-              type: number
+            currency:
+              type: string
+              enum:
+              - USD
+            value:
+              type: integer
+              minimum: 0
+            unit:
+              type: string
+              enum:
+              - MICRO_DOLLAR
+              - CENT
+              - DOLLAR
           required:
-          - limitAmount
-        status:
-          type: string
-          enum:
-          - PASSED
-          - BLOCKED
-        createdAt:
-          type: string
-          format: date-time
-      required:
-      - runCapControlId
-      - runId
-      - estimatedCost
-      - currency
-      - snapshot
-      - status
-      - createdAt
-    WorkspaceBudget:
-      type: object
-      properties:
-        budgetControlId:
-          type: string
-          description: Budget control ID (ULID).
-          example: 01JC2Z0A9V8Q4R6T8Y0B2D4F6H
-        workspaceId:
-          type: string
-        period:
-          type: string
-          enum:
-          - HOUR
-          - DAY
-          - WEEK
-          - MONTH
-        limitAmount:
-          type: number
-          description: Budget cap for the window, in dollars.
-          example: 100
-        spentAmount:
-          type: number
-          description: Settled spend in the current window, in dollars.
-        heldAmount:
-          type: number
-          description: Outstanding holds for in-flight runs, in dollars.
-        availableAmount:
-          type: number
-          description: limitAmount - spentAmount - heldAmount, in dollars.
-        currency:
-          type: string
-          enum:
-          - USD
-        windowStart:
-          type: string
-          format: date-time
-          description: ISO 8601 — which window the counters represent.
+          - currency
+          - value
+          - unit
         status:
           type: string
           enum:
           - ACTIVE
           - PAUSED
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-      required:
-      - budgetControlId
-      - workspaceId
-      - period
-      - limitAmount
-      - spentAmount
-      - heldAmount
-      - availableAmount
-      - currency
-      - windowStart
-      - status
-      - createdAt
-      - updatedAt
     WorkspaceBudgetRun:
       type: object
       properties:
@@ -752,6 +682,67 @@ components:
       - snapshot
       - createdAt
       - settledAt
+    WorkspaceBudget:
+      type: object
+      properties:
+        budgetControlId:
+          type: string
+          description: Budget control ID (ULID).
+          example: 01JC2Z0A9V8Q4R6T8Y0B2D4F6H
+        workspaceId:
+          type: string
+        period:
+          type: string
+          enum:
+          - HOUR
+          - DAY
+          - WEEK
+          - MONTH
+        limitAmount:
+          type: number
+          description: Budget cap for the window, in dollars.
+          example: 100
+        spentAmount:
+          type: number
+          description: Settled spend in the current window, in dollars.
+        heldAmount:
+          type: number
+          description: Outstanding holds for in-flight runs, in dollars.
+        availableAmount:
+          type: number
+          description: limitAmount - spentAmount - heldAmount, in dollars.
+        currency:
+          type: string
+          enum:
+          - USD
+        windowStart:
+          type: string
+          format: date-time
+          description: ISO 8601 — which window the counters represent.
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - PAUSED
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+      - budgetControlId
+      - workspaceId
+      - period
+      - limitAmount
+      - spentAmount
+      - heldAmount
+      - availableAmount
+      - currency
+      - windowStart
+      - status
+      - createdAt
+      - updatedAt
     WorkspaceRunCap:
       type: object
       properties:
@@ -788,34 +779,6 @@ components:
       - status
       - createdAt
       - updatedAt
-    WorkspaceBudgetPatchRequest:
-      type: object
-      properties:
-        limitAmount:
-          type: object
-          properties:
-            currency:
-              type: string
-              enum:
-              - USD
-            value:
-              type: integer
-              minimum: 0
-            unit:
-              type: string
-              enum:
-              - MICRO_DOLLAR
-              - CENT
-              - DOLLAR
-          required:
-          - currency
-          - value
-          - unit
-        status:
-          type: string
-          enum:
-          - ACTIVE
-          - PAUSED
     WorkspaceRunCapPatchRequest:
       type: object
       properties:
@@ -844,6 +807,59 @@ components:
           enum:
           - ACTIVE
           - PAUSED
+    WorkspaceRunCapRun:
+      type: object
+      properties:
+        runCapControlId:
+          type: string
+        runId:
+          type: string
+          description: Run ID (ULID).
+          example: 01JC2Z0A9V8Q4R6T8Y0B2D4F6H
+        estimatedCost:
+          type: number
+          description: Estimated cost at check time, in dollars.
+        currency:
+          type: string
+          enum:
+          - USD
+        snapshot:
+          type: object
+          properties:
+            limitAmount:
+              type: number
+          required:
+          - limitAmount
+        status:
+          type: string
+          enum:
+          - PASSED
+          - BLOCKED
+        createdAt:
+          type: string
+          format: date-time
+      required:
+      - runCapControlId
+      - runId
+      - estimatedCost
+      - currency
+      - snapshot
+      - status
+      - createdAt
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+      required:
+      - code
+      - message
   securitySchemes:
     Bearer:
       type: http

@@ -88,6 +88,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RunCompleted'
+      operationId: postV1Run
+      x-operation-id-source: derived
   /v1/runs:
     get:
       tags:
@@ -171,6 +173,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: getV1Runs
+      x-operation-id-source: derived
   /v1/runs/{runId}:
     get:
       tags:
@@ -219,6 +223,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: getV1RunsByRunId
+      x-operation-id-source: derived
   /v1/runs/{runId}/controls:
     get:
       tags:
@@ -295,6 +301,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: getV1RunsByRunIdControls
+      x-operation-id-source: derived
   /v1/runs/{runId}/stop:
     post:
       tags:
@@ -349,6 +357,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: postV1RunsByRunIdStop
+      x-operation-id-source: derived
 components:
   schemas:
     RunStopAccepted:
@@ -366,103 +376,40 @@ components:
       - runId
       - status
       - message
-    Error:
+    RunRequest:
       type: object
       properties:
-        code:
-          type: integer
-          description: HTTP status code, duplicated in the body.
-          example: 400
-        message:
-          type: string
-          description: Human-readable error description.
-          example: Bad Request
-      required:
-      - code
-      - message
-    Cost:
-      type: object
-      properties:
-        value:
-          type: number
-        currency:
-          type: string
-          enum:
-          - USD
-      required:
-      - value
-      - currency
-    RunListItem:
-      type: object
-      properties:
-        runId:
-          type: string
-          description: Run identifier (ULID).
-          example: 01JGXYZABCDEFGHJKMNPQRSTVW
-        caller:
-          type: string
-          description: Prefixed polymorphic caller id (e.g. `USER#<userId>`).
         provider:
           type: string
-        providerName:
-          type: string
+          minLength: 1
+          description: Provider slug.
+          example: exa
         endpoint:
           type: string
-        status:
-          type: string
-          enum:
-          - READY
-          - RUNNING
-          - STOPPING
-          - COMPLETED
-          - FAILED
-          - BLOCKED
-          - STOPPED
-          - TIMED_OUT
-        stoppable:
-          type: boolean
-        providerResponse:
-          $ref: '#/components/schemas/ProviderResponse'
-        price:
-          $ref: '#/components/schemas/Price'
-        cost:
-          $ref: '#/components/schemas/Cost'
-        resultCount:
-          type: integer
-          minimum: 0
-        billedUnits:
-          type: integer
-          minimum: 0
-        createdAt:
-          type: string
-          format: date-time
-        startedAt:
-          type: string
-          format: date-time
-        completedAt:
-          type: string
-          format: date-time
+          minLength: 1
+          description: Endpoint path within the provider.
+          example: search
+        input:
+          type: object
+          properties:
+            body:
+              type: object
+              additionalProperties: {}
+              description: Request body fields.
+            queryParams:
+              type: object
+              additionalProperties: {}
+              description: URL query string parameters.
+            pathParams:
+              type: object
+              additionalProperties: {}
+              description: URL path placeholder substitutions (e.g. {id} in `/users/{id}`).
+          additionalProperties: false
+          description: Composite endpoint input — body + URL query + URL path. All sub-fields optional.
       required:
-      - runId
-      - caller
       - provider
       - endpoint
-      - status
-      - price
-      - createdAt
-    ProviderResponse:
-      type: object
-      properties:
-        httpStatus:
-          type: integer
-          description: HTTP status from the provider (e.g. 200, 400, 404, 429, 500).
-          example: 200
-        error:
-          description: Provider error body, passed through faithfully on failure.
-        metadata:
-          type: object
-          additionalProperties: {}
-          description: Provider-specific debug metadata lifted from the raw response.
+      additionalProperties: false
     Price:
       type: object
       properties:
@@ -639,340 +586,18 @@ components:
       - type
       - amount
       description: User-facing price (markup applied).
-    RunAccepted:
+    Cost:
       type: object
       properties:
-        runId:
-          type: string
-        provider:
-          type: string
-        endpoint:
-          type: string
-        status:
+        value:
+          type: number
+        currency:
           type: string
           enum:
-          - READY
-          - RUNNING
-          - STOPPING
-          - COMPLETED
-          - FAILED
-          - BLOCKED
-          - STOPPED
-          - TIMED_OUT
-        price:
-          $ref: '#/components/schemas/Price'
-        createdAt:
-          type: string
-          format: date-time
-        hints:
-          type: object
-          additionalProperties:
-            anyOf:
-            - type: string
-            - type: object
-              properties:
-                kind:
-                  type: string
-                  enum:
-                  - command
-                  - discover
-                  - inspect
-                  - run
-                  - getRun
-                  - stop
-                  - releaseResource
-                command:
-                  type: string
-                query:
-                  type: string
-                provider:
-                  type: string
-                endpoint:
-                  type: string
-                runId:
-                  type: string
-                resourceId:
-                  type: string
-                comment:
-                  type: string
-              required:
-              - kind
+          - USD
       required:
-      - runId
-      - provider
-      - endpoint
-      - status
-      - price
-      - createdAt
-    Run:
-      type: object
-      properties:
-        runId:
-          type: string
-          description: Run identifier (ULID).
-          example: 01JGXYZABCDEFGHJKMNPQRSTVW
-        caller:
-          type: string
-          description: Prefixed polymorphic caller id (e.g. `USER#<userId>`).
-        provider:
-          type: string
-        providerName:
-          type: string
-        endpoint:
-          type: string
-        status:
-          type: string
-          enum:
-          - READY
-          - RUNNING
-          - STOPPING
-          - COMPLETED
-          - FAILED
-          - BLOCKED
-          - STOPPED
-          - TIMED_OUT
-          description: Run lifecycle status. COMPLETED means the provider responded (any HTTP status); FAILED means an infrastructure failure.
-        stoppable:
-          type: boolean
-        reason:
-          type: string
-        controls:
-          type: array
-          items:
-            type: object
-            additionalProperties: {}
-        input:
-          type: object
-          properties:
-            body:
-              type: object
-              additionalProperties: {}
-              description: Request body fields.
-            queryParams:
-              type: object
-              additionalProperties: {}
-              description: URL query string parameters.
-            pathParams:
-              type: object
-              additionalProperties: {}
-              description: URL path placeholder substitutions (e.g. {id} in `/users/{id}`).
-          additionalProperties: false
-          description: Composite endpoint input — body + URL query + URL path. All sub-fields optional.
-        output:
-          description: Provider output data (terminal runs only; may be null).
-        providerResponse:
-          $ref: '#/components/schemas/ProviderResponse'
-        price:
-          $ref: '#/components/schemas/Price'
-        cost:
-          $ref: '#/components/schemas/Cost'
-        resultCount:
-          type: integer
-          minimum: 0
-        billedUnits:
-          type: integer
-          minimum: 0
-        resources:
-          type: array
-          items:
-            type: object
-            properties:
-              action:
-                type: string
-                enum:
-                - PROVISIONED
-                - PROVISION_FAILED
-                - RELEASED
-                - RELEASE_FAILED
-              resourceId:
-                type: string
-                minLength: 1
-              resourceType:
-                type: string
-                enum:
-                - phone_number
-              identifier:
-                type: string
-                minLength: 1
-            required:
-            - action
-            - resourceId
-            - resourceType
-            - identifier
-        createdAt:
-          type: string
-          format: date-time
-        startedAt:
-          type: string
-          format: date-time
-        completedAt:
-          type: string
-          format: date-time
-        hints:
-          type: object
-          additionalProperties:
-            anyOf:
-            - type: string
-            - type: object
-              properties:
-                kind:
-                  type: string
-                  enum:
-                  - command
-                  - discover
-                  - inspect
-                  - run
-                  - getRun
-                  - stop
-                  - releaseResource
-                command:
-                  type: string
-                query:
-                  type: string
-                provider:
-                  type: string
-                endpoint:
-                  type: string
-                runId:
-                  type: string
-                resourceId:
-                  type: string
-                comment:
-                  type: string
-              required:
-              - kind
-      required:
-      - runId
-      - caller
-      - provider
-      - endpoint
-      - status
-      - input
-      - price
-      - createdAt
-    RunBlocked:
-      type: object
-      properties:
-        runId:
-          type: string
-        status:
-          type: string
-          enum:
-          - BLOCKED
-        provider:
-          type: string
-        endpoint:
-          type: string
-        reason:
-          type: string
-        price:
-          $ref: '#/components/schemas/Price'
-        controls:
-          type: array
-          items:
-            type: object
-            properties:
-              controlId:
-                type: string
-              controlType:
-                type: string
-              requiredAmount:
-                type: number
-                description: The gate's pre-flight cost hold/estimate (dollars).
-              snapshot:
-                type: object
-                additionalProperties: {}
-                description: Dollarized control state snapshot at gate time (same shape as /v1/runs/{runId}/controls).
-            required:
-            - controlId
-            - controlType
-            - snapshot
-        createdAt:
-          type: string
-          format: date-time
-        completedAt:
-          type: string
-          format: date-time
-        hints:
-          type: object
-          additionalProperties:
-            anyOf:
-            - type: string
-            - type: object
-              properties:
-                kind:
-                  type: string
-                  enum:
-                  - command
-                  - discover
-                  - inspect
-                  - run
-                  - getRun
-                  - stop
-                  - releaseResource
-                command:
-                  type: string
-                query:
-                  type: string
-                provider:
-                  type: string
-                endpoint:
-                  type: string
-                runId:
-                  type: string
-                resourceId:
-                  type: string
-                comment:
-                  type: string
-              required:
-              - kind
-      required:
-      - runId
-      - status
-      - provider
-      - endpoint
-      - reason
-      - price
-      - controls
-      - createdAt
-      - completedAt
-    ControlRun:
-      type: object
-      additionalProperties: {}
-    RunRequest:
-      type: object
-      properties:
-        provider:
-          type: string
-          minLength: 1
-          description: Provider slug.
-          example: exa
-        endpoint:
-          type: string
-          minLength: 1
-          description: Endpoint path within the provider.
-          example: search
-        input:
-          type: object
-          properties:
-            body:
-              type: object
-              additionalProperties: {}
-              description: Request body fields.
-            queryParams:
-              type: object
-              additionalProperties: {}
-              description: URL query string parameters.
-            pathParams:
-              type: object
-              additionalProperties: {}
-              description: URL path placeholder substitutions (e.g. {id} in `/users/{id}`).
-          additionalProperties: false
-          description: Composite endpoint input — body + URL query + URL path. All sub-fields optional.
-      required:
-      - provider
-      - endpoint
-      additionalProperties: false
+      - value
+      - currency
     RunCompleted:
       type: object
       properties:
@@ -1149,6 +774,391 @@ components:
       - providerResponse
       - price
       - createdAt
+    ProviderResponse:
+      type: object
+      properties:
+        httpStatus:
+          type: integer
+          description: HTTP status from the provider (e.g. 200, 400, 404, 429, 500).
+          example: 200
+        error:
+          description: Provider error body, passed through faithfully on failure.
+        metadata:
+          type: object
+          additionalProperties: {}
+          description: Provider-specific debug metadata lifted from the raw response.
+    Run:
+      type: object
+      properties:
+        runId:
+          type: string
+          description: Run identifier (ULID).
+          example: 01JGXYZABCDEFGHJKMNPQRSTVW
+        caller:
+          type: string
+          description: Prefixed polymorphic caller id (e.g. `USER#<userId>`).
+        provider:
+          type: string
+        providerName:
+          type: string
+        endpoint:
+          type: string
+        status:
+          type: string
+          enum:
+          - READY
+          - RUNNING
+          - STOPPING
+          - COMPLETED
+          - FAILED
+          - BLOCKED
+          - STOPPED
+          - TIMED_OUT
+          description: Run lifecycle status. COMPLETED means the provider responded (any HTTP status); FAILED means an infrastructure failure.
+        stoppable:
+          type: boolean
+        reason:
+          type: string
+        controls:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        input:
+          type: object
+          properties:
+            body:
+              type: object
+              additionalProperties: {}
+              description: Request body fields.
+            queryParams:
+              type: object
+              additionalProperties: {}
+              description: URL query string parameters.
+            pathParams:
+              type: object
+              additionalProperties: {}
+              description: URL path placeholder substitutions (e.g. {id} in `/users/{id}`).
+          additionalProperties: false
+          description: Composite endpoint input — body + URL query + URL path. All sub-fields optional.
+        output:
+          description: Provider output data (terminal runs only; may be null).
+        providerResponse:
+          $ref: '#/components/schemas/ProviderResponse'
+        price:
+          $ref: '#/components/schemas/Price'
+        cost:
+          $ref: '#/components/schemas/Cost'
+        resultCount:
+          type: integer
+          minimum: 0
+        billedUnits:
+          type: integer
+          minimum: 0
+        resources:
+          type: array
+          items:
+            type: object
+            properties:
+              action:
+                type: string
+                enum:
+                - PROVISIONED
+                - PROVISION_FAILED
+                - RELEASED
+                - RELEASE_FAILED
+              resourceId:
+                type: string
+                minLength: 1
+              resourceType:
+                type: string
+                enum:
+                - phone_number
+              identifier:
+                type: string
+                minLength: 1
+            required:
+            - action
+            - resourceId
+            - resourceType
+            - identifier
+        createdAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        hints:
+          type: object
+          additionalProperties:
+            anyOf:
+            - type: string
+            - type: object
+              properties:
+                kind:
+                  type: string
+                  enum:
+                  - command
+                  - discover
+                  - inspect
+                  - run
+                  - getRun
+                  - stop
+                  - releaseResource
+                command:
+                  type: string
+                query:
+                  type: string
+                provider:
+                  type: string
+                endpoint:
+                  type: string
+                runId:
+                  type: string
+                resourceId:
+                  type: string
+                comment:
+                  type: string
+              required:
+              - kind
+      required:
+      - runId
+      - caller
+      - provider
+      - endpoint
+      - status
+      - input
+      - price
+      - createdAt
+    ControlRun:
+      type: object
+      additionalProperties: {}
+    RunAccepted:
+      type: object
+      properties:
+        runId:
+          type: string
+        provider:
+          type: string
+        endpoint:
+          type: string
+        status:
+          type: string
+          enum:
+          - READY
+          - RUNNING
+          - STOPPING
+          - COMPLETED
+          - FAILED
+          - BLOCKED
+          - STOPPED
+          - TIMED_OUT
+        price:
+          $ref: '#/components/schemas/Price'
+        createdAt:
+          type: string
+          format: date-time
+        hints:
+          type: object
+          additionalProperties:
+            anyOf:
+            - type: string
+            - type: object
+              properties:
+                kind:
+                  type: string
+                  enum:
+                  - command
+                  - discover
+                  - inspect
+                  - run
+                  - getRun
+                  - stop
+                  - releaseResource
+                command:
+                  type: string
+                query:
+                  type: string
+                provider:
+                  type: string
+                endpoint:
+                  type: string
+                runId:
+                  type: string
+                resourceId:
+                  type: string
+                comment:
+                  type: string
+              required:
+              - kind
+      required:
+      - runId
+      - provider
+      - endpoint
+      - status
+      - price
+      - createdAt
+    RunListItem:
+      type: object
+      properties:
+        runId:
+          type: string
+          description: Run identifier (ULID).
+          example: 01JGXYZABCDEFGHJKMNPQRSTVW
+        caller:
+          type: string
+          description: Prefixed polymorphic caller id (e.g. `USER#<userId>`).
+        provider:
+          type: string
+        providerName:
+          type: string
+        endpoint:
+          type: string
+        status:
+          type: string
+          enum:
+          - READY
+          - RUNNING
+          - STOPPING
+          - COMPLETED
+          - FAILED
+          - BLOCKED
+          - STOPPED
+          - TIMED_OUT
+        stoppable:
+          type: boolean
+        providerResponse:
+          $ref: '#/components/schemas/ProviderResponse'
+        price:
+          $ref: '#/components/schemas/Price'
+        cost:
+          $ref: '#/components/schemas/Cost'
+        resultCount:
+          type: integer
+          minimum: 0
+        billedUnits:
+          type: integer
+          minimum: 0
+        createdAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+      required:
+      - runId
+      - caller
+      - provider
+      - endpoint
+      - status
+      - price
+      - createdAt
+    RunBlocked:
+      type: object
+      properties:
+        runId:
+          type: string
+        status:
+          type: string
+          enum:
+          - BLOCKED
+        provider:
+          type: string
+        endpoint:
+          type: string
+        reason:
+          type: string
+        price:
+          $ref: '#/components/schemas/Price'
+        controls:
+          type: array
+          items:
+            type: object
+            properties:
+              controlId:
+                type: string
+              controlType:
+                type: string
+              requiredAmount:
+                type: number
+                description: The gate's pre-flight cost hold/estimate (dollars).
+              snapshot:
+                type: object
+                additionalProperties: {}
+                description: Dollarized control state snapshot at gate time (same shape as /v1/runs/{runId}/controls).
+            required:
+            - controlId
+            - controlType
+            - snapshot
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        hints:
+          type: object
+          additionalProperties:
+            anyOf:
+            - type: string
+            - type: object
+              properties:
+                kind:
+                  type: string
+                  enum:
+                  - command
+                  - discover
+                  - inspect
+                  - run
+                  - getRun
+                  - stop
+                  - releaseResource
+                command:
+                  type: string
+                query:
+                  type: string
+                provider:
+                  type: string
+                endpoint:
+                  type: string
+                runId:
+                  type: string
+                resourceId:
+                  type: string
+                comment:
+                  type: string
+              required:
+              - kind
+      required:
+      - runId
+      - status
+      - provider
+      - endpoint
+      - reason
+      - price
+      - controls
+      - createdAt
+      - completedAt
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+      required:
+      - code
+      - message
   securitySchemes:
     Bearer:
       type: http

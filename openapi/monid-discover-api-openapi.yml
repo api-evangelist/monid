@@ -56,60 +56,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: postV1Discover
+      x-operation-id-source: derived
 components:
   schemas:
-    DiscoverRequest:
-      type: object
-      properties:
-        query:
-          type: string
-          minLength: 1
-          maxLength: 1000
-          description: Natural-language search query for data endpoints.
-          example: twitter posts
-        limit:
-          type: integer
-          exclusiveMinimum: 0
-          default: 5
-          description: Requested result count. A config-driven server-side cap (`service.discover.max_results`) applies.
-          example: 5
-        minScore:
-          type: number
-          minimum: 0
-          maximum: 2
-          description: Per-call override for the post-rerank score floor. Results scoring below this are filtered out before truncation to `limit`. Falls back to the configured default when omitted.
-          example: 0.2
-      required:
-      - query
-    Error:
-      type: object
-      properties:
-        code:
-          type: integer
-          description: HTTP status code, duplicated in the body.
-          example: 400
-        message:
-          type: string
-          description: Human-readable error description.
-          example: Bad Request
-      required:
-      - code
-      - message
-    DiscoverResponse:
-      type: object
-      properties:
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/DiscoverResult'
-        query:
-          type: string
-        count:
-          type: number
-      required:
-      - results
-      - query
-      - count
     DiscoverPrice:
       type: object
       properties:
@@ -282,6 +232,44 @@ components:
       - type
       - amount
       description: User-facing price (markup applied, no notes).
+    DiscoverResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiscoverResult'
+        query:
+          type: string
+        count:
+          type: number
+      required:
+      - results
+      - query
+      - count
+    DiscoverRequest:
+      type: object
+      properties:
+        query:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: Natural-language search query for data endpoints.
+          example: twitter posts
+        limit:
+          type: integer
+          exclusiveMinimum: 0
+          default: 5
+          description: Requested result count. A config-driven server-side cap (`service.discover.max_results`) applies.
+          example: 5
+        minScore:
+          type: number
+          minimum: 0
+          maximum: 2
+          description: Per-call override for the post-rerank score floor. Results scoring below this are filtered out before truncation to `limit`. Falls back to the configured default when omitted.
+          example: 0.2
+      required:
+      - query
     DiscoverResult:
       type: object
       properties:
@@ -362,6 +350,20 @@ components:
       - score
       - tags
       - scoreBreakdown
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+      required:
+      - code
+      - message
   securitySchemes:
     Bearer:
       type: http

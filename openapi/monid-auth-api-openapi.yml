@@ -44,6 +44,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: getV1AuthWhoami
+      x-operation-id-source: derived
   /v1/auth/workspaces:
     get:
       tags:
@@ -77,39 +79,52 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: getV1AuthWorkspaces
+      x-operation-id-source: derived
 components:
   schemas:
-    Error:
+    WhoamiResponse:
       type: object
       properties:
-        code:
-          type: integer
-          description: HTTP status code, duplicated in the body.
-          example: 400
-        message:
-          type: string
-          description: Human-readable error description.
-          example: Bad Request
+        user:
+          $ref: '#/components/schemas/AuthUser'
+        workspace:
+          $ref: '#/components/schemas/AuthWorkspace'
       required:
-      - code
-      - message
-    WorkspaceListItem:
+      - user
+    AuthUser:
       type: object
       properties:
-        workspaceId:
+        userId:
           type: string
           minLength: 1
-          description: Workspace (Clerk organization) id.
-          example: org_2abcDEFghiJKLmnop
-        slug:
-          type:
-          - string
-          - 'null'
-          description: Organization slug from Clerk. `null` when the organization has no slug.
-          example: acme-inc
+          description: Clerk user id.
+          example: user_2abcDEFghiJKLmnop
+        username:
+          type: string
+          description: Username from Clerk (may be empty).
+        email:
+          type: string
+          description: Primary email, when known.
+          example: dev@example.com
+        metadata:
+          type: object
+          additionalProperties: {}
+          description: Free-form user metadata record.
+        createdAt:
+          type: string
+          format: date-time
+          description: Record creation time (ISO-8601).
+        updatedAt:
+          type: string
+          format: date-time
+          description: Record last-update time (ISO-8601).
       required:
-      - workspaceId
-      - slug
+      - userId
+      - username
+      - metadata
+      - createdAt
+      - updatedAt
     AuthWorkspace:
       type: object
       properties:
@@ -145,15 +160,23 @@ components:
       - createdAt
       - updatedAt
       description: Absent when the caller is not part of a workspace.
-    WhoamiResponse:
+    WorkspaceListItem:
       type: object
       properties:
-        user:
-          $ref: '#/components/schemas/AuthUser'
-        workspace:
-          $ref: '#/components/schemas/AuthWorkspace'
+        workspaceId:
+          type: string
+          minLength: 1
+          description: Workspace (Clerk organization) id.
+          example: org_2abcDEFghiJKLmnop
+        slug:
+          type:
+          - string
+          - 'null'
+          description: Organization slug from Clerk. `null` when the organization has no slug.
+          example: acme-inc
       required:
-      - user
+      - workspaceId
+      - slug
     WorkspaceListResponse:
       type: object
       properties:
@@ -163,39 +186,20 @@ components:
             $ref: '#/components/schemas/WorkspaceListItem'
       required:
       - workspaces
-    AuthUser:
+    Error:
       type: object
       properties:
-        userId:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
           type: string
-          minLength: 1
-          description: Clerk user id.
-          example: user_2abcDEFghiJKLmnop
-        username:
-          type: string
-          description: Username from Clerk (may be empty).
-        email:
-          type: string
-          description: Primary email, when known.
-          example: dev@example.com
-        metadata:
-          type: object
-          additionalProperties: {}
-          description: Free-form user metadata record.
-        createdAt:
-          type: string
-          format: date-time
-          description: Record creation time (ISO-8601).
-        updatedAt:
-          type: string
-          format: date-time
-          description: Record last-update time (ISO-8601).
+          description: Human-readable error description.
+          example: Bad Request
       required:
-      - userId
-      - username
-      - metadata
-      - createdAt
-      - updatedAt
+      - code
+      - message
   securitySchemes:
     Bearer:
       type: http

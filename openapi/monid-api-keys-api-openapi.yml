@@ -77,6 +77,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: getV1ApiKeys
+      x-operation-id-source: derived
   /v1/api-keys/{label}:
     patch:
       tags:
@@ -138,6 +140,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: patchV1ApiKeysByLabel
+      x-operation-id-source: derived
     delete:
       tags:
       - API Keys
@@ -188,6 +192,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: deleteV1ApiKeysByLabel
+      x-operation-id-source: derived
 components:
   schemas:
     UpdateApiKeyRequest:
@@ -198,20 +204,6 @@ components:
           minLength: 1
           description: New label for the key.
           example: ci-runner-renamed
-    Error:
-      type: object
-      properties:
-        code:
-          type: integer
-          description: HTTP status code, duplicated in the body.
-          example: 400
-        message:
-          type: string
-          description: Human-readable error description.
-          example: Bad Request
-      required:
-      - code
-      - message
     ApiKey:
       type: object
       properties:
@@ -239,6 +231,20 @@ components:
       - keyPrefix
       - createdBy
       - createdAt
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+      required:
+      - code
+      - message
   securitySchemes:
     Bearer:
       type: http

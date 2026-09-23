@@ -1,0 +1,48 @@
+{
+  "provider": "monid",
+  "sources": [
+    "_original/monid-openapi.json"
+  ],
+  "outputs": [
+    "monid-api-keys-api-openapi.yml",
+    "monid-auth-api-openapi.yml",
+    "monid-controls-api-openapi.yml",
+    "monid-discover-api-openapi.yml",
+    "monid-endpoints-api-openapi.yml",
+    "monid-inspect-api-openapi.yml",
+    "monid-public-registry-api-openapi.yml",
+    "monid-resources-api-openapi.yml",
+    "monid-runs-api-openapi.yml",
+    "monid-wallet-api-openapi.yml"
+  ],
+  "archived": [],
+  "errors": [],
+  "warnings": [],
+  "notes": [
+    "sourced from openapi/_original/ (1 archived document(s)); previously refined output at the top level was skipped rather than re-split",
+    "monid-openapi.json: upgraded openapi 3.1.0 -> OpenAPI 3.2.0",
+    "monid-openapi.json: declared missing tag: API Keys",
+    "monid-openapi.json: declared missing tag: Auth",
+    "monid-openapi.json: declared missing tag: Controls",
+    "monid-openapi.json: declared missing tag: Discover",
+    "monid-openapi.json: declared missing tag: Endpoints",
+    "monid-openapi.json: declared missing tag: Inspect",
+    "monid-openapi.json: declared missing tag: Public Registry",
+    "monid-openapi.json: declared missing tag: Resources",
+    "monid-openapi.json: declared missing tag: Runs",
+    "monid-openapi.json: declared missing tag: Wallet",
+    "apis.yml register: already-registered"
+  ],
+  "skipped": [
+    "monid-api-keys-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "monid-auth-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "monid-controls-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "monid-discover-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "monid-endpoints-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "monid-inspect-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "monid-public-registry-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "monid-resources-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "monid-runs-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "monid-wallet-api-openapi.yml: previously refined output, superseded by openapi/_original/"
+  ]
+}

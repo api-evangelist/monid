@@ -30,6 +30,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: getPublicV1Stats
+      x-operation-id-source: derived
   /public/v1/providers:
     get:
       tags:
@@ -82,6 +84,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: getPublicV1Providers
+      x-operation-id-source: derived
   /public/v1/providers/{provider}/endpoints:
     get:
       tags:
@@ -153,6 +157,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: getPublicV1ProvidersByProviderEndpoints
+      x-operation-id-source: derived
   /public/v1/search:
     get:
       tags:
@@ -204,6 +210,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: getPublicV1Search
+      x-operation-id-source: derived
   /public/v1/providers/{provider}/endpoints/{endpoint}:
     get:
       tags:
@@ -244,6 +252,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: getPublicV1ProvidersByProviderEndpointsByEndpoint
+      x-operation-id-source: derived
 components:
   schemas:
     PublicProviderEntry:
@@ -265,20 +275,6 @@ components:
       - provider
       - displayName
       - endpointCount
-    Error:
-      type: object
-      properties:
-        code:
-          type: integer
-          description: HTTP status code, duplicated in the body.
-          example: 400
-        message:
-          type: string
-          description: Human-readable error description.
-          example: Bad Request
-      required:
-      - code
-      - message
     PublicEndpointInfo:
       type: object
       properties:
@@ -317,6 +313,46 @@ components:
       - displayDescription
       - price
       - tags
+    PublicSearchResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicEndpointInfo'
+        query:
+          type: string
+          description: Echo of the `q` input.
+        count:
+          type: integer
+          minimum: 0
+          description: Number of items on THIS page (not the total).
+        cursor:
+          type: string
+          description: Cursor for the next page; absent when no more pages.
+        total:
+          type: integer
+          minimum: 0
+          description: Total endpoints matching the query, irrespective of pagination. Capped — see `totalIsCapped`.
+        totalIsCapped:
+          type: boolean
+          description: '`true` when `total` met or exceeded the count cap; the real count is unknown but >= `total`.'
+      required:
+      - items
+      - query
+      - count
+    PublicRegistryStats:
+      type: object
+      properties:
+        endpointCount:
+          type: integer
+          minimum: 0
+        providerCount:
+          type: integer
+          minimum: 0
+      required:
+      - endpointCount
+      - providerCount
     PublicPrice:
       type: object
       properties:
@@ -489,46 +525,20 @@ components:
       - type
       - amount
       description: User-facing price (markup applied).
-    PublicRegistryStats:
+    Error:
       type: object
       properties:
-        endpointCount:
+        code:
           type: integer
-          minimum: 0
-        providerCount:
-          type: integer
-          minimum: 0
-      required:
-      - endpointCount
-      - providerCount
-    PublicSearchResponse:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/PublicEndpointInfo'
-        query:
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
           type: string
-          description: Echo of the `q` input.
-        count:
-          type: integer
-          minimum: 0
-          description: Number of items on THIS page (not the total).
-        cursor:
-          type: string
-          description: Cursor for the next page; absent when no more pages.
-        total:
-          type: integer
-          minimum: 0
-          description: Total endpoints matching the query, irrespective of pagination. Capped — see `totalIsCapped`.
-        totalIsCapped:
-          type: boolean
-          description: '`true` when `total` met or exceeded the count cap; the real count is unknown but >= `total`.'
+          description: Human-readable error description.
+          example: Bad Request
       required:
-      - items
-      - query
-      - count
+      - code
+      - message
   securitySchemes:
     Bearer:
       type: http

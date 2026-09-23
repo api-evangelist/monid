@@ -55,6 +55,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WalletUnavailableError'
+      operationId: getV1WalletBalance
+      x-operation-id-source: derived
   /v1/wallet/topup:
     get:
       tags:
@@ -99,6 +101,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WalletUnavailableError'
+      operationId: getV1WalletTopup
+      x-operation-id-source: derived
 components:
   schemas:
     WalletBalanceResponse:
@@ -128,20 +132,6 @@ components:
           - 'null'
           description: Wallet provisioning status (e.g. PROVISIONING, FAILED). Null when the wallet does not exist yet.
           example: PROVISIONING
-      required:
-      - code
-      - message
-    Error:
-      type: object
-      properties:
-        code:
-          type: integer
-          description: HTTP status code, duplicated in the body.
-          example: 400
-        message:
-          type: string
-          description: Human-readable error description.
-          example: Bad Request
       required:
       - code
       - message
@@ -197,6 +187,20 @@ components:
       - minAmount
       - currency
       - processingFee
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+      required:
+      - code
+      - message
   securitySchemes:
     Bearer:
       type: http

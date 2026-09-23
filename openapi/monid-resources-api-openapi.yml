@@ -123,6 +123,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: getV1Resources
+      x-operation-id-source: derived
   /v1/resources/{resourceId}/external/{kind}:
     get:
       tags:
@@ -183,6 +185,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: getV1ResourcesByResourceIdExternalByKind
+      x-operation-id-source: derived
   /v1/resources/{resourceId}/events:
     get:
       tags:
@@ -308,6 +312,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: getV1ResourcesByResourceIdEvents
+      x-operation-id-source: derived
   /v1/resources/{resourceId}/release:
     post:
       tags:
@@ -361,6 +367,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: postV1ResourcesByResourceIdRelease
+      x-operation-id-source: derived
   /v1/resources/{resourceId}:
     get:
       tags:
@@ -408,107 +416,67 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+      operationId: getV1ResourcesByResourceId
+      x-operation-id-source: derived
 components:
   schemas:
-    Error:
+    ResourceRenewal:
       type: object
       properties:
-        code:
-          type: integer
-          description: HTTP status code, duplicated in the body.
-          example: 400
-        message:
-          type: string
-          description: Human-readable error description.
-          example: Bad Request
-      required:
-      - code
-      - message
-    Resource:
-      type: object
-      properties:
-        resourceId:
-          type: string
-          description: Resource identifier (ULID).
-        provider:
-          type: string
-        resourceSlug:
-          type: string
-        resourceType:
-          type: string
-        externalId:
-          type: string
-        identifier:
-          type: string
-        state:
-          type: string
-          enum:
-          - READY
-          - PROVISIONING
-          - ACTIVE
-          - EXPIRING
-          - SUSPENDED
-          - RELEASED
-          - PROVISION_FAILED
-          description: Lifecycle state.
-        provisionedBy:
-          type: string
-        releasedBy:
-          type: string
-        renewal:
-          $ref: '#/components/schemas/ResourceRenewal'
-        createdAt:
+        price:
+          $ref: '#/components/schemas/Price'
+        renewLead:
+          type: object
+          properties:
+            unit:
+              type: string
+            count:
+              type: number
+          required:
+          - unit
+          - count
+          description: How long before `currentPeriodEnd` charging starts.
+        startedAt:
           type: string
           format: date-time
-        updatedAt:
+        currentPeriodStart:
           type: string
           format: date-time
-        releasedAt:
+        currentPeriodEnd:
           type: string
           format: date-time
-        releaseReasonCode:
+        renewAttemptAt:
           type: string
-        releaseReason:
-          type: string
-        phoneNumber:
-          type: string
-        country:
-          type: string
-        numberType:
-          type: string
-        externalResources:
-          type: array
-          items:
-            $ref: '#/components/schemas/ExternalResourceSummary'
-        syncedAt:
+          format: date-time
+        cycle:
+          type: number
+        lastAttempt:
+          type: object
+          properties:
+            at:
+              type: string
+              format: date-time
+            outcome:
+              type: string
+              enum:
+              - SUCCEEDED
+              - FAILED
+            reason:
+              type: string
+          required:
+          - at
+          - outcome
+        cancelledAt:
           type: string
           format: date-time
       required:
-      - resourceId
-      - provider
-      - resourceSlug
-      - resourceType
-      - externalId
-      - identifier
-      - state
-      - provisionedBy
-      - createdAt
-      - updatedAt
-    ResourceReleaseAccepted:
-      type: object
-      properties:
-        resourceId:
-          type: string
-        state:
-          type: string
-          enum:
-          - EXPIRING
-        message:
-          type: string
-      required:
-      - resourceId
-      - state
-      - message
+      - price
+      - renewLead
+      - startedAt
+      - currentPeriodStart
+      - currentPeriodEnd
+      - renewAttemptAt
+      - cycle
     Price:
       type: object
       properties:
@@ -685,6 +653,103 @@ components:
       - type
       - amount
       description: User-facing price (markup applied).
+    ExternalResourceSummary:
+      type: object
+      properties:
+        kind:
+          type: string
+        displayName:
+          type: string
+        label:
+          type: string
+      required:
+      - kind
+      - displayName
+    ResourceReleaseAccepted:
+      type: object
+      properties:
+        resourceId:
+          type: string
+        state:
+          type: string
+          enum:
+          - EXPIRING
+        message:
+          type: string
+      required:
+      - resourceId
+      - state
+      - message
+    Resource:
+      type: object
+      properties:
+        resourceId:
+          type: string
+          description: Resource identifier (ULID).
+        provider:
+          type: string
+        resourceSlug:
+          type: string
+        resourceType:
+          type: string
+        externalId:
+          type: string
+        identifier:
+          type: string
+        state:
+          type: string
+          enum:
+          - READY
+          - PROVISIONING
+          - ACTIVE
+          - EXPIRING
+          - SUSPENDED
+          - RELEASED
+          - PROVISION_FAILED
+          description: Lifecycle state.
+        provisionedBy:
+          type: string
+        releasedBy:
+          type: string
+        renewal:
+          $ref: '#/components/schemas/ResourceRenewal'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        releasedAt:
+          type: string
+          format: date-time
+        releaseReasonCode:
+          type: string
+        releaseReason:
+          type: string
+        phoneNumber:
+          type: string
+        country:
+          type: string
+        numberType:
+          type: string
+        externalResources:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExternalResourceSummary'
+        syncedAt:
+          type: string
+          format: date-time
+      required:
+      - resourceId
+      - provider
+      - resourceSlug
+      - resourceType
+      - externalId
+      - identifier
+      - state
+      - provisionedBy
+      - createdAt
+      - updatedAt
     ResourceEvent:
       type: object
       properties:
@@ -729,75 +794,20 @@ components:
       - kind
       - displayName
       - data
-    ResourceRenewal:
+    Error:
       type: object
       properties:
-        price:
-          $ref: '#/components/schemas/Price'
-        renewLead:
-          type: object
-          properties:
-            unit:
-              type: string
-            count:
-              type: number
-          required:
-          - unit
-          - count
-          description: How long before `currentPeriodEnd` charging starts.
-        startedAt:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
           type: string
-          format: date-time
-        currentPeriodStart:
-          type: string
-          format: date-time
-        currentPeriodEnd:
-          type: string
-          format: date-time
-        renewAttemptAt:
-          type: string
-          format: date-time
-        cycle:
-          type: number
-        lastAttempt:
-          type: object
-          properties:
-            at:
-              type: string
-              format: date-time
-            outcome:
-              type: string
-              enum:
-              - SUCCEEDED
-              - FAILED
-            reason:
-              type: string
-          required:
-          - at
-          - outcome
-        cancelledAt:
-          type: string
-          format: date-time
+          description: Human-readable error description.
+          example: Bad Request
       required:
-      - price
-      - renewLead
-      - startedAt
-      - currentPeriodStart
-      - currentPeriodEnd
-      - renewAttemptAt
-      - cycle
-    ExternalResourceSummary:
-      type: object
-      properties:
-        kind:
-          type: string
-        displayName:
-          type: string
-        label:
-          type: string
-      required:
-      - kind
-      - displayName
+      - code
+      - message
   securitySchemes:
     Bearer:
       type: http
