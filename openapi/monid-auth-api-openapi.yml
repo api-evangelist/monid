@@ -83,15 +83,29 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
-    WhoamiResponse:
+    WorkspaceListResponse:
       type: object
       properties:
-        user:
-          $ref: '#/components/schemas/AuthUser'
-        workspace:
-          $ref: '#/components/schemas/AuthWorkspace'
+        workspaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkspaceListItem'
       required:
-      - user
+      - workspaces
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+      required:
+      - code
+      - message
     AuthUser:
       type: object
       properties:
@@ -125,6 +139,15 @@ components:
       - metadata
       - createdAt
       - updatedAt
+    WhoamiResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/AuthUser'
+        workspace:
+          $ref: '#/components/schemas/AuthWorkspace'
+      required:
+      - user
     AuthWorkspace:
       type: object
       properties:
@@ -177,29 +200,6 @@ components:
       required:
       - workspaceId
       - slug
-    WorkspaceListResponse:
-      type: object
-      properties:
-        workspaces:
-          type: array
-          items:
-            $ref: '#/components/schemas/WorkspaceListItem'
-      required:
-      - workspaces
-    Error:
-      type: object
-      properties:
-        code:
-          type: integer
-          description: HTTP status code, duplicated in the body.
-          example: 400
-        message:
-          type: string
-          description: Human-readable error description.
-          example: Bad Request
-      required:
-      - code
-      - message
   securitySchemes:
     Bearer:
       type: http

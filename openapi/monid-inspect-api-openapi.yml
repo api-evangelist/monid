@@ -82,6 +82,20 @@ components:
       required:
       - provider
       - endpoint
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+      required:
+      - code
+      - message
     Price:
       type: object
       properties:
@@ -366,20 +380,6 @@ components:
           - multipart
           description: Body content type (when body is present).
       description: Structured input — JSON Schema per param location (path, query, body).
-    Error:
-      type: object
-      properties:
-        code:
-          type: integer
-          description: HTTP status code, duplicated in the body.
-          example: 400
-        message:
-          type: string
-          description: Human-readable error description.
-          example: Bad Request
-      required:
-      - code
-      - message
   securitySchemes:
     Bearer:
       type: http

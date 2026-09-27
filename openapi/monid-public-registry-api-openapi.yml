@@ -256,6 +256,20 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+      required:
+      - code
+      - message
     PublicProviderEntry:
       type: object
       properties:
@@ -275,72 +289,6 @@ components:
       - provider
       - displayName
       - endpointCount
-    PublicEndpointInfo:
-      type: object
-      properties:
-        provider:
-          type: string
-          description: Provider slug.
-          example: exa
-        providerDisplayName:
-          type: string
-          description: Resolved provider display name (curation > slug).
-        providerDisplayDescription:
-          type: string
-          description: Resolved provider display blurb.
-        endpoint:
-          type: string
-          description: Endpoint path.
-          example: /search
-        displayName:
-          type: string
-          description: Resolved endpoint display label. Always populated.
-        displayDescription:
-          type: string
-          description: Resolved endpoint display blurb. May be empty.
-        price:
-          $ref: '#/components/schemas/PublicPrice'
-        tags:
-          type: array
-          items:
-            type: string
-          description: User-facing tags (e.g. `["verified"]`). Always an array; empty when no tags are set on the indexed wrapper.
-      required:
-      - provider
-      - providerDisplayName
-      - endpoint
-      - displayName
-      - displayDescription
-      - price
-      - tags
-    PublicSearchResponse:
-      type: object
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/PublicEndpointInfo'
-        query:
-          type: string
-          description: Echo of the `q` input.
-        count:
-          type: integer
-          minimum: 0
-          description: Number of items on THIS page (not the total).
-        cursor:
-          type: string
-          description: Cursor for the next page; absent when no more pages.
-        total:
-          type: integer
-          minimum: 0
-          description: Total endpoints matching the query, irrespective of pagination. Capped — see `totalIsCapped`.
-        totalIsCapped:
-          type: boolean
-          description: '`true` when `total` met or exceeded the count cap; the real count is unknown but >= `total`.'
-      required:
-      - items
-      - query
-      - count
     PublicRegistryStats:
       type: object
       properties:
@@ -525,20 +473,72 @@ components:
       - type
       - amount
       description: User-facing price (markup applied).
-    Error:
+    PublicEndpointInfo:
       type: object
       properties:
-        code:
-          type: integer
-          description: HTTP status code, duplicated in the body.
-          example: 400
-        message:
+        provider:
           type: string
-          description: Human-readable error description.
-          example: Bad Request
+          description: Provider slug.
+          example: exa
+        providerDisplayName:
+          type: string
+          description: Resolved provider display name (curation > slug).
+        providerDisplayDescription:
+          type: string
+          description: Resolved provider display blurb.
+        endpoint:
+          type: string
+          description: Endpoint path.
+          example: /search
+        displayName:
+          type: string
+          description: Resolved endpoint display label. Always populated.
+        displayDescription:
+          type: string
+          description: Resolved endpoint display blurb. May be empty.
+        price:
+          $ref: '#/components/schemas/PublicPrice'
+        tags:
+          type: array
+          items:
+            type: string
+          description: User-facing tags (e.g. `["verified"]`). Always an array; empty when no tags are set on the indexed wrapper.
       required:
-      - code
-      - message
+      - provider
+      - providerDisplayName
+      - endpoint
+      - displayName
+      - displayDescription
+      - price
+      - tags
+    PublicSearchResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicEndpointInfo'
+        query:
+          type: string
+          description: Echo of the `q` input.
+        count:
+          type: integer
+          minimum: 0
+          description: Number of items on THIS page (not the total).
+        cursor:
+          type: string
+          description: Cursor for the next page; absent when no more pages.
+        total:
+          type: integer
+          minimum: 0
+          description: Total endpoints matching the query, irrespective of pagination. Capped — see `totalIsCapped`.
+        totalIsCapped:
+          type: boolean
+          description: '`true` when `total` met or exceeded the count cap; the real count is unknown but >= `total`.'
+      required:
+      - items
+      - query
+      - count
   securitySchemes:
     Bearer:
       type: http

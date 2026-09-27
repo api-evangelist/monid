@@ -420,63 +420,20 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
-    ResourceRenewal:
+    Error:
       type: object
       properties:
-        price:
-          $ref: '#/components/schemas/Price'
-        renewLead:
-          type: object
-          properties:
-            unit:
-              type: string
-            count:
-              type: number
-          required:
-          - unit
-          - count
-          description: How long before `currentPeriodEnd` charging starts.
-        startedAt:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
           type: string
-          format: date-time
-        currentPeriodStart:
-          type: string
-          format: date-time
-        currentPeriodEnd:
-          type: string
-          format: date-time
-        renewAttemptAt:
-          type: string
-          format: date-time
-        cycle:
-          type: number
-        lastAttempt:
-          type: object
-          properties:
-            at:
-              type: string
-              format: date-time
-            outcome:
-              type: string
-              enum:
-              - SUCCEEDED
-              - FAILED
-            reason:
-              type: string
-          required:
-          - at
-          - outcome
-        cancelledAt:
-          type: string
-          format: date-time
+          description: Human-readable error description.
+          example: Bad Request
       required:
-      - price
-      - renewLead
-      - startedAt
-      - currentPeriodStart
-      - currentPeriodEnd
-      - renewAttemptAt
-      - cycle
+      - code
+      - message
     Price:
       type: object
       properties:
@@ -653,18 +610,6 @@ components:
       - type
       - amount
       description: User-facing price (markup applied).
-    ExternalResourceSummary:
-      type: object
-      properties:
-        kind:
-          type: string
-        displayName:
-          type: string
-        label:
-          type: string
-      required:
-      - kind
-      - displayName
     ResourceReleaseAccepted:
       type: object
       properties:
@@ -680,6 +625,34 @@ components:
       - resourceId
       - state
       - message
+    ExternalResourceDetail:
+      type: object
+      properties:
+        kind:
+          type: string
+        displayName:
+          type: string
+        label:
+          type: string
+        data:
+          type: object
+          additionalProperties: {}
+      required:
+      - kind
+      - displayName
+      - data
+    ExternalResourceSummary:
+      type: object
+      properties:
+        kind:
+          type: string
+        displayName:
+          type: string
+        label:
+          type: string
+      required:
+      - kind
+      - displayName
     Resource:
       type: object
       properties:
@@ -750,6 +723,63 @@ components:
       - provisionedBy
       - createdAt
       - updatedAt
+    ResourceRenewal:
+      type: object
+      properties:
+        price:
+          $ref: '#/components/schemas/Price'
+        renewLead:
+          type: object
+          properties:
+            unit:
+              type: string
+            count:
+              type: number
+          required:
+          - unit
+          - count
+          description: How long before `currentPeriodEnd` charging starts.
+        startedAt:
+          type: string
+          format: date-time
+        currentPeriodStart:
+          type: string
+          format: date-time
+        currentPeriodEnd:
+          type: string
+          format: date-time
+        renewAttemptAt:
+          type: string
+          format: date-time
+        cycle:
+          type: number
+        lastAttempt:
+          type: object
+          properties:
+            at:
+              type: string
+              format: date-time
+            outcome:
+              type: string
+              enum:
+              - SUCCEEDED
+              - FAILED
+            reason:
+              type: string
+          required:
+          - at
+          - outcome
+        cancelledAt:
+          type: string
+          format: date-time
+      required:
+      - price
+      - renewLead
+      - startedAt
+      - currentPeriodStart
+      - currentPeriodEnd
+      - renewAttemptAt
+      - cycle
     ResourceEvent:
       type: object
       properties:
@@ -778,36 +808,6 @@ components:
       - eventId
       - type
       - at
-    ExternalResourceDetail:
-      type: object
-      properties:
-        kind:
-          type: string
-        displayName:
-          type: string
-        label:
-          type: string
-        data:
-          type: object
-          additionalProperties: {}
-      required:
-      - kind
-      - displayName
-      - data
-    Error:
-      type: object
-      properties:
-        code:
-          type: integer
-          description: HTTP status code, duplicated in the body.
-          example: 400
-        message:
-          type: string
-          description: Human-readable error description.
-          example: Bad Request
-      required:
-      - code
-      - message
   securitySchemes:
     Bearer:
       type: http
