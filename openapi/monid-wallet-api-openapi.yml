@@ -105,20 +105,6 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
-    Error:
-      type: object
-      properties:
-        code:
-          type: integer
-          description: HTTP status code, duplicated in the body.
-          example: 400
-        message:
-          type: string
-          description: Human-readable error description.
-          example: Bad Request
-      required:
-      - code
-      - message
     WalletBalanceResponse:
       type: object
       properties:
@@ -129,6 +115,20 @@ components:
       required:
       - balance
       - held
+    WalletMonetaryAmount:
+      type: object
+      properties:
+        value:
+          type: number
+          description: Amount in dollars (float).
+          example: 25.5
+        currency:
+          type: string
+          description: ISO currency code.
+          example: USD
+      required:
+      - value
+      - currency
     WalletUnavailableError:
       type: object
       properties:
@@ -149,20 +149,20 @@ components:
       required:
       - code
       - message
-    WalletMonetaryAmount:
+    Error:
       type: object
       properties:
-        value:
-          type: number
-          description: Amount in dollars (float).
-          example: 25.5
-        currency:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
           type: string
-          description: ISO currency code.
-          example: USD
+          description: Human-readable error description.
+          example: Bad Request
       required:
-      - value
-      - currency
+      - code
+      - message
     WalletTopupConfigResponse:
       type: object
       properties:

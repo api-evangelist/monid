@@ -83,29 +83,15 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
-    WorkspaceListResponse:
+    WhoamiResponse:
       type: object
       properties:
-        workspaces:
-          type: array
-          items:
-            $ref: '#/components/schemas/WorkspaceListItem'
+        user:
+          $ref: '#/components/schemas/AuthUser'
+        workspace:
+          $ref: '#/components/schemas/AuthWorkspace'
       required:
-      - workspaces
-    Error:
-      type: object
-      properties:
-        code:
-          type: integer
-          description: HTTP status code, duplicated in the body.
-          example: 400
-        message:
-          type: string
-          description: Human-readable error description.
-          example: Bad Request
-      required:
-      - code
-      - message
+      - user
     AuthUser:
       type: object
       properties:
@@ -139,15 +125,37 @@ components:
       - metadata
       - createdAt
       - updatedAt
-    WhoamiResponse:
+    WorkspaceListItem:
       type: object
       properties:
-        user:
-          $ref: '#/components/schemas/AuthUser'
-        workspace:
-          $ref: '#/components/schemas/AuthWorkspace'
+        workspaceId:
+          type: string
+          minLength: 1
+          description: Workspace (Clerk organization) id.
+          example: org_2abcDEFghiJKLmnop
+        slug:
+          type:
+          - string
+          - 'null'
+          description: Organization slug from Clerk. `null` when the organization has no slug.
+          example: acme-inc
       required:
-      - user
+      - workspaceId
+      - slug
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+      required:
+      - code
+      - message
     AuthWorkspace:
       type: object
       properties:
@@ -183,23 +191,15 @@ components:
       - createdAt
       - updatedAt
       description: Absent when the caller is not part of a workspace.
-    WorkspaceListItem:
+    WorkspaceListResponse:
       type: object
       properties:
-        workspaceId:
-          type: string
-          minLength: 1
-          description: Workspace (Clerk organization) id.
-          example: org_2abcDEFghiJKLmnop
-        slug:
-          type:
-          - string
-          - 'null'
-          description: Organization slug from Clerk. `null` when the organization has no slug.
-          example: acme-inc
+        workspaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkspaceListItem'
       required:
-      - workspaceId
-      - slug
+      - workspaces
   securitySchemes:
     Bearer:
       type: http

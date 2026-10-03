@@ -123,20 +123,6 @@ components:
       - displayDescription
       - price
       - tags
-    Error:
-      type: object
-      properties:
-        code:
-          type: integer
-          description: HTTP status code, duplicated in the body.
-          example: 400
-        message:
-          type: string
-          description: Human-readable error description.
-          example: Bad Request
-      required:
-      - code
-      - message
     PublicPrice:
       type: object
       properties:
@@ -309,6 +295,20 @@ components:
       - type
       - amount
       description: User-facing price (markup applied).
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+      required:
+      - code
+      - message
   securitySchemes:
     Bearer:
       type: http

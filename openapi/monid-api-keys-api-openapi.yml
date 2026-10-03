@@ -196,6 +196,14 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
+    UpdateApiKeyRequest:
+      type: object
+      properties:
+        label:
+          type: string
+          minLength: 1
+          description: New label for the key.
+          example: ci-runner-renamed
     Error:
       type: object
       properties:
@@ -210,14 +218,6 @@ components:
       required:
       - code
       - message
-    UpdateApiKeyRequest:
-      type: object
-      properties:
-        label:
-          type: string
-          minLength: 1
-          description: New label for the key.
-          example: ci-runner-renamed
     ApiKey:
       type: object
       properties:
