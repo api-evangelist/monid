@@ -204,20 +204,6 @@ components:
           minLength: 1
           description: New label for the key.
           example: ci-runner-renamed
-    Error:
-      type: object
-      properties:
-        code:
-          type: integer
-          description: HTTP status code, duplicated in the body.
-          example: 400
-        message:
-          type: string
-          description: Human-readable error description.
-          example: Bad Request
-      required:
-      - code
-      - message
     ApiKey:
       type: object
       properties:
@@ -245,6 +231,20 @@ components:
       - keyPrefix
       - createdBy
       - createdAt
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+      required:
+      - code
+      - message
   securitySchemes:
     Bearer:
       type: http

@@ -92,6 +92,32 @@ components:
           $ref: '#/components/schemas/AuthWorkspace'
       required:
       - user
+    WorkspaceListItem:
+      type: object
+      properties:
+        workspaceId:
+          type: string
+          minLength: 1
+          description: Workspace (Clerk organization) id.
+          example: org_2abcDEFghiJKLmnop
+        slug:
+          type:
+          - string
+          - 'null'
+          description: Organization slug from Clerk. `null` when the organization has no slug.
+          example: acme-inc
+      required:
+      - workspaceId
+      - slug
+    WorkspaceListResponse:
+      type: object
+      properties:
+        workspaces:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkspaceListItem'
+      required:
+      - workspaces
     AuthUser:
       type: object
       properties:
@@ -125,37 +151,6 @@ components:
       - metadata
       - createdAt
       - updatedAt
-    WorkspaceListItem:
-      type: object
-      properties:
-        workspaceId:
-          type: string
-          minLength: 1
-          description: Workspace (Clerk organization) id.
-          example: org_2abcDEFghiJKLmnop
-        slug:
-          type:
-          - string
-          - 'null'
-          description: Organization slug from Clerk. `null` when the organization has no slug.
-          example: acme-inc
-      required:
-      - workspaceId
-      - slug
-    Error:
-      type: object
-      properties:
-        code:
-          type: integer
-          description: HTTP status code, duplicated in the body.
-          example: 400
-        message:
-          type: string
-          description: Human-readable error description.
-          example: Bad Request
-      required:
-      - code
-      - message
     AuthWorkspace:
       type: object
       properties:
@@ -191,15 +186,20 @@ components:
       - createdAt
       - updatedAt
       description: Absent when the caller is not part of a workspace.
-    WorkspaceListResponse:
+    Error:
       type: object
       properties:
-        workspaces:
-          type: array
-          items:
-            $ref: '#/components/schemas/WorkspaceListItem'
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
       required:
-      - workspaces
+      - code
+      - message
   securitySchemes:
     Bearer:
       type: http

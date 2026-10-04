@@ -60,6 +60,109 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
+    DiscoverRequest:
+      type: object
+      properties:
+        query:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: Natural-language search query for data endpoints.
+          example: twitter posts
+        limit:
+          type: integer
+          exclusiveMinimum: 0
+          default: 5
+          description: Requested result count. A config-driven server-side cap (`service.discover.max_results`) applies.
+          example: 5
+        minScore:
+          type: number
+          minimum: 0
+          maximum: 2
+          description: Per-call override for the post-rerank score floor. Results scoring below this are filtered out before truncation to `limit`. Falls back to the configured default when omitted.
+          example: 0.2
+      required:
+      - query
+    DiscoverResult:
+      type: object
+      properties:
+        provider:
+          type: string
+          description: Provider slug.
+          example: exa
+        providerName:
+          type: string
+          description: Human-readable provider name.
+        endpoint:
+          type: string
+          description: Endpoint path.
+          example: /search
+        description:
+          type: string
+        price:
+          $ref: '#/components/schemas/DiscoverPrice'
+        score:
+          type: number
+          description: Final composed reranker score. Opaque sort context — not a fixed-range relevance probability.
+        tags:
+          type: array
+          items:
+            type: string
+          description: User-facing tags (e.g. `["verified"]`).
+        scoreBreakdown:
+          type: object
+          properties:
+            querierScore:
+              type: number
+          required:
+          - querierScore
+          additionalProperties:
+            anyOf:
+            - type: number
+            - type: 'null'
+          description: Per-signal breakdown of the reranker's final score (`querierScore` plus one raw log-odds shift per signal).
+        hints:
+          type: object
+          additionalProperties:
+            anyOf:
+            - type: string
+            - type: object
+              properties:
+                kind:
+                  type: string
+                  enum:
+                  - command
+                  - discover
+                  - inspect
+                  - run
+                  - getRun
+                  - stop
+                  - releaseResource
+                command:
+                  type: string
+                query:
+                  type: string
+                provider:
+                  type: string
+                endpoint:
+                  type: string
+                runId:
+                  type: string
+                resourceId:
+                  type: string
+                comment:
+                  type: string
+              required:
+              - kind
+          description: Endpoint-authored workflow hints, polymorphic by client (rendered command string for cli/api/mcp; structured target for web). Omitted for unknown clients and endpoints without authored hints.
+      required:
+      - provider
+      - endpoint
+      - description
+      - price
+      - score
+      - tags
+      - scoreBreakdown
     DiscoverPrice:
       type: object
       properties:
@@ -247,29 +350,6 @@ components:
       - results
       - query
       - count
-    DiscoverRequest:
-      type: object
-      properties:
-        query:
-          type: string
-          minLength: 1
-          maxLength: 1000
-          description: Natural-language search query for data endpoints.
-          example: twitter posts
-        limit:
-          type: integer
-          exclusiveMinimum: 0
-          default: 5
-          description: Requested result count. A config-driven server-side cap (`service.discover.max_results`) applies.
-          example: 5
-        minScore:
-          type: number
-          minimum: 0
-          maximum: 2
-          description: Per-call override for the post-rerank score floor. Results scoring below this are filtered out before truncation to `limit`. Falls back to the configured default when omitted.
-          example: 0.2
-      required:
-      - query
     Error:
       type: object
       properties:
@@ -284,86 +364,6 @@ components:
       required:
       - code
       - message
-    DiscoverResult:
-      type: object
-      properties:
-        provider:
-          type: string
-          description: Provider slug.
-          example: exa
-        providerName:
-          type: string
-          description: Human-readable provider name.
-        endpoint:
-          type: string
-          description: Endpoint path.
-          example: /search
-        description:
-          type: string
-        price:
-          $ref: '#/components/schemas/DiscoverPrice'
-        score:
-          type: number
-          description: Final composed reranker score. Opaque sort context — not a fixed-range relevance probability.
-        tags:
-          type: array
-          items:
-            type: string
-          description: User-facing tags (e.g. `["verified"]`).
-        scoreBreakdown:
-          type: object
-          properties:
-            querierScore:
-              type: number
-          required:
-          - querierScore
-          additionalProperties:
-            anyOf:
-            - type: number
-            - type: 'null'
-          description: Per-signal breakdown of the reranker's final score (`querierScore` plus one raw log-odds shift per signal).
-        hints:
-          type: object
-          additionalProperties:
-            anyOf:
-            - type: string
-            - type: object
-              properties:
-                kind:
-                  type: string
-                  enum:
-                  - command
-                  - discover
-                  - inspect
-                  - run
-                  - getRun
-                  - stop
-                  - releaseResource
-                command:
-                  type: string
-                query:
-                  type: string
-                provider:
-                  type: string
-                endpoint:
-                  type: string
-                runId:
-                  type: string
-                resourceId:
-                  type: string
-                comment:
-                  type: string
-              required:
-              - kind
-          description: Endpoint-authored workflow hints, polymorphic by client (rendered command string for cli/api/mcp; structured target for web). Omitted for unknown clients and endpoints without authored hints.
-      required:
-      - provider
-      - endpoint
-      - description
-      - price
-      - score
-      - tags
-      - scoreBreakdown
   securitySchemes:
     Bearer:
       type: http

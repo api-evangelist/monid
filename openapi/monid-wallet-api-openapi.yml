@@ -115,6 +115,44 @@ components:
       required:
       - balance
       - held
+    WalletTopupConfigResponse:
+      type: object
+      properties:
+        minAmount:
+          type: number
+          description: Minimum top-up amount in dollars.
+          example: 5
+        maxAmount:
+          type: number
+          description: Maximum top-up amount in dollars. Omitted when no app-level cap is configured.
+          example: 1000
+        currency:
+          type: string
+          enum:
+          - USD
+          description: Top-up currency (currently always USD).
+        processingFee:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+              - PERCENTAGE
+            rate:
+              type: number
+              description: Processing fee rate (e.g. 0.05 for 5%).
+              example: 0.05
+            description:
+              type: string
+              example: Processing fee (5%)
+          required:
+          - type
+          - rate
+          - description
+      required:
+      - minAmount
+      - currency
+      - processingFee
     WalletMonetaryAmount:
       type: object
       properties:
@@ -163,44 +201,6 @@ components:
       required:
       - code
       - message
-    WalletTopupConfigResponse:
-      type: object
-      properties:
-        minAmount:
-          type: number
-          description: Minimum top-up amount in dollars.
-          example: 5
-        maxAmount:
-          type: number
-          description: Maximum top-up amount in dollars. Omitted when no app-level cap is configured.
-          example: 1000
-        currency:
-          type: string
-          enum:
-          - USD
-          description: Top-up currency (currently always USD).
-        processingFee:
-          type: object
-          properties:
-            type:
-              type: string
-              enum:
-              - PERCENTAGE
-            rate:
-              type: number
-              description: Processing fee rate (e.g. 0.05 for 5%).
-              example: 0.05
-            description:
-              type: string
-              example: Processing fee (5%)
-          required:
-          - type
-          - rate
-          - description
-      required:
-      - minAmount
-      - currency
-      - processingFee
   securitySchemes:
     Bearer:
       type: http

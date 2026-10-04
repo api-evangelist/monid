@@ -588,6 +588,184 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
+    WorkspaceRunCapRun:
+      type: object
+      properties:
+        runCapControlId:
+          type: string
+        runId:
+          type: string
+          description: Run ID (ULID).
+          example: 01JC2Z0A9V8Q4R6T8Y0B2D4F6H
+        estimatedCost:
+          type: number
+          description: Estimated cost at check time, in dollars.
+        currency:
+          type: string
+          enum:
+          - USD
+        snapshot:
+          type: object
+          properties:
+            limitAmount:
+              type: number
+          required:
+          - limitAmount
+        status:
+          type: string
+          enum:
+          - PASSED
+          - BLOCKED
+        createdAt:
+          type: string
+          format: date-time
+      required:
+      - runCapControlId
+      - runId
+      - estimatedCost
+      - currency
+      - snapshot
+      - status
+      - createdAt
+    WorkspaceBudgetPatchRequest:
+      type: object
+      properties:
+        limitAmount:
+          type: object
+          properties:
+            currency:
+              type: string
+              enum:
+              - USD
+            value:
+              type: integer
+              minimum: 0
+            unit:
+              type: string
+              enum:
+              - MICRO_DOLLAR
+              - CENT
+              - DOLLAR
+          required:
+          - currency
+          - value
+          - unit
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - PAUSED
+    WorkspaceBudget:
+      type: object
+      properties:
+        budgetControlId:
+          type: string
+          description: Budget control ID (ULID).
+          example: 01JC2Z0A9V8Q4R6T8Y0B2D4F6H
+        workspaceId:
+          type: string
+        period:
+          type: string
+          enum:
+          - HOUR
+          - DAY
+          - WEEK
+          - MONTH
+        limitAmount:
+          type: number
+          description: Budget cap for the window, in dollars.
+          example: 100
+        spentAmount:
+          type: number
+          description: Settled spend in the current window, in dollars.
+        heldAmount:
+          type: number
+          description: Outstanding holds for in-flight runs, in dollars.
+        availableAmount:
+          type: number
+          description: limitAmount - spentAmount - heldAmount, in dollars.
+        currency:
+          type: string
+          enum:
+          - USD
+        windowStart:
+          type: string
+          format: date-time
+          description: ISO 8601 — which window the counters represent.
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - PAUSED
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+      - budgetControlId
+      - workspaceId
+      - period
+      - limitAmount
+      - spentAmount
+      - heldAmount
+      - availableAmount
+      - currency
+      - windowStart
+      - status
+      - createdAt
+      - updatedAt
+    WorkspaceRunCap:
+      type: object
+      properties:
+        runCapControlId:
+          type: string
+          description: Run cap control ID (ULID).
+          example: 01JC2Z0A9V8Q4R6T8Y0B2D4F6H
+        workspaceId:
+          type: string
+        limitAmount:
+          type: number
+          description: Per-run spending cap, in dollars.
+          example: 5
+        currency:
+          type: string
+          enum:
+          - USD
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - PAUSED
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+      - runCapControlId
+      - workspaceId
+      - limitAmount
+      - currency
+      - status
+      - createdAt
+      - updatedAt
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+      required:
+      - code
+      - message
     WorkspaceBudgetRun:
       type: object
       properties:
@@ -682,184 +860,6 @@ components:
           enum:
           - ACTIVE
           - PAUSED
-    WorkspaceRunCapRun:
-      type: object
-      properties:
-        runCapControlId:
-          type: string
-        runId:
-          type: string
-          description: Run ID (ULID).
-          example: 01JC2Z0A9V8Q4R6T8Y0B2D4F6H
-        estimatedCost:
-          type: number
-          description: Estimated cost at check time, in dollars.
-        currency:
-          type: string
-          enum:
-          - USD
-        snapshot:
-          type: object
-          properties:
-            limitAmount:
-              type: number
-          required:
-          - limitAmount
-        status:
-          type: string
-          enum:
-          - PASSED
-          - BLOCKED
-        createdAt:
-          type: string
-          format: date-time
-      required:
-      - runCapControlId
-      - runId
-      - estimatedCost
-      - currency
-      - snapshot
-      - status
-      - createdAt
-    WorkspaceBudgetPatchRequest:
-      type: object
-      properties:
-        limitAmount:
-          type: object
-          properties:
-            currency:
-              type: string
-              enum:
-              - USD
-            value:
-              type: integer
-              minimum: 0
-            unit:
-              type: string
-              enum:
-              - MICRO_DOLLAR
-              - CENT
-              - DOLLAR
-          required:
-          - currency
-          - value
-          - unit
-        status:
-          type: string
-          enum:
-          - ACTIVE
-          - PAUSED
-    WorkspaceRunCap:
-      type: object
-      properties:
-        runCapControlId:
-          type: string
-          description: Run cap control ID (ULID).
-          example: 01JC2Z0A9V8Q4R6T8Y0B2D4F6H
-        workspaceId:
-          type: string
-        limitAmount:
-          type: number
-          description: Per-run spending cap, in dollars.
-          example: 5
-        currency:
-          type: string
-          enum:
-          - USD
-        status:
-          type: string
-          enum:
-          - ACTIVE
-          - PAUSED
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-      required:
-      - runCapControlId
-      - workspaceId
-      - limitAmount
-      - currency
-      - status
-      - createdAt
-      - updatedAt
-    Error:
-      type: object
-      properties:
-        code:
-          type: integer
-          description: HTTP status code, duplicated in the body.
-          example: 400
-        message:
-          type: string
-          description: Human-readable error description.
-          example: Bad Request
-      required:
-      - code
-      - message
-    WorkspaceBudget:
-      type: object
-      properties:
-        budgetControlId:
-          type: string
-          description: Budget control ID (ULID).
-          example: 01JC2Z0A9V8Q4R6T8Y0B2D4F6H
-        workspaceId:
-          type: string
-        period:
-          type: string
-          enum:
-          - HOUR
-          - DAY
-          - WEEK
-          - MONTH
-        limitAmount:
-          type: number
-          description: Budget cap for the window, in dollars.
-          example: 100
-        spentAmount:
-          type: number
-          description: Settled spend in the current window, in dollars.
-        heldAmount:
-          type: number
-          description: Outstanding holds for in-flight runs, in dollars.
-        availableAmount:
-          type: number
-          description: limitAmount - spentAmount - heldAmount, in dollars.
-        currency:
-          type: string
-          enum:
-          - USD
-        windowStart:
-          type: string
-          format: date-time
-          description: ISO 8601 — which window the counters represent.
-        status:
-          type: string
-          enum:
-          - ACTIVE
-          - PAUSED
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-      required:
-      - budgetControlId
-      - workspaceId
-      - period
-      - limitAmount
-      - spentAmount
-      - heldAmount
-      - availableAmount
-      - currency
-      - windowStart
-      - status
-      - createdAt
-      - updatedAt
   securitySchemes:
     Bearer:
       type: http
