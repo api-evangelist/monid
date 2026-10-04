@@ -70,6 +70,9 @@ maintainers:
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: CapabilityMap
+  url: capabilities/monid-capability-edges.yml
+  name: Monid Business Capability Map
 - type: AgenticAccess
   url: agentic-access/monid-agentic-access.yml
 - type: Authentication
