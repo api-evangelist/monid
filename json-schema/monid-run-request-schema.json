@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/monid/main/json-schema/monid-run-request-schema.json",
+  "title": "RunRequest",
+  "x-generated": "2026-10-07",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/monid-runs-api-openapi.yml#/components/schemas/RunRequest",
+  "type": "object",
+  "properties": {
+    "provider": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Provider slug."
+    },
+    "endpoint": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Endpoint path within the provider."
+    },
+    "input": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "type": "object",
+          "additionalProperties": {},
+          "description": "Request body fields."
+        },
+        "queryParams": {
+          "type": "object",
+          "additionalProperties": {},
+          "description": "URL query string parameters."
+        },
+        "pathParams": {
+          "type": "object",
+          "additionalProperties": {},
+          "description": "URL path placeholder substitutions (e.g. {id} in `/users/{id}`)."
+        }
+      },
+      "additionalProperties": false,
+      "description": "Composite endpoint input — body + URL query + URL path. All sub-fields optional."
+    }
+  },
+  "required": [
+    "provider",
+    "endpoint"
+  ],
+  "additionalProperties": false
+}

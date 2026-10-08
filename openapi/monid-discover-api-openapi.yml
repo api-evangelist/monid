@@ -11,12 +11,235 @@ servers:
 tags:
 - name: Discover
 paths:
+  /v1/discover/endpoints:
+    post:
+      tags:
+      - Discover
+      summary: Semantic endpoint search (ranked cards)
+      description: The shared discover pipeline projected as public endpoint cards in ranked order — the semantic twin of `GET /public/v1/endpoints?q=`. Cards carry `categories` node-id tags for client-side grouping.
+      security:
+      - Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscoverEndpointsRequest'
+      responses:
+        '200':
+          description: Ranked endpoint cards
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoverEndpointsResponse'
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded (errorCode `RATE_LIMITED`) — the `Retry-After` header carries whole seconds until the caller may retry; `RateLimit-Limit/-Remaining/-Reset` and `X-RateLimit-Rule` name the binding rule (also sent on allowed responses that matched a rule; responses that matched no rule, or an `unlimited` exemption, carry none of them). Applies to every authenticated `/v1` route (per API key / user / origin / workspace); POST /v1/run additionally enforces per-provider/endpoint run limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      operationId: postV1DiscoverEndpoints
+      x-operation-id-source: derived
+  /v1/discover/categories:
+    post:
+      tags:
+      - Discover
+      summary: Semantic search grouped into categories
+      description: The shared discover pipeline's match set aggregated into category nodes with per-node match counts — the semantic twin of `GET /public/v1/categories?q=` (same response shape; counts are within the bounded semantic match set).
+      security:
+      - Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscoverCategoriesRequest'
+      responses:
+        '200':
+          description: Category nodes with semantic match counts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicCategoriesResponse'
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded (errorCode `RATE_LIMITED`) — the `Retry-After` header carries whole seconds until the caller may retry; `RateLimit-Limit/-Remaining/-Reset` and `X-RateLimit-Rule` name the binding rule (also sent on allowed responses that matched a rule; responses that matched no rule, or an `unlimited` exemption, carry none of them). Applies to every authenticated `/v1` route (per API key / user / origin / workspace); POST /v1/run additionally enforces per-provider/endpoint run limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      operationId: postV1DiscoverCategories
+      x-operation-id-source: derived
+  /v1/discover/providers:
+    post:
+      tags:
+      - Discover
+      summary: Semantic search grouped by provider
+      description: The shared discover pipeline's match set aggregated by provider — the semantic twin of `GET /public/v1/providers?q=` (same entry shape; counts are within the bounded semantic match set).
+      security:
+      - Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscoverProvidersRequest'
+      responses:
+        '200':
+          description: Provider entries with semantic match counts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PublicProviderEntry'
+                  cursor:
+                    type: string
+                    description: Opaque cursor for the next page. Absent on the last page.
+                required:
+                - items
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded (errorCode `RATE_LIMITED`) — the `Retry-After` header carries whole seconds until the caller may retry; `RateLimit-Limit/-Remaining/-Reset` and `X-RateLimit-Rule` name the binding rule (also sent on allowed responses that matched a rule; responses that matched no rule, or an `unlimited` exemption, carry none of them). Applies to every authenticated `/v1` route (per API key / user / origin / workspace); POST /v1/run additionally enforces per-provider/endpoint run limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      operationId: postV1DiscoverProviders
+      x-operation-id-source: derived
+  /v1/discover/resources:
+    post:
+      tags:
+      - Discover
+      summary: List provider resources
+      description: The resources providers offer, with display copy, prices (recurring rent and metered usage rates) and the endpoints that operate on them. Filter by `category` and/or `provider`.
+      security:
+      - Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscoverResourcesRequest'
+      responses:
+        '200':
+          description: Matching resources
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderResourcesResponse'
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded (errorCode `RATE_LIMITED`) — the `Retry-After` header carries whole seconds until the caller may retry; `RateLimit-Limit/-Remaining/-Reset` and `X-RateLimit-Rule` name the binding rule (also sent on allowed responses that matched a rule; responses that matched no rule, or an `unlimited` exemption, carry none of them). Applies to every authenticated `/v1` route (per API key / user / origin / workspace); POST /v1/run additionally enforces per-provider/endpoint run limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      operationId: postV1DiscoverResources
+      x-operation-id-source: derived
   /v1/discover:
     post:
       tags:
       - Discover
-      summary: Search for data endpoints
-      description: 'Semantic search over the endpoint catalog: registry kNN retrieval, signal-based reranking, relevance floors, and per-result pricing.'
+      summary: Search for data endpoints (deprecated)
+      description: 'Semantic search over the endpoint catalog: registry kNN retrieval, signal-based reranking, relevance floors, and per-result pricing. DEPRECATED in favor of `POST /v1/discover/endpoints` (same pipeline, card response shape, larger page cap); kept for existing CLI/MCP callers and removed in a future release.'
+      deprecated: true
       security:
       - Bearer: []
       requestBody:
@@ -50,6 +273,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded (errorCode `RATE_LIMITED`) — the `Retry-After` header carries whole seconds until the caller may retry; `RateLimit-Limit/-Remaining/-Reset` and `X-RateLimit-Rule` name the binding rule (also sent on allowed responses that matched a rule; responses that matched no rule, or an `unlimited` exemption, carry none of them). Applies to every authenticated `/v1` route (per API key / user / origin / workspace); POST /v1/run additionally enforces per-provider/endpoint run limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal server error
           content:
@@ -60,29 +289,130 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
-    DiscoverRequest:
+    TopCategoryNode:
       type: object
       properties:
-        query:
+        id:
+          type: string
+          description: Stable node id (e.g. "social-media", "twitter", "apify").
+        displayName:
+          type: string
+          description: Display label — manifest copy for tops/leaves; resolved provider display name for provider nodes.
+        description:
+          type: string
+          description: Short blurb, when available.
+        endpointCount:
+          type: integer
+          minimum: 0
+          description: 'Live endpoint count (with `q`: endpoints matching the query). Top counts are DISTINCT-document counts across their members.'
+        kind:
+          type: string
+          enum:
+          - top
+          description: System group node.
+        children:
+          type: array
+          items:
+            type: string
+          description: Ordered member node ids (linked leaves in display order, then provider nodes).
+      required:
+      - id
+      - displayName
+      - endpointCount
+      - kind
+      - children
+    PublicEndpointInfo:
+      type: object
+      properties:
+        provider:
+          type: string
+          description: Provider slug.
+          example: exa
+        providerDisplayName:
+          type: string
+          description: Resolved provider display name (curation > slug).
+        providerDisplayDescription:
+          type: string
+          description: Resolved provider display blurb.
+        endpoint:
+          type: string
+          description: Endpoint path.
+          example: /search
+        displayName:
+          type: string
+          description: Resolved endpoint display label. Always populated.
+        displayDescription:
+          type: string
+          description: Resolved endpoint display blurb. May be empty.
+        price:
+          $ref: '#/components/schemas/PublicPrice'
+        tags:
+          type: array
+          items:
+            type: string
+          description: User-facing tags (e.g. `["verified"]`). Always an array; empty when no tags are set on the indexed wrapper.
+        categories:
+          type: array
+          items:
+            type: string
+          description: Depth-2 category paths — authored functional paths AND derived provider placement paths (e.g. `["social-media/twitter", "scrapers/apify"]`), treated uniformly. Bare top-level ancestors are excluded. Empty when the endpoint is outside the category catalog.
+        supportedX402Networks:
+          type: array
+          items:
+            type: string
+          description: Customer-payment networks (CAIP-2 ids, e.g. `["eip155:8453", "eip155:143"]`) this endpoint can be paid for through `POST /x402/v1/run`. Empty when the endpoint is not x402-eligible (workspace-resource coupling, cost accrual, settlement-window fit, or visibility). Static protocol/policy compatibility — network availability and request/payment validation are checked at execution time.
+      required:
+      - provider
+      - providerDisplayName
+      - endpoint
+      - displayName
+      - displayDescription
+      - price
+      - tags
+      - categories
+      - supportedX402Networks
+    DiscoverProvidersRequest:
+      type: object
+      properties:
+        q:
           type: string
           minLength: 1
           maxLength: 1000
-          description: Natural-language search query for data endpoints.
+          description: Natural-language search query.
           example: twitter posts
-        limit:
-          type: integer
-          exclusiveMinimum: 0
-          default: 5
-          description: Requested result count. A config-driven server-side cap (`service.discover.max_results`) applies.
-          example: 5
         minScore:
           type: number
           minimum: 0
           maximum: 2
-          description: Per-call override for the post-rerank score floor. Results scoring below this are filtered out before truncation to `limit`. Falls back to the configured default when omitted.
+          description: Per-call override for the post-rerank score floor — same semantics as the legacy POST /v1/discover body field.
           example: 0.2
+        supportsX402:
+          type: boolean
+          description: 'Filter by static eligibility for x402 payment (`POST /x402/v1/run`): `true` keeps only payable endpoints, `false` only non-payable ones. Omit for all endpoints. Network availability and request/payment validation are checked at execution time.'
+        x402Network:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Narrow to endpoints payable via x402 on this customer-payment network (CAIP-2 id, e.g. `eip155:8453`). Implies `supportsX402=true`; an unknown/unconfigured id returns an empty page.
+          example: eip155:8453
+        readonly:
+          type: boolean
+          description: 'Filter by whether running the endpoint can change your workspace resources (phone numbers, files, asset libraries): `true` keeps only endpoints that cannot create, modify or delete them, `false` only endpoints that can. Omit for all endpoints. This describes RESOURCE effects only — a readonly endpoint may still perform real-world actions and is still billed.'
+        effects:
+          type: array
+          items:
+            type: string
+            enum:
+            - creates
+            - updates
+            - deletes
+          minItems: 1
+          description: 'Keep only endpoints whose run can have AT LEAST ONE of the named effects on your workspace resources (phone numbers, files, asset libraries): `creates`, `updates`, `deletes`. Omit for all endpoints. Takes precedence over `readonly` (`readonly=true` is the alias for "no write effects"). Resource effects only — an endpoint with no effect may still perform real-world actions and is still billed.'
+          example:
+          - creates
+          - deletes
       required:
-      - query
+      - q
     DiscoverResult:
       type: object
       properties:
@@ -109,18 +439,31 @@ components:
           items:
             type: string
           description: User-facing tags (e.g. `["verified"]`).
-        scoreBreakdown:
+        metrics:
           type: object
           properties:
-            querierScore:
-              type: number
+            status:
+              type: string
+              enum:
+              - healthy
+              - stable
+              - degraded
+              - outage
+              - unknown
+              description: Operational status. healthy = 100% green in the fresh window (minutes); outage = failing right now; degraded = chronically elevated errors (days); stable = clean recent history, no live signal; unknown = no data at all (rare).
+            runTimeMs:
+              type: object
+              properties:
+                p50:
+                  type: number
+                  description: Median end-to-end run time (ms) — typical.
+                p95:
+                  type: number
+                  description: 95th-percentile end-to-end run time (ms) — tail.
+              description: Typical end-to-end run time, measured over the freshest recent window with enough completed runs to be meaningful. Omitted when no window has enough measured runs.
           required:
-          - querierScore
-          additionalProperties:
-            anyOf:
-            - type: number
-            - type: 'null'
-          description: Per-signal breakdown of the reranker's final score (`querierScore` plus one raw log-odds shift per signal).
+          - status
+          description: Recent operational health (server-computed from run analytics). Omitted when analytics is unavailable.
         hints:
           type: object
           additionalProperties:
@@ -138,6 +481,7 @@ components:
                   - getRun
                   - stop
                   - releaseResource
+                  - topup
                 command:
                   type: string
                 query:
@@ -149,6 +493,12 @@ components:
                 runId:
                   type: string
                 resourceId:
+                  type: string
+                stripe:
+                  type: string
+                dashboard:
+                  type: string
+                docs:
                   type: string
                 comment:
                   type: string
@@ -162,55 +512,503 @@ components:
       - price
       - score
       - tags
-      - scoreBreakdown
-    DiscoverPrice:
+    DiscoverResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiscoverResult'
+        query:
+          type: string
+        count:
+          type: number
+      required:
+      - results
+      - query
+      - count
+    DiscoverCategoriesRequest:
+      type: object
+      properties:
+        q:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: Natural-language search query.
+          example: twitter posts
+        minScore:
+          type: number
+          minimum: 0
+          maximum: 2
+          description: Per-call override for the post-rerank score floor — same semantics as the legacy POST /v1/discover body field.
+          example: 0.2
+        supportsX402:
+          type: boolean
+          description: 'Filter by static eligibility for x402 payment (`POST /x402/v1/run`): `true` keeps only payable endpoints, `false` only non-payable ones. Omit for all endpoints. Network availability and request/payment validation are checked at execution time.'
+        x402Network:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Narrow to endpoints payable via x402 on this customer-payment network (CAIP-2 id, e.g. `eip155:8453`). Implies `supportsX402=true`; an unknown/unconfigured id returns an empty page.
+          example: eip155:8453
+        readonly:
+          type: boolean
+          description: 'Filter by whether running the endpoint can change your workspace resources (phone numbers, files, asset libraries): `true` keeps only endpoints that cannot create, modify or delete them, `false` only endpoints that can. Omit for all endpoints. This describes RESOURCE effects only — a readonly endpoint may still perform real-world actions and is still billed.'
+        effects:
+          type: array
+          items:
+            type: string
+            enum:
+            - creates
+            - updates
+            - deletes
+          minItems: 1
+          description: 'Keep only endpoints whose run can have AT LEAST ONE of the named effects on your workspace resources (phone numbers, files, asset libraries): `creates`, `updates`, `deletes`. Omit for all endpoints. Takes precedence over `readonly` (`readonly=true` is the alias for "no write effects"). Resource effects only — an endpoint with no effect may still perform real-world actions and is still billed.'
+          example:
+          - creates
+          - deletes
+      required:
+      - q
+    ProviderCategoryNode:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Stable node id (e.g. "social-media", "twitter", "apify").
+        displayName:
+          type: string
+          description: Display label — manifest copy for tops/leaves; resolved provider display name for provider nodes.
+        description:
+          type: string
+          description: Short blurb, when available.
+        endpointCount:
+          type: integer
+          minimum: 0
+          description: 'Live endpoint count (with `q`: endpoints matching the query). Top counts are DISTINCT-document counts across their members.'
+        kind:
+          type: string
+          enum:
+          - provider
+          description: Derived provider node.
+        provider:
+          type: string
+          description: Provider slug.
+        url:
+          type: string
+          format: uri
+          description: 'The provider''s own public website, when it declares one (`ProviderInfo.url`). Absent otherwise — never null, never empty. Provider nodes only: a leaf/top category has no vendor to link to. This is display copy, NOT the endpoint-level documentation URL (`docUrl`).'
+          example: https://context.dev
+        docsUrl:
+          type: string
+          format: uri
+          description: The provider's own API documentation, when known (`ProviderInfo.docsUrl`). Provider nodes only; absent otherwise.
+          example: https://docs.context.dev
+        parents:
+          type: array
+          items:
+            type: string
+          description: Top ids this provider node is linked under (a node may have several parents).
+      required:
+      - id
+      - displayName
+      - endpointCount
+      - kind
+      - provider
+      - parents
+    ProviderResource:
+      type: object
+      properties:
+        provider:
+          type: string
+          example: smolmachine
+        providerDisplayName:
+          type: string
+          example: Smol Machines
+        providerUrl:
+          type: string
+          format: uri
+          description: The provider's website, when known.
+        providerDocsUrl:
+          type: string
+          format: uri
+          description: The provider's API docs, when known.
+        resource:
+          type: string
+          description: Resource slug — unique with `provider`.
+          example: SmolmachineMachine
+        resourceType:
+          type: string
+          example: machine
+        displayName:
+          type: string
+          example: Virtual machine
+        displayDescription:
+          type: string
+        summary:
+          type: string
+        pricing:
+          type: object
+          properties:
+            rent:
+              $ref: '#/components/schemas/ResourceRent'
+            rateCard:
+              type: array
+              items:
+                $ref: '#/components/schemas/ResourceRateLine'
+              description: Metered usage rates (empty when the resource is not usage-billed).
+            firstPeriodChargedAtCreation:
+              type: boolean
+              description: True when the call that creates the resource charges the first rent period (so the rent is not charged twice).
+          required:
+          - rent
+          - rateCard
+          - firstPeriodChargedAtCreation
+        endpoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResourceEndpoint'
+          description: The endpoints that operate on this resource and are visible to the caller, with what each does to it.
+        categories:
+          type: array
+          items:
+            type: string
+          description: Category node ids — the union of those endpoints' categories.
+      required:
+      - provider
+      - providerDisplayName
+      - resource
+      - resourceType
+      - displayName
+      - displayDescription
+      - summary
+      - pricing
+      - endpoints
+      - categories
+    DiscoverEndpointsRequest:
+      type: object
+      properties:
+        q:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: Natural-language search query.
+          example: twitter posts
+        limit:
+          type: integer
+          exclusiveMinimum: 0
+          description: Max results. Capped at the discover over-fetch pool size (`api-config` `discover.overfetchSize`).
+          example: 200
+        category:
+          type: string
+          maxLength: 60
+          pattern: ^[a-z0-9]+(?:-[a-z0-9]+)*$
+          description: Optional category node id to narrow the ranked results (ids from `GET /public/v1/categories`; a top id covers its group).
+          example: twitter
+        minScore:
+          type: number
+          minimum: 0
+          maximum: 2
+          description: Per-call override for the post-rerank score floor — same semantics as the legacy POST /v1/discover body field.
+          example: 0.2
+        supportsX402:
+          type: boolean
+          description: 'Filter by static eligibility for x402 payment (`POST /x402/v1/run`): `true` keeps only payable endpoints, `false` only non-payable ones. Omit for all endpoints. Network availability and request/payment validation are checked at execution time.'
+        x402Network:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Narrow to endpoints payable via x402 on this customer-payment network (CAIP-2 id, e.g. `eip155:8453`). Implies `supportsX402=true`; an unknown/unconfigured id returns an empty page.
+          example: eip155:8453
+        readonly:
+          type: boolean
+          description: 'Filter by whether running the endpoint can change your workspace resources (phone numbers, files, asset libraries): `true` keeps only endpoints that cannot create, modify or delete them, `false` only endpoints that can. Omit for all endpoints. This describes RESOURCE effects only — a readonly endpoint may still perform real-world actions and is still billed.'
+        effects:
+          type: array
+          items:
+            type: string
+            enum:
+            - creates
+            - updates
+            - deletes
+          minItems: 1
+          description: 'Keep only endpoints whose run can have AT LEAST ONE of the named effects on your workspace resources (phone numbers, files, asset libraries): `creates`, `updates`, `deletes`. Omit for all endpoints. Takes precedence over `readonly` (`readonly=true` is the alias for "no write effects"). Resource effects only — an endpoint with no effect may still perform real-world actions and is still billed.'
+          example:
+          - creates
+          - deletes
+      required:
+      - q
+    ResourceRent:
+      type:
+      - object
+      - 'null'
+      properties:
+        type:
+          type: string
+          enum:
+          - BY_PERIOD
+        amount:
+          type: object
+          properties:
+            value:
+              type: number
+            currency:
+              type: string
+              enum:
+              - USD
+          required:
+          - value
+          - currency
+        period:
+          type: object
+          properties:
+            unit:
+              type: string
+              enum:
+              - MINUTE
+              - DAY
+              - MONTH
+            count:
+              type: integer
+              exclusiveMinimum: 0
+          required:
+          - unit
+          - count
+      required:
+      - type
+      - amount
+      - period
+      description: Recurring rent, or null when the resource charges no rent (free to hold, or billed by usage only).
+    DiscoverResourcesRequest:
+      type: object
+      properties:
+        category:
+          type: string
+          maxLength: 60
+          pattern: ^[a-z0-9]+(?:-[a-z0-9]+)*$
+          description: Category node id to filter by (top group, leaf category, or provider node id).
+          example: virtual-machines
+        provider:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Exact provider slug.
+          example: smolmachine
+    PublicCategoryNode:
+      oneOf:
+      - $ref: '#/components/schemas/TopCategoryNode'
+      - $ref: '#/components/schemas/LeafCategoryNode'
+      - $ref: '#/components/schemas/ProviderCategoryNode'
+      discriminator:
+        propertyName: kind
+        mapping:
+          top: '#/components/schemas/TopCategoryNode'
+          category: '#/components/schemas/LeafCategoryNode'
+          provider: '#/components/schemas/ProviderCategoryNode'
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+        errorCode:
+          type: string
+          enum:
+          - RATE_LIMITED
+          - X402_WORKSPACE_RESOURCES
+          - X402_ACCRUING_COST
+          - X402_EXCEEDS_SETTLEMENT_WINDOW
+          - X402_VALIDITY_WINDOW_TOO_SHORT
+          - X402_UNBOUNDED_PRICE
+          - INSUFFICIENT_SCOPE
+          - WALLET_INSUFFICIENT_FUNDS
+          - IDENTITY_PROVIDER_UNKNOWN
+          - IDENTITY_LINK_REQUIRES_SESSION
+          - IDENTITY_LINK_STATE_INVALID
+          - IDENTITY_VERIFICATION_FAILED
+          - IDENTITY_PROVIDER_UNAVAILABLE
+          - IDENTITY_ALREADY_LINKED
+          - IDENTITY_USER_ALREADY_LINKED
+          - IDENTITY_LINK_RATE_LIMITED
+          - IDENTITY_REQUIRED
+          - PROMO_IDENTITY_REDEEMED
+          - PROMO_REDEEM_REQUIRES_SESSION
+          - PROMO_REDEEM_DISABLED
+          description: OPTIONAL machine-readable discriminant from the documented `ApiErrorCode` registry. Absent on legacy errors; clients MUST treat unknown values as absent.
+      required:
+      - code
+      - message
+    PublicProviderEntry:
+      type: object
+      properties:
+        provider:
+          type: string
+          description: Provider slug.
+        displayName:
+          type: string
+          description: Resolved display label (curation > slug).
+        displayDescription:
+          type: string
+        url:
+          type: string
+          format: uri
+          description: Provider's public website. Absent when the provider declares none — never null, never empty. NOT the endpoint-level documentation URL (`docUrl`), which is served only on the endpoint detail and `POST /v1/inspect`.
+          example: https://context.dev
+        docsUrl:
+          type: string
+          format: uri
+          description: Provider's own API documentation, when known. Absent otherwise — never null, never empty.
+        endpointCount:
+          type: integer
+          minimum: 0
+          description: Number of currently-enabled endpoints.
+      required:
+      - provider
+      - displayName
+      - endpointCount
+    ResourceRateLine:
+      type: object
+      properties:
+        label:
+          type: string
+          example: cpu
+        ratePerUnit:
+          type: number
+          description: USD per `per` unit.
+          example: 0.05
+        per:
+          type: string
+          example: vCPU·hour
+      required:
+      - label
+      - ratePerUnit
+      - per
+    ProviderResourcesResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProviderResource'
+      required:
+      - items
+    DiscoverEndpointsResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicEndpointInfo'
+          description: Ranked endpoint cards (best match first).
+        total:
+          type: integer
+          minimum: 0
+          description: Above-floor semantic matches (after the optional category narrowing), before `limit` truncation.
+      required:
+      - items
+      - total
+    ResourceEndpoint:
+      type: object
+      properties:
+        endpoint:
+          type: string
+          example: /machines
+        displayName:
+          type: string
+          example: Create machine
+        price:
+          $ref: '#/components/schemas/PublicPrice'
+        effects:
+          type: array
+          items:
+            type: string
+            enum:
+            - create
+            - read
+            - update
+            - delete
+          description: What this endpoint does to the resource (derived from the endpoint's resource lifecycle).
+          example:
+          - create
+      required:
+      - endpoint
+      - displayName
+      - price
+      - effects
+    DiscoverRequest:
+      type: object
+      properties:
+        query:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: Natural-language search query for data endpoints.
+          example: twitter posts
+        limit:
+          type: integer
+          exclusiveMinimum: 0
+          default: 5
+          description: Requested result count. A config-driven server-side cap (`api-config` `discover.maxResults`) applies.
+          example: 5
+        minScore:
+          type: number
+          minimum: 0
+          maximum: 2
+          description: Per-call override for the post-rerank score floor. Results scoring below this are filtered out before truncation to `limit`. Falls back to the configured default when omitted.
+          example: 0.2
+        includeUnavailable:
+          type: boolean
+          default: false
+          description: 'Endpoints currently in outage are hidden by default (the page is back-filled from the next ranked candidates). Set true to include them — marked `metrics.status: "outage"` and ranked last.'
+          example: false
+        supportsX402:
+          type: boolean
+          description: 'Filter by static eligibility for x402 payment (`POST /x402/v1/run`): `true` keeps only payable endpoints, `false` only non-payable ones. Omit for all endpoints. Network availability and request/payment validation are checked at execution time.'
+        x402Network:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Narrow to endpoints payable via x402 on this customer-payment network (CAIP-2 id, e.g. `eip155:8453`). Implies `supportsX402=true`; an unknown/unconfigured id returns an empty page.
+          example: eip155:8453
+        readonly:
+          type: boolean
+          description: 'Filter by whether running the endpoint can change your workspace resources (phone numbers, files, asset libraries): `true` keeps only endpoints that cannot create, modify or delete them, `false` only endpoints that can. Omit for all endpoints. This describes RESOURCE effects only — a readonly endpoint may still perform real-world actions and is still billed.'
+        effects:
+          type: array
+          items:
+            type: string
+            enum:
+            - creates
+            - updates
+            - deletes
+          minItems: 1
+          description: 'Keep only endpoints whose run can have AT LEAST ONE of the named effects on your workspace resources (phone numbers, files, asset libraries): `creates`, `updates`, `deletes`. Omit for all endpoints. Takes precedence over `readonly` (`readonly=true` is the alias for "no write effects"). Resource effects only — an endpoint with no effect may still perform real-world actions and is still billed.'
+          example:
+          - creates
+          - deletes
+      required:
+      - query
+    PublicPrice:
       type: object
       properties:
         type:
           type: string
         amount:
-          anyOf:
-          - type: object
-            properties:
-              value:
-                type: number
-              currency:
-                type: string
-                enum:
-                - USD
-            required:
-            - value
-            - currency
-          - type: object
-            properties:
-              type:
-                type: string
-                enum:
-                - PER_TOKEN
-              amount:
-                type: object
-                properties:
-                  value:
-                    type: number
-                  currency:
-                    type: string
-                    enum:
-                    - USD
-                required:
-                - value
-                - currency
-              per:
-                type: number
-              unit:
-                type: string
-                enum:
-                - token
-                - character
-            required:
-            - type
-            - amount
-            - per
-            - unit
+          type: object
+          properties:
+            value:
+              type: number
+            currency:
+              type: string
+              enum:
+              - USD
+          required:
+          - value
+          - currency
         flatFee:
           type: object
           properties:
@@ -239,20 +1037,162 @@ components:
           - unit
           - count
         per:
-          type: object
-          properties:
-            unit:
-              type: string
-              enum:
-              - MINUTE
-              - DAY
-              - MONTH
-            count:
-              type: integer
-              exclusiveMinimum: 0
-          required:
-          - unit
-          - count
+          anyOf:
+          - type: object
+            properties:
+              unit:
+                type: string
+                enum:
+                - MINUTE
+                - DAY
+                - MONTH
+              count:
+                type: integer
+                exclusiveMinimum: 0
+            required:
+            - unit
+            - count
+          - type: number
+        unit:
+          type: string
+          enum:
+          - token
+          - character
+          - second
+          - image
+          - credit
+          - result
+          - gb-month
+          - step
+        default:
+          anyOf:
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - PER_CALL
+              amount:
+                type: object
+                properties:
+                  value:
+                    type: number
+                  currency:
+                    type: string
+                    enum:
+                    - USD
+                required:
+                - value
+                - currency
+            required:
+            - type
+            - amount
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - PER_RESULT
+              amount:
+                type: object
+                properties:
+                  value:
+                    type: number
+                  currency:
+                    type: string
+                    enum:
+                    - USD
+                required:
+                - value
+                - currency
+              flatFee:
+                type: object
+                properties:
+                  value:
+                    type: number
+                  currency:
+                    type: string
+                    enum:
+                    - USD
+                required:
+                - value
+                - currency
+            required:
+            - type
+            - amount
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - METERED
+              amount:
+                type: object
+                properties:
+                  value:
+                    type: number
+                  currency:
+                    type: string
+                    enum:
+                    - USD
+                required:
+                - value
+                - currency
+              per:
+                type: object
+                properties:
+                  unit:
+                    type: string
+                    enum:
+                    - MINUTE
+                    - DAY
+                    - MONTH
+                  count:
+                    type: integer
+                    exclusiveMinimum: 0
+                required:
+                - unit
+                - count
+            required:
+            - type
+            - amount
+            - per
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - PER_UNIT
+              amount:
+                type: object
+                properties:
+                  value:
+                    type: number
+                  currency:
+                    type: string
+                    enum:
+                    - USD
+                required:
+                - value
+                - currency
+              per:
+                type: number
+              unit:
+                type: string
+                enum:
+                - token
+                - character
+                - second
+                - image
+                - credit
+                - result
+                - gb-month
+                - step
+            required:
+            - type
+            - amount
+            - per
+            - unit
         selectors:
           type: array
           items:
@@ -268,6 +1208,10 @@ components:
                 - body
                 - queryParam
                 - pathParam
+                - output
+              offset:
+                type: integer
+                minimum: 0
             required:
             - label
             - key
@@ -283,25 +1227,106 @@ components:
                   anyOf:
                   - type: string
                   - type: number
-              amount:
+                  - type: boolean
+              price:
                 anyOf:
-                - type: object
-                  properties:
-                    value:
-                      type: number
-                    currency:
-                      type: string
-                      enum:
-                      - USD
-                  required:
-                  - value
-                  - currency
                 - type: object
                   properties:
                     type:
                       type: string
                       enum:
-                      - PER_TOKEN
+                      - PER_CALL
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                  required:
+                  - type
+                  - amount
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - PER_RESULT
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                    flatFee:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                  required:
+                  - type
+                  - amount
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - METERED
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                    per:
+                      type: object
+                      properties:
+                        unit:
+                          type: string
+                          enum:
+                          - MINUTE
+                          - DAY
+                          - MONTH
+                        count:
+                          type: integer
+                          exclusiveMinimum: 0
+                      required:
+                      - unit
+                      - count
+                  required:
+                  - type
+                  - amount
+                  - per
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - PER_UNIT
                     amount:
                       type: object
                       properties:
@@ -321,6 +1346,12 @@ components:
                       enum:
                       - token
                       - character
+                      - second
+                      - image
+                      - credit
+                      - result
+                      - gb-month
+                      - step
                   required:
                   - type
                   - amount
@@ -330,40 +1361,766 @@ components:
                 type: string
             required:
             - when
+            - price
+        tiers:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              when:
+                type: object
+                additionalProperties:
+                  anyOf:
+                  - type: string
+                  - type: number
+                  - type: boolean
+              selector:
+                type: object
+                properties:
+                  label:
+                    type: string
+                  key:
+                    type: string
+                  in:
+                    type: string
+                    enum:
+                    - body
+                    - queryParam
+                    - pathParam
+                    - output
+                  offset:
+                    type: integer
+                    minimum: 0
+                required:
+                - label
+                - key
+                - in
+              price:
+                anyOf:
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - PER_CALL
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                  required:
+                  - type
+                  - amount
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - PER_RESULT
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                    flatFee:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                  required:
+                  - type
+                  - amount
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - METERED
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                    per:
+                      type: object
+                      properties:
+                        unit:
+                          type: string
+                          enum:
+                          - MINUTE
+                          - DAY
+                          - MONTH
+                        count:
+                          type: integer
+                          exclusiveMinimum: 0
+                      required:
+                      - unit
+                      - count
+                  required:
+                  - type
+                  - amount
+                  - per
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - PER_UNIT
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                    per:
+                      type: number
+                    unit:
+                      type: string
+                      enum:
+                      - token
+                      - character
+                      - second
+                      - image
+                      - credit
+                      - result
+                      - gb-month
+                      - step
+                  required:
+                  - type
+                  - amount
+                  - per
+                  - unit
+            required:
+            - label
+            - price
+      required:
+      - type
+      - amount
+      description: User-facing price (markup applied).
+    LeafCategoryNode:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Stable node id (e.g. "social-media", "twitter", "apify").
+        displayName:
+          type: string
+          description: Display label — manifest copy for tops/leaves; resolved provider display name for provider nodes.
+        description:
+          type: string
+          description: Short blurb, when available.
+        endpointCount:
+          type: integer
+          minimum: 0
+          description: 'Live endpoint count (with `q`: endpoints matching the query). Top counts are DISTINCT-document counts across their members.'
+        kind:
+          type: string
+          enum:
+          - category
+          description: Leaf category node.
+        parents:
+          type: array
+          items:
+            type: string
+          description: Top ids this leaf is linked under (a leaf may have several parents).
+      required:
+      - id
+      - displayName
+      - endpointCount
+      - kind
+      - parents
+    DiscoverPrice:
+      type: object
+      properties:
+        type:
+          type: string
+        amount:
+          type: object
+          properties:
+            value:
+              type: number
+            currency:
+              type: string
+              enum:
+              - USD
+          required:
+          - value
+          - currency
+        flatFee:
+          type: object
+          properties:
+            value:
+              type: number
+            currency:
+              type: string
+              enum:
+              - USD
+          required:
+          - value
+          - currency
+        period:
+          type: object
+          properties:
+            unit:
+              type: string
+              enum:
+              - MINUTE
+              - DAY
+              - MONTH
+            count:
+              type: integer
+              exclusiveMinimum: 0
+          required:
+          - unit
+          - count
+        per:
+          anyOf:
+          - type: object
+            properties:
+              unit:
+                type: string
+                enum:
+                - MINUTE
+                - DAY
+                - MONTH
+              count:
+                type: integer
+                exclusiveMinimum: 0
+            required:
+            - unit
+            - count
+          - type: number
+        unit:
+          type: string
+          enum:
+          - token
+          - character
+          - second
+          - image
+          - credit
+          - result
+          - gb-month
+          - step
+        default:
+          anyOf:
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - PER_CALL
+              amount:
+                type: object
+                properties:
+                  value:
+                    type: number
+                  currency:
+                    type: string
+                    enum:
+                    - USD
+                required:
+                - value
+                - currency
+            required:
+            - type
             - amount
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - PER_RESULT
+              amount:
+                type: object
+                properties:
+                  value:
+                    type: number
+                  currency:
+                    type: string
+                    enum:
+                    - USD
+                required:
+                - value
+                - currency
+              flatFee:
+                type: object
+                properties:
+                  value:
+                    type: number
+                  currency:
+                    type: string
+                    enum:
+                    - USD
+                required:
+                - value
+                - currency
+            required:
+            - type
+            - amount
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - METERED
+              amount:
+                type: object
+                properties:
+                  value:
+                    type: number
+                  currency:
+                    type: string
+                    enum:
+                    - USD
+                required:
+                - value
+                - currency
+              per:
+                type: object
+                properties:
+                  unit:
+                    type: string
+                    enum:
+                    - MINUTE
+                    - DAY
+                    - MONTH
+                  count:
+                    type: integer
+                    exclusiveMinimum: 0
+                required:
+                - unit
+                - count
+            required:
+            - type
+            - amount
+            - per
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - PER_UNIT
+              amount:
+                type: object
+                properties:
+                  value:
+                    type: number
+                  currency:
+                    type: string
+                    enum:
+                    - USD
+                required:
+                - value
+                - currency
+              per:
+                type: number
+              unit:
+                type: string
+                enum:
+                - token
+                - character
+                - second
+                - image
+                - credit
+                - result
+                - gb-month
+                - step
+            required:
+            - type
+            - amount
+            - per
+            - unit
+        selectors:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              key:
+                type: string
+              in:
+                type: string
+                enum:
+                - body
+                - queryParam
+                - pathParam
+                - output
+              offset:
+                type: integer
+                minimum: 0
+            required:
+            - label
+            - key
+            - in
+        variants:
+          type: array
+          items:
+            type: object
+            properties:
+              when:
+                type: object
+                additionalProperties:
+                  anyOf:
+                  - type: string
+                  - type: number
+                  - type: boolean
+              price:
+                anyOf:
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - PER_CALL
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                  required:
+                  - type
+                  - amount
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - PER_RESULT
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                    flatFee:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                  required:
+                  - type
+                  - amount
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - METERED
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                    per:
+                      type: object
+                      properties:
+                        unit:
+                          type: string
+                          enum:
+                          - MINUTE
+                          - DAY
+                          - MONTH
+                        count:
+                          type: integer
+                          exclusiveMinimum: 0
+                      required:
+                      - unit
+                      - count
+                  required:
+                  - type
+                  - amount
+                  - per
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - PER_UNIT
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                    per:
+                      type: number
+                    unit:
+                      type: string
+                      enum:
+                      - token
+                      - character
+                      - second
+                      - image
+                      - credit
+                      - result
+                      - gb-month
+                      - step
+                  required:
+                  - type
+                  - amount
+                  - per
+                  - unit
+              label:
+                type: string
+            required:
+            - when
+            - price
+        tiers:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              when:
+                type: object
+                additionalProperties:
+                  anyOf:
+                  - type: string
+                  - type: number
+                  - type: boolean
+              selector:
+                type: object
+                properties:
+                  label:
+                    type: string
+                  key:
+                    type: string
+                  in:
+                    type: string
+                    enum:
+                    - body
+                    - queryParam
+                    - pathParam
+                    - output
+                  offset:
+                    type: integer
+                    minimum: 0
+                required:
+                - label
+                - key
+                - in
+              price:
+                anyOf:
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - PER_CALL
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                  required:
+                  - type
+                  - amount
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - PER_RESULT
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                    flatFee:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                  required:
+                  - type
+                  - amount
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - METERED
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                    per:
+                      type: object
+                      properties:
+                        unit:
+                          type: string
+                          enum:
+                          - MINUTE
+                          - DAY
+                          - MONTH
+                        count:
+                          type: integer
+                          exclusiveMinimum: 0
+                      required:
+                      - unit
+                      - count
+                  required:
+                  - type
+                  - amount
+                  - per
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - PER_UNIT
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                    per:
+                      type: number
+                    unit:
+                      type: string
+                      enum:
+                      - token
+                      - character
+                      - second
+                      - image
+                      - credit
+                      - result
+                      - gb-month
+                      - step
+                  required:
+                  - type
+                  - amount
+                  - per
+                  - unit
+            required:
+            - label
+            - price
       required:
       - type
       - amount
       description: User-facing price (markup applied, no notes).
-    DiscoverResponse:
+    PublicCategoriesResponse:
       type: object
       properties:
-        results:
+        items:
           type: array
           items:
-            $ref: '#/components/schemas/DiscoverResult'
-        query:
-          type: string
-        count:
-          type: number
-      required:
-      - results
-      - query
-      - count
-    Error:
-      type: object
-      properties:
-        code:
+            $ref: '#/components/schemas/PublicCategoryNode'
+          description: 'Flat node list: tops (priority order) then leaves/providers (alphabetical). Hidden, unlinked, and zero-count nodes omitted.'
+        totalEndpointCount:
           type: integer
-          description: HTTP status code, duplicated in the body.
-          example: 400
-        message:
-          type: string
-          description: Human-readable error description.
-          example: Bad Request
+          minimum: 0
+          description: 'Exact number of catalog-visible endpoints (with `q`: matching the query) — drives the All rail count.'
       required:
-      - code
-      - message
+      - items
+      - totalEndpointCount
   securitySchemes:
     Bearer:
       type: http

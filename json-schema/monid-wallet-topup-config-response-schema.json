@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/monid/main/json-schema/monid-wallet-topup-config-response-schema.json",
+  "title": "WalletTopupConfigResponse",
+  "x-generated": "2026-10-07",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/monid-wallet-api-openapi.yml#/components/schemas/WalletTopupConfigResponse",
+  "type": "object",
+  "properties": {
+    "minAmount": {
+      "type": "number",
+      "description": "Minimum top-up amount in dollars."
+    },
+    "maxAmount": {
+      "type": "number",
+      "description": "Maximum top-up amount in dollars. Omitted when no app-level cap is configured."
+    },
+    "currency": {
+      "type": "string",
+      "enum": [
+        "USD"
+      ],
+      "description": "Top-up currency (currently always USD)."
+    },
+    "processingFee": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "PERCENTAGE"
+          ]
+        },
+        "rate": {
+          "type": "number",
+          "description": "Processing fee rate (e.g. 0.05 for 5%)."
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "rate",
+        "description"
+      ]
+    },
+    "promotion": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": "Promotion key (config-defined)."
+        },
+        "label": {
+          "type": "string",
+          "description": "Server-defined display text for the badge."
+        }
+      },
+      "required": [
+        "key",
+        "label"
+      ],
+      "description": "Active promotion. Absent when the baseline (`default`) applies — no promotion badge."
+    },
+    "tiers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "minAmount": {
+            "type": "number",
+            "description": "Inclusive tier minimum in dollars."
+          },
+          "rate": {
+            "type": "number",
+            "description": "Bonus rate applied to the actual amount."
+          }
+        },
+        "required": [
+          "minAmount",
+          "rate"
+        ]
+      },
+      "description": "Bonus tiers for the applied promotion, ascending. Any amount rounds DOWN to a tier; the rate applies to the actual amount."
+    },
+    "presets": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "description": "Preset amounts in dollars, display order. Bonuses are client-derived from `tiers` (round-down tier match)."
+    },
+    "defaultPreset": {
+      "type": "number",
+      "description": "Pre-selected preset amount in dollars."
+    },
+    "autoReload": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether auto-reload is currently enabled on the workspace. True means checkout shows a passive 'auto-reload is on' note instead of an enrollment toggle — disabling lives on the wallet page."
+        },
+        "topUpToAmount": {
+          "type": "number",
+          "description": "Balance (dollars) each automatic reload tops up TO — the same 'Top up to' amount the wallet settings panel shows. Metronome charges this minus the current balance."
+        },
+        "threshold": {
+          "type": "number",
+          "description": "Balance level (dollars) that triggers a reload."
+        }
+      },
+      "required": [
+        "enabled",
+        "topUpToAmount",
+        "threshold"
+      ]
+    }
+  },
+  "required": [
+    "minAmount",
+    "currency",
+    "processingFee",
+    "tiers",
+    "presets",
+    "defaultPreset",
+    "autoReload"
+  ]
+}

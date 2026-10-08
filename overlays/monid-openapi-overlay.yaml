@@ -2,7 +2,7 @@ overlay: 1.0.0
 info:
   title: API Evangelist enhancements for Monid API
   version: 1.0.0
-extends: openapi/monid-openapi.json
+extends: ../openapi/_original/monid-openapi.json
 actions:
 - target: $.info
   update:

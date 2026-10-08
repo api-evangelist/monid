@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/monid/main/json-schema/monid-identity-link-start-request-schema.json",
+  "title": "IdentityLinkStartRequest",
+  "x-generated": "2026-10-07",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/monid-identities-api-openapi.yml#/components/schemas/IdentityLinkStartRequest",
+  "type": "object",
+  "properties": {
+    "returnTo": {
+      "type": "string",
+      "maxLength": 512,
+      "description": "Dashboard path to return to after the link completes (same-origin path only, e.g. `/wallet?promoResume=1`)."
+    }
+  }
+}

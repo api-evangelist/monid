@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/monid/main/json-schema/monid-wallet-topup-request-schema.json",
+  "title": "WalletTopupRequest",
+  "x-generated": "2026-10-07",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/monid-wallet-api-openapi.yml#/components/schemas/WalletTopupRequest",
+  "type": "object",
+  "properties": {
+    "amount": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "Top-up amount in dollars (float)."
+    },
+    "currency": {
+      "type": "string",
+      "enum": [
+        "USD"
+      ],
+      "description": "Top-up currency (currently only USD)."
+    },
+    "success_redirect": {
+      "type": "string",
+      "description": "Where to send the payer after a successful checkout. Must be on the Monid web-app origin. Defaults to the web-app wallet page, so an agent without a UI can omit it and hand the returned `url` to its owner."
+    },
+    "cancel_redirect": {
+      "type": "string",
+      "description": "Where to send the user if checkout is cancelled. Must be on the Monid web-app origin."
+    },
+    "autoReload": {
+      "type": "boolean",
+      "description": "Opt in to auto-reload (with the service defaults) when this checkout completes. Opt-in ONLY: the system never enables auto-reload on the caller's behalf, so `false` and an omitted field are equivalent and record nothing. Ignored when auto-reload is already enabled on the wallet."
+    }
+  },
+  "required": [
+    "amount",
+    "currency"
+  ]
+}

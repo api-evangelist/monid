@@ -1,0 +1,13 @@
+generated: '2026-10-07'
+method: none
+source: https://monid.ai/docs/api/overview.md
+name: Monid rate limits
+limit_count: 0
+limits: []
+headers: []
+exhaustion_status: null
+note: No rate limits are documented. The API reference (overview.md) documents request tracing (x-request-id) and
+  an error-code table that has no 429 entry, and no RateLimit-*/X-RateLimit-*/Retry-After headers are described;
+  https://monid.ai/docs/guide/rate-limits.md answers 404 (probed 2026-10-07). Monid pools upstream provider rate
+  limits behind its router. Per-workspace spend is governed instead by budget and run-cap controls (/v1/controls/workspace/budgets,
+  /v1/controls/workspace/run-caps).

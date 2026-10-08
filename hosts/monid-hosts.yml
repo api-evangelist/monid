@@ -1,0 +1,222 @@
+generated: '2026-10-07'
+method: derived
+source: the pre-flight dossier, apis.yml pointers, spec servers, well-known, vendors -- nothing fetched here
+generator: derive-hosts.py
+summary:
+  hosts: 16
+  own: 12
+  other_domain: 1
+  platform: 3
+  roles:
+  - api
+  - docs
+  - identity
+  - other
+  - sandbox
+  - source
+  - status
+  - support
+  - website
+hosts:
+- host: api.monid.ai
+  found_by:
+  - apis[]
+  - probed
+  - site-links
+  - contract-discovery
+  - well-known
+  types: []
+  serves:
+  - api
+  registrable_domain: monid.ai
+  role: api
+  relation: own
+- host: app.dev.monid.ai
+  found_by:
+  - probed
+  - site-links
+  - well-known
+  types: []
+  serves: []
+  registrable_domain: monid.ai
+  role: other
+  relation: own
+- host: app.monid.ai
+  found_by:
+  - pointer
+  - probed
+  - site-links
+  - docs-index
+  - contract-discovery
+  - well-known
+  types:
+  - SignUp
+  serves:
+  - docs
+  registrable_domain: monid.ai
+  role: identity
+  relation: own
+- host: app.sandbox.monid.ai
+  found_by:
+  - probed
+  - site-links
+  - well-known
+  types: []
+  serves: []
+  registrable_domain: monid.ai
+  role: sandbox
+  relation: own
+- host: clerk.app.monid.ai
+  found_by:
+  - vendor-detect
+  types: []
+  serves:
+  - identity
+  vendor: clerk
+  registrable_domain: monid.ai
+  role: other
+  relation: own
+- host: dev.monid.ai
+  found_by:
+  - probed
+  - site-links
+  - namespace-probe
+  - docs-index
+  - well-known
+  types: []
+  serves:
+  - docs
+  title: Monid | Connect your agent to every tool it needs
+  status: 200
+  registrable_domain: monid.ai
+  role: other
+  relation: own
+- host: discord.gg
+  found_by:
+  - pointer
+  - docs-index
+  - vendor-detect
+  types:
+  - Support
+  serves:
+  - docs
+  - community
+  vendor: discord
+  registrable_domain: discord.gg
+  role: support
+  relation: platform
+- host: docs.monid.ai
+  found_by:
+  - probed
+  - site-links
+  - namespace-probe
+  - docs-index
+  types: []
+  serves:
+  - docs
+  title: Introduction | Monid
+  status: 200
+  registrable_domain: monid.ai
+  role: docs
+  relation: own
+- host: forms.gle
+  found_by:
+  - docs-index
+  types: []
+  serves:
+  - docs
+  registrable_domain: forms.gle
+  role: other
+  relation: other-domain
+- host: github.com
+  found_by:
+  - pointer
+  types:
+  - GitHubOrganization
+  serves: []
+  registrable_domain: github.com
+  role: source
+  relation: platform
+- host: mcp.monid.ai
+  found_by:
+  - probed
+  - contract-discovery
+  - well-known
+  types: []
+  serves: []
+  registrable_domain: monid.ai
+  role: other
+  relation: own
+- host: monid.ai
+  found_by:
+  - pointer
+  - apis[]
+  - probed
+  - docs-index
+  - contract-discovery
+  - well-known
+  - vendor-detect
+  types:
+  - BlogRSS
+  - Website
+  - DeveloperPortal
+  - Documentation
+  - APIReference
+  - GettingStarted
+  - Blog
+  - Pricing
+  - TermsOfService
+  - PrivacyPolicy
+  serves:
+  - docs
+  - cdn
+  vendor: cloudfront
+  registrable_domain: monid.ai
+  role: website
+  relation: own
+- host: sandbox.monid.ai
+  found_by:
+  - probed
+  - site-links
+  - namespace-probe
+  types: []
+  serves: []
+  title: Monid | Connect your agent to every tool it needs
+  status: 200
+  registrable_domain: monid.ai
+  role: sandbox
+  relation: own
+- host: status.monid.ai
+  found_by:
+  - pointer
+  - probed
+  - site-links
+  - contract-discovery
+  - well-known
+  - vendor-detect
+  types:
+  - StatusPage
+  serves:
+  - status-page
+  vendor: betterstack
+  registrable_domain: monid.ai
+  role: status
+  relation: own
+- host: x.com
+  found_by:
+  - docs-index
+  types: []
+  serves:
+  - docs
+  registrable_domain: x.com
+  role: other
+  relation: platform
+- host: x402.monid.ai
+  found_by:
+  - apis[]
+  types: []
+  serves:
+  - api
+  registrable_domain: monid.ai
+  role: other
+  relation: own

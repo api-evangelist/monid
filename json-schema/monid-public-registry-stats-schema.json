@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/monid/main/json-schema/monid-public-registry-stats-schema.json",
+  "title": "PublicRegistryStats",
+  "x-generated": "2026-10-07",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/monid-public-registry-api-openapi.yml#/components/schemas/PublicRegistryStats",
+  "type": "object",
+  "properties": {
+    "endpointCount": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "providerCount": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "endpointCount",
+    "providerCount"
+  ]
+}

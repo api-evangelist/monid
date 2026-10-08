@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/monid/main/json-schema/monid-workspace-list-response-schema.json",
+  "title": "WorkspaceListResponse",
+  "x-generated": "2026-10-07",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/monid-auth-api-openapi.yml#/components/schemas/WorkspaceListResponse",
+  "type": "object",
+  "properties": {
+    "workspaces": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/WorkspaceListItem"
+      }
+    }
+  },
+  "required": [
+    "workspaces"
+  ],
+  "$defs": {
+    "WorkspaceListItem": {
+      "type": "object",
+      "properties": {
+        "workspaceId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Workspace (Clerk organization) id."
+        },
+        "slug": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Organization slug from Clerk. `null` when the organization has no slug."
+        }
+      },
+      "required": [
+        "workspaceId",
+        "slug"
+      ]
+    }
+  }
+}

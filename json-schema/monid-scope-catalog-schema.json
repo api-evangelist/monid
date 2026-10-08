@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/monid/main/json-schema/monid-scope-catalog-schema.json",
+  "title": "ScopeCatalog",
+  "x-generated": "2026-10-07",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/monid-api-keys-api-openapi.yml#/components/schemas/ScopeCatalog",
+  "type": "object",
+  "properties": {
+    "resources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "runs",
+              "resources",
+              "wallet",
+              "topups",
+              "controls",
+              "api_keys"
+            ]
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "enum": [
+                    "read",
+                    "create",
+                    "update",
+                    "delete"
+                  ]
+                },
+                "description": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "key",
+                "description"
+              ]
+            },
+            "description": "ONLY the actions some route requires for this resource — `{resource}:{action}` for any other pair is not a scope and is rejected at creation."
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "description",
+          "actions"
+        ]
+      }
+    }
+  },
+  "required": [
+    "resources"
+  ]
+}

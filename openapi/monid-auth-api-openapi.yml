@@ -16,7 +16,7 @@ paths:
       tags:
       - Auth
       summary: Get the authenticated user and workspace
-      description: Returns the authenticated user and (when present) workspace from the auth context. Requires an authenticated user but NOT a workspace — `workspace` is omitted when the caller has none.
+      description: Returns the authenticated user and (when present) workspace from the auth context, plus the calling credential's own scopes. Requires an authenticated user but NOT a workspace — `workspace` is omitted when the caller has none.
       security:
       - Bearer: []
       responses:
@@ -38,6 +38,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded (errorCode `RATE_LIMITED`) — the `Retry-After` header carries whole seconds until the caller may retry; `RateLimit-Limit/-Remaining/-Reset` and `X-RateLimit-Rule` name the binding rule (also sent on allowed responses that matched a rule; responses that matched no rule, or an `unlimited` exemption, carry none of them). Applies to every authenticated `/v1` route (per API key / user / origin / workspace); POST /v1/run additionally enforces per-provider/endpoint run limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal server error
           content:
@@ -51,12 +57,12 @@ paths:
       tags:
       - Auth
       summary: List the caller's workspaces
-      description: All workspaces (Clerk organizations) the authenticated user belongs to. Requires an authenticated user but NOT a selected workspace — use this to discover which workspace to select.
+      description: 'The workspaces the presented credential can act in. For Clerk tokens: all workspaces (Clerk organizations) the authenticated user belongs to. For Monid API keys: exactly the key''s bound workspace (an API key can only act in the workspace it was created in). Requires an authenticated user but NOT a selected workspace — use this to discover which workspace to select.'
       security:
       - Bearer: []
       responses:
         '200':
-          description: The caller's workspace memberships
+          description: The workspaces the credential can act in — the user's memberships for Clerk tokens, the single bound workspace for API keys
           content:
             application/json:
               schema:
@@ -73,6 +79,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded (errorCode `RATE_LIMITED`) — the `Retry-After` header carries whole seconds until the caller may retry; `RateLimit-Limit/-Remaining/-Reset` and `X-RateLimit-Rule` name the binding rule (also sent on allowed responses that matched a rule; responses that matched no rule, or an `unlimited` exemption, carry none of them). Applies to every authenticated `/v1` route (per API key / user / origin / workspace); POST /v1/run additionally enforces per-provider/endpoint run limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal server error
           content:
@@ -83,15 +95,6 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
-    WhoamiResponse:
-      type: object
-      properties:
-        user:
-          $ref: '#/components/schemas/AuthUser'
-        workspace:
-          $ref: '#/components/schemas/AuthWorkspace'
-      required:
-      - user
     WorkspaceListItem:
       type: object
       properties:
@@ -118,39 +121,22 @@ components:
             $ref: '#/components/schemas/WorkspaceListItem'
       required:
       - workspaces
-    AuthUser:
+    IdentityProviderAvailability:
       type: object
       properties:
-        userId:
+        key:
           type: string
-          minLength: 1
-          description: Clerk user id.
-          example: user_2abcDEFghiJKLmnop
-        username:
-          type: string
-          description: Username from Clerk (may be empty).
-        email:
-          type: string
-          description: Primary email, when known.
-          example: dev@example.com
-        metadata:
-          type: object
-          additionalProperties: {}
-          description: Free-form user metadata record.
-        createdAt:
-          type: string
-          format: date-time
-          description: Record creation time (ISO-8601).
-        updatedAt:
-          type: string
-          format: date-time
-          description: Record last-update time (ISO-8601).
+          enum:
+          - clerk
+          - aep
+          - world
+          - world-sandbox
+        enabled:
+          type: boolean
+          description: Whether NEW links can be started for this provider.
       required:
-      - userId
-      - username
-      - metadata
-      - createdAt
-      - updatedAt
+      - key
+      - enabled
     AuthWorkspace:
       type: object
       properties:
@@ -186,6 +172,145 @@ components:
       - createdAt
       - updatedAt
       description: Absent when the caller is not part of a workspace.
+    AuthUser:
+      type: object
+      properties:
+        userId:
+          type: string
+          minLength: 1
+          description: Clerk user id.
+          example: user_2abcDEFghiJKLmnop
+        username:
+          type: string
+          description: Username from Clerk (may be empty).
+        email:
+          type: string
+          description: Primary email, when known.
+          example: dev@example.com
+        metadata:
+          type: object
+          additionalProperties: {}
+          description: Free-form user metadata record.
+        createdAt:
+          type: string
+          format: date-time
+          description: Record creation time (ISO-8601).
+        updatedAt:
+          type: string
+          format: date-time
+          description: Record last-update time (ISO-8601).
+      required:
+      - userId
+      - username
+      - metadata
+      - createdAt
+      - updatedAt
+    AuthCredential:
+      type: object
+      properties:
+        kind:
+          type: string
+          enum:
+          - clerk_session
+          - api_key
+          description: How the request was authenticated.
+        scopes:
+          type: array
+          items:
+            type: string
+            enum:
+            - '*'
+            - runs:*
+            - resources:*
+            - wallet:*
+            - topups:*
+            - controls:*
+            - api_keys:*
+            - runs:create
+            - runs:read
+            - runs:update
+            - resources:read
+            - resources:create
+            - resources:update
+            - resources:delete
+            - wallet:read
+            - wallet:update
+            - topups:create
+            - controls:read
+            - controls:create
+            - controls:update
+            - controls:delete
+            - api_keys:read
+            - api_keys:create
+            - api_keys:update
+            - api_keys:delete
+          description: The grants this credential holds (`*` = everything) — also the MOST a key it mints may hold.
+        defaultScopes:
+          type: array
+          items:
+            type: string
+            enum:
+            - '*'
+            - runs:*
+            - resources:*
+            - wallet:*
+            - topups:*
+            - controls:*
+            - api_keys:*
+            - runs:create
+            - runs:read
+            - runs:update
+            - resources:read
+            - resources:create
+            - resources:update
+            - resources:delete
+            - wallet:read
+            - wallet:update
+            - topups:create
+            - controls:read
+            - controls:create
+            - controls:update
+            - controls:delete
+            - api_keys:read
+            - api_keys:create
+            - api_keys:update
+            - api_keys:delete
+          description: 'What `POST /v1/api-keys` mints when this credential omits `scopes`: a session gets every resource except `controls`; an API key passes its own grants down. See `GET /v1/api-keys/scopes` for the catalog.'
+        fingerprint:
+          type: string
+          description: API-key fingerprint (= AEP `credential_id`). Absent for sessions.
+        expiresAt:
+          type: string
+          format: date-time
+          description: API-key expiry. Absent when it never expires or for sessions.
+      required:
+      - kind
+      - scopes
+      - defaultScopes
+    WhoamiResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/AuthUser'
+        workspace:
+          $ref: '#/components/schemas/AuthWorkspace'
+        credential:
+          $ref: '#/components/schemas/AuthCredential'
+        identities:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdentitySummary'
+          description: External identities linked to this user (e.g. a World ID). The Clerk login itself is not listed.
+        identityProviders:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdentityProviderAvailability'
+          description: Linkable providers and whether linking is enabled.
+      required:
+      - user
+      - credential
+      - identities
+      - identityProviders
     Error:
       type: object
       properties:
@@ -197,9 +322,57 @@ components:
           type: string
           description: Human-readable error description.
           example: Bad Request
+        errorCode:
+          type: string
+          enum:
+          - RATE_LIMITED
+          - X402_WORKSPACE_RESOURCES
+          - X402_ACCRUING_COST
+          - X402_EXCEEDS_SETTLEMENT_WINDOW
+          - X402_VALIDITY_WINDOW_TOO_SHORT
+          - X402_UNBOUNDED_PRICE
+          - INSUFFICIENT_SCOPE
+          - WALLET_INSUFFICIENT_FUNDS
+          - IDENTITY_PROVIDER_UNKNOWN
+          - IDENTITY_LINK_REQUIRES_SESSION
+          - IDENTITY_LINK_STATE_INVALID
+          - IDENTITY_VERIFICATION_FAILED
+          - IDENTITY_PROVIDER_UNAVAILABLE
+          - IDENTITY_ALREADY_LINKED
+          - IDENTITY_USER_ALREADY_LINKED
+          - IDENTITY_LINK_RATE_LIMITED
+          - IDENTITY_REQUIRED
+          - PROMO_IDENTITY_REDEEMED
+          - PROMO_REDEEM_REQUIRES_SESSION
+          - PROMO_REDEEM_DISABLED
+          description: OPTIONAL machine-readable discriminant from the documented `ApiErrorCode` registry. Absent on legacy errors; clients MUST treat unknown values as absent.
       required:
       - code
       - message
+    IdentitySummary:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+          - clerk
+          - aep
+          - world
+          - world-sandbox
+        verified:
+          type: boolean
+          description: Whether the provider vouched for this identity.
+        linkedAt:
+          type: string
+          format: date-time
+        lastVerifiedAt:
+          type: string
+          format: date-time
+          description: Last successful (re-)verification, for OIDC identities.
+      required:
+      - provider
+      - verified
+      - linkedAt
   securitySchemes:
     Bearer:
       type: http

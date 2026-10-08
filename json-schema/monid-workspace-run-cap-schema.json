@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/monid/main/json-schema/monid-workspace-run-cap-schema.json",
+  "title": "WorkspaceRunCap",
+  "x-generated": "2026-10-07",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/monid-controls-api-openapi.yml#/components/schemas/WorkspaceRunCap",
+  "type": "object",
+  "properties": {
+    "runCapControlId": {
+      "type": "string",
+      "description": "Run cap control ID (ULID)."
+    },
+    "workspaceId": {
+      "type": "string"
+    },
+    "limitAmount": {
+      "type": "number",
+      "description": "Per-run spending cap, in dollars."
+    },
+    "currency": {
+      "type": "string",
+      "enum": [
+        "USD"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ACTIVE",
+        "PAUSED"
+      ]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "runCapControlId",
+    "workspaceId",
+    "limitAmount",
+    "currency",
+    "status",
+    "createdAt",
+    "updatedAt"
+  ]
+}

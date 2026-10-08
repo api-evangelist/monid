@@ -17,6 +17,27 @@ paths:
       - Public Registry
       summary: Catalog-wide aggregate counts
       description: Number of enabled endpoints and providers in the public catalog.
+      parameters:
+      - schema:
+          type: string
+          enum:
+          - 'true'
+          - 'false'
+          description: 'Filter by static eligibility for x402 payment (`POST /x402/v1/run`): `true` keeps only payable endpoints, `false` only non-payable ones. Omit for all endpoints.'
+        required: false
+        description: 'Filter by static eligibility for x402 payment (`POST /x402/v1/run`): `true` keeps only payable endpoints, `false` only non-payable ones. Omit for all endpoints.'
+        name: supportsX402
+        in: query
+      - schema:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Narrow to endpoints payable via x402 on this customer-payment network (CAIP-2 id, e.g. `eip155:8453`). Implies `supportsX402=true`; an unknown/unconfigured id returns an empty page.
+          example: eip155:8453
+        required: false
+        description: Narrow to endpoints payable via x402 on this customer-payment network (CAIP-2 id, e.g. `eip155:8453`). Implies `supportsX402=true`; an unknown/unconfigured id returns an empty page.
+        name: x402Network
+        in: query
       responses:
         '200':
           description: Aggregate counts
@@ -24,6 +45,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PublicRegistryStats'
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal server error
           content:
@@ -32,12 +59,98 @@ paths:
                 $ref: '#/components/schemas/Error'
       operationId: getPublicV1Stats
       x-operation-id-source: derived
-  /public/v1/providers:
+  /public/v1/categories:
     get:
       tags:
       - Public Registry
-      summary: List providers
-      description: Cursor-paginated list of providers with their enabled-endpoint counts.
+      summary: List catalog categories
+      description: Flat, id-based list of category nodes (top groups, leaf categories, provider nodes) with live endpoint counts and the exact catalog total. Use the returned `id` values with `GET /public/v1/endpoints?category=…` (+ optional `q=`).
+      parameters:
+      - schema:
+          type: string
+          enum:
+          - 'true'
+          - 'false'
+          description: 'Filter by static eligibility for x402 payment (`POST /x402/v1/run`): `true` keeps only payable endpoints, `false` only non-payable ones. Omit for all endpoints.'
+        required: false
+        description: 'Filter by static eligibility for x402 payment (`POST /x402/v1/run`): `true` keeps only payable endpoints, `false` only non-payable ones. Omit for all endpoints.'
+        name: supportsX402
+        in: query
+      - schema:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Narrow to endpoints payable via x402 on this customer-payment network (CAIP-2 id, e.g. `eip155:8453`). Implies `supportsX402=true`; an unknown/unconfigured id returns an empty page.
+          example: eip155:8453
+        required: false
+        description: Narrow to endpoints payable via x402 on this customer-payment network (CAIP-2 id, e.g. `eip155:8453`). Implies `supportsX402=true`; an unknown/unconfigured id returns an empty page.
+        name: x402Network
+        in: query
+      - schema:
+          type: string
+          enum:
+          - 'true'
+          - 'false'
+          description: 'Filter by whether running the endpoint can change your workspace resources (phone numbers, files, asset libraries): `true` keeps only endpoints that cannot create, modify or delete them, `false` only endpoints that can. Omit for all endpoints. This describes RESOURCE effects only — a readonly endpoint may still perform real-world actions and is still billed.'
+        required: false
+        description: 'Filter by whether running the endpoint can change your workspace resources (phone numbers, files, asset libraries): `true` keeps only endpoints that cannot create, modify or delete them, `false` only endpoints that can. Omit for all endpoints. This describes RESOURCE effects only — a readonly endpoint may still perform real-world actions and is still billed.'
+        name: readonly
+        in: query
+      - schema:
+          type: string
+          description: 'Keep only endpoints whose run can have AT LEAST ONE of the named effects on your workspace resources (phone numbers, files, asset libraries): `creates`, `updates`, `deletes`. Omit for all endpoints. Takes precedence over `readonly` (`readonly=true` is the alias for "no write effects"). Resource effects only — an endpoint with no effect may still perform real-world actions and is still billed.'
+          example: creates,deletes
+        required: false
+        description: 'Keep only endpoints whose run can have AT LEAST ONE of the named effects on your workspace resources (phone numbers, files, asset libraries): `creates`, `updates`, `deletes`. Omit for all endpoints. Takes precedence over `readonly` (`readonly=true` is the alias for "no write effects"). Resource effects only — an endpoint with no effect may still perform real-world actions and is still billed.'
+        name: effects
+        in: query
+      - schema:
+          type: string
+          maxLength: 60
+          pattern: ^[a-z0-9]+(?:-[a-z0-9]+)*$
+          description: Node id filter. A TOP id returns the top plus its member nodes; a leaf/provider id returns that single node. Omit for every node.
+          example: social-media
+        required: false
+        description: Node id filter. A TOP id returns the top plus its member nodes; a leaf/provider id returns that single node. Omit for every node.
+        name: category
+        in: query
+      - schema:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Optional free-text query — counts become per-node search hit counts (same BM25 semantics as `GET /public/v1/endpoints?q=`). Nodes with zero hits are omitted.
+          example: twitter
+        required: false
+        description: Optional free-text query — counts become per-node search hit counts (same BM25 semantics as `GET /public/v1/endpoints?q=`). Nodes with zero hits are omitted.
+        name: q
+        in: query
+      responses:
+        '200':
+          description: Category nodes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicCategoriesResponse'
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      operationId: getPublicV1Categories
+      x-operation-id-source: derived
+  /public/v1/endpoints:
+    get:
+      tags:
+      - Public Registry
+      summary: List or search endpoints
+      description: Cursor-paginated flat list of endpoint cards. Pass `category` to narrow to a category node (ids from `GET /public/v1/categories`), `provider` to narrow to one provider's endpoints, and/or `q` for BM25 keyword ranking.
       parameters:
       - schema:
           type: integer
@@ -54,6 +167,179 @@ paths:
         required: false
         description: Cursor returned by the previous page.
         name: cursor
+        in: query
+      - schema:
+          type: string
+          enum:
+          - 'true'
+          - 'false'
+          description: 'Filter by static eligibility for x402 payment (`POST /x402/v1/run`): `true` keeps only payable endpoints, `false` only non-payable ones. Omit for all endpoints.'
+        required: false
+        description: 'Filter by static eligibility for x402 payment (`POST /x402/v1/run`): `true` keeps only payable endpoints, `false` only non-payable ones. Omit for all endpoints.'
+        name: supportsX402
+        in: query
+      - schema:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Narrow to endpoints payable via x402 on this customer-payment network (CAIP-2 id, e.g. `eip155:8453`). Implies `supportsX402=true`; an unknown/unconfigured id returns an empty page.
+          example: eip155:8453
+        required: false
+        description: Narrow to endpoints payable via x402 on this customer-payment network (CAIP-2 id, e.g. `eip155:8453`). Implies `supportsX402=true`; an unknown/unconfigured id returns an empty page.
+        name: x402Network
+        in: query
+      - schema:
+          type: string
+          enum:
+          - 'true'
+          - 'false'
+          description: 'Filter by whether running the endpoint can change your workspace resources (phone numbers, files, asset libraries): `true` keeps only endpoints that cannot create, modify or delete them, `false` only endpoints that can. Omit for all endpoints. This describes RESOURCE effects only — a readonly endpoint may still perform real-world actions and is still billed.'
+        required: false
+        description: 'Filter by whether running the endpoint can change your workspace resources (phone numbers, files, asset libraries): `true` keeps only endpoints that cannot create, modify or delete them, `false` only endpoints that can. Omit for all endpoints. This describes RESOURCE effects only — a readonly endpoint may still perform real-world actions and is still billed.'
+        name: readonly
+        in: query
+      - schema:
+          type: string
+          description: 'Keep only endpoints whose run can have AT LEAST ONE of the named effects on your workspace resources (phone numbers, files, asset libraries): `creates`, `updates`, `deletes`. Omit for all endpoints. Takes precedence over `readonly` (`readonly=true` is the alias for "no write effects"). Resource effects only — an endpoint with no effect may still perform real-world actions and is still billed.'
+          example: creates,deletes
+        required: false
+        description: 'Keep only endpoints whose run can have AT LEAST ONE of the named effects on your workspace resources (phone numbers, files, asset libraries): `creates`, `updates`, `deletes`. Omit for all endpoints. Takes precedence over `readonly` (`readonly=true` is the alias for "no write effects"). Resource effects only — an endpoint with no effect may still perform real-world actions and is still billed.'
+        name: effects
+        in: query
+      - schema:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Optional free-text query — BM25 keyword ranking over the endpoint catalog (endpoint copy, provider names, category names). Combinable with `category`.
+          example: twitter scraper
+        required: false
+        description: Optional free-text query — BM25 keyword ranking over the endpoint catalog (endpoint copy, provider names, category names). Combinable with `category`.
+        name: q
+        in: query
+      - schema:
+          type: string
+          maxLength: 60
+          pattern: ^[a-z0-9]+(?:-[a-z0-9]+)*$
+          description: Category node id to filter by (top group, leaf category, or provider node id from `GET /public/v1/categories`).
+          example: twitter
+        required: false
+        description: Category node id to filter by (top group, leaf category, or provider node id from `GET /public/v1/categories`).
+        name: category
+        in: query
+      - schema:
+          type: string
+          minLength: 1
+          description: Provider slug to narrow to (exact match). Combinable with `q` and `category`; an unknown slug returns an empty page.
+          example: exa
+        required: false
+        description: Provider slug to narrow to (exact match). Combinable with `q` and `category`; an unknown slug returns an empty page.
+        name: provider
+        in: query
+      responses:
+        '200':
+          description: Endpoints page
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PublicEndpointInfo'
+                  cursor:
+                    type: string
+                    description: Opaque cursor for the next page. Absent on the last page.
+                  total:
+                    type: integer
+                    minimum: 0
+                    description: Total number of enabled endpoints matching the underlying query, irrespective of pagination.
+                required:
+                - items
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      operationId: getPublicV1Endpoints
+      x-operation-id-source: derived
+  /public/v1/providers:
+    get:
+      tags:
+      - Public Registry
+      summary: List providers
+      description: Cursor-paginated list of providers with their enabled-endpoint counts. Pass `q` to re-scope counts to matching endpoints.
+      parameters:
+      - schema:
+          type: integer
+          exclusiveMinimum: 0
+          description: Max items per page (server-side cap applies).
+          example: 20
+        required: false
+        description: Max items per page (server-side cap applies).
+        name: limit
+        in: query
+      - schema:
+          type: string
+          description: Cursor returned by the previous page.
+        required: false
+        description: Cursor returned by the previous page.
+        name: cursor
+        in: query
+      - schema:
+          type: string
+          enum:
+          - 'true'
+          - 'false'
+          description: 'Filter by static eligibility for x402 payment (`POST /x402/v1/run`): `true` keeps only payable endpoints, `false` only non-payable ones. Omit for all endpoints.'
+        required: false
+        description: 'Filter by static eligibility for x402 payment (`POST /x402/v1/run`): `true` keeps only payable endpoints, `false` only non-payable ones. Omit for all endpoints.'
+        name: supportsX402
+        in: query
+      - schema:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Narrow to endpoints payable via x402 on this customer-payment network (CAIP-2 id, e.g. `eip155:8453`). Implies `supportsX402=true`; an unknown/unconfigured id returns an empty page.
+          example: eip155:8453
+        required: false
+        description: Narrow to endpoints payable via x402 on this customer-payment network (CAIP-2 id, e.g. `eip155:8453`). Implies `supportsX402=true`; an unknown/unconfigured id returns an empty page.
+        name: x402Network
+        in: query
+      - schema:
+          type: string
+          enum:
+          - 'true'
+          - 'false'
+          description: 'Filter by whether running the endpoint can change your workspace resources (phone numbers, files, asset libraries): `true` keeps only endpoints that cannot create, modify or delete them, `false` only endpoints that can. Omit for all endpoints. This describes RESOURCE effects only — a readonly endpoint may still perform real-world actions and is still billed.'
+        required: false
+        description: 'Filter by whether running the endpoint can change your workspace resources (phone numbers, files, asset libraries): `true` keeps only endpoints that cannot create, modify or delete them, `false` only endpoints that can. Omit for all endpoints. This describes RESOURCE effects only — a readonly endpoint may still perform real-world actions and is still billed.'
+        name: readonly
+        in: query
+      - schema:
+          type: string
+          description: 'Keep only endpoints whose run can have AT LEAST ONE of the named effects on your workspace resources (phone numbers, files, asset libraries): `creates`, `updates`, `deletes`. Omit for all endpoints. Takes precedence over `readonly` (`readonly=true` is the alias for "no write effects"). Resource effects only — an endpoint with no effect may still perform real-world actions and is still billed.'
+          example: creates,deletes
+        required: false
+        description: 'Keep only endpoints whose run can have AT LEAST ONE of the named effects on your workspace resources (phone numbers, files, asset libraries): `creates`, `updates`, `deletes`. Omit for all endpoints. Takes precedence over `readonly` (`readonly=true` is the alias for "no write effects"). Resource effects only — an endpoint with no effect may still perform real-world actions and is still billed.'
+        name: effects
+        in: query
+      - schema:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Optional free-text query. Counts become matching-endpoint counts (the same lexical matching as the endpoint search, aggregated by provider); providers with zero matches are omitted.
+          example: twitter scraper
+        required: false
+        description: Optional free-text query. Counts become matching-endpoint counts (the same lexical matching as the endpoint search, aggregated by provider); providers with zero matches are omitted.
+        name: q
         in: query
       responses:
         '200':
@@ -86,118 +372,40 @@ paths:
                 $ref: '#/components/schemas/Error'
       operationId: getPublicV1Providers
       x-operation-id-source: derived
-  /public/v1/providers/{provider}/endpoints:
+  /public/v1/resources:
     get:
       tags:
       - Public Registry
-      summary: List a provider's endpoints
-      description: Cursor-paginated list of a provider's enabled endpoints (display copy + price). 404 when the provider has no enabled endpoints.
+      summary: List provider resources
+      description: The resources providers offer (e.g. a machine, an inbox, a phone number) with display copy, prices (recurring rent and metered usage rates) and the endpoints that operate on them. Filter by `category` and/or `provider`.
       parameters:
       - schema:
           type: string
-          minLength: 1
-          description: Provider slug.
-          example: exa
-        required: true
-        description: Provider slug.
-        name: provider
-        in: path
-      - schema:
-          type: integer
-          exclusiveMinimum: 0
-          description: Max items per page (server-side cap applies).
-          example: 20
+          maxLength: 60
+          pattern: ^[a-z0-9]+(?:-[a-z0-9]+)*$
+          description: Category node id to filter by (top group, leaf category, or provider node id from `GET /public/v1/categories`).
+          example: virtual-machines
         required: false
-        description: Max items per page (server-side cap applies).
-        name: limit
+        description: Category node id to filter by (top group, leaf category, or provider node id from `GET /public/v1/categories`).
+        name: category
         in: query
-      - schema:
-          type: string
-          description: Cursor returned by the previous page.
-        required: false
-        description: Cursor returned by the previous page.
-        name: cursor
-        in: query
-      responses:
-        '200':
-          description: Endpoints page
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/PublicEndpointInfo'
-                  cursor:
-                    type: string
-                    description: Opaque cursor for the next page. Absent on the last page.
-                  total:
-                    type: integer
-                    minimum: 0
-                    description: Total number of enabled endpoints matching the underlying query, irrespective of pagination.
-                required:
-                - items
-        '400':
-          description: Bad request — input failed validation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '404':
-          description: Provider not found (or has no enabled endpoints)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '500':
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-      operationId: getPublicV1ProvidersByProviderEndpoints
-      x-operation-id-source: derived
-  /public/v1/search:
-    get:
-      tags:
-      - Public Registry
-      summary: Keyword search over the catalog
-      description: Anonymous BM25 keyword search over the endpoint catalog.
-      parameters:
       - schema:
           type: string
           minLength: 1
           maxLength: 200
-          description: Free-text query. Required, 1..200 chars.
-          example: twitter scraper
-        required: true
-        description: Free-text query. Required, 1..200 chars.
-        name: q
-        in: query
-      - schema:
-          type: integer
-          exclusiveMinimum: 0
-          description: Max results to return. Server caps this at the configured public search max (currently 20).
+          description: Exact provider slug.
+          example: smolmachine
         required: false
-        description: Max results to return. Server caps this at the configured public search max (currently 20).
-        name: limit
-        in: query
-      - schema:
-          type: string
-          description: Opaque pagination token from a previous response. Pass it back unchanged to fetch the next page.
-        required: false
-        description: Opaque pagination token from a previous response. Pass it back unchanged to fetch the next page.
-        name: cursor
+        description: Exact provider slug.
+        name: provider
         in: query
       responses:
         '200':
-          description: Search results page
+          description: Matching resources
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PublicSearchResponse'
+                $ref: '#/components/schemas/ProviderResourcesResponse'
         '400':
           description: Bad request — input failed validation
           content:
@@ -210,7 +418,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-      operationId: getPublicV1Search
+      operationId: getPublicV1Resources
       x-operation-id-source: derived
   /public/v1/providers/{provider}/endpoints/{endpoint}:
     get:
@@ -235,11 +443,11 @@ paths:
         in: path
       responses:
         '200':
-          description: Endpoint card
+          description: Endpoint detail
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PublicEndpointInfo'
+                $ref: '#/components/schemas/PublicEndpointDetail'
         '404':
           description: Endpoint not found (missing or disabled)
           content:
@@ -256,206 +464,47 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
-    PublicPrice:
+    TopCategoryNode:
       type: object
       properties:
-        type:
+        id:
           type: string
-        amount:
-          anyOf:
-          - type: object
-            properties:
-              value:
-                type: number
-              currency:
-                type: string
-                enum:
-                - USD
-            required:
-            - value
-            - currency
-          - type: object
-            properties:
-              type:
-                type: string
-                enum:
-                - PER_TOKEN
-              amount:
-                type: object
-                properties:
-                  value:
-                    type: number
-                  currency:
-                    type: string
-                    enum:
-                    - USD
-                required:
-                - value
-                - currency
-              per:
-                type: number
-              unit:
-                type: string
-                enum:
-                - token
-                - character
-            required:
-            - type
-            - amount
-            - per
-            - unit
-        flatFee:
-          type: object
-          properties:
-            value:
-              type: number
-            currency:
-              type: string
-              enum:
-              - USD
-          required:
-          - value
-          - currency
-        period:
-          type: object
-          properties:
-            unit:
-              type: string
-              enum:
-              - MINUTE
-              - DAY
-              - MONTH
-            count:
-              type: integer
-              exclusiveMinimum: 0
-          required:
-          - unit
-          - count
-        per:
-          type: object
-          properties:
-            unit:
-              type: string
-              enum:
-              - MINUTE
-              - DAY
-              - MONTH
-            count:
-              type: integer
-              exclusiveMinimum: 0
-          required:
-          - unit
-          - count
-        selectors:
+          description: Stable node id (e.g. "social-media", "twitter", "apify").
+        displayName:
+          type: string
+          description: Display label — manifest copy for tops/leaves; resolved provider display name for provider nodes.
+        description:
+          type: string
+          description: Short blurb, when available.
+        endpointCount:
+          type: integer
+          minimum: 0
+          description: 'Live endpoint count (with `q`: endpoints matching the query). Top counts are DISTINCT-document counts across their members.'
+        kind:
+          type: string
+          enum:
+          - top
+          description: System group node.
+        children:
           type: array
           items:
-            type: object
-            properties:
-              label:
-                type: string
-              key:
-                type: string
-              in:
-                type: string
-                enum:
-                - body
-                - queryParam
-                - pathParam
-            required:
-            - label
-            - key
-            - in
-        variants:
-          type: array
-          items:
-            type: object
-            properties:
-              when:
-                type: object
-                additionalProperties:
-                  anyOf:
-                  - type: string
-                  - type: number
-              amount:
-                anyOf:
-                - type: object
-                  properties:
-                    value:
-                      type: number
-                    currency:
-                      type: string
-                      enum:
-                      - USD
-                  required:
-                  - value
-                  - currency
-                - type: object
-                  properties:
-                    type:
-                      type: string
-                      enum:
-                      - PER_TOKEN
-                    amount:
-                      type: object
-                      properties:
-                        value:
-                          type: number
-                        currency:
-                          type: string
-                          enum:
-                          - USD
-                      required:
-                      - value
-                      - currency
-                    per:
-                      type: number
-                    unit:
-                      type: string
-                      enum:
-                      - token
-                      - character
-                  required:
-                  - type
-                  - amount
-                  - per
-                  - unit
-              label:
-                type: string
-            required:
-            - when
-            - amount
+            type: string
+          description: Ordered member node ids (linked leaves in display order, then provider nodes).
       required:
-      - type
-      - amount
-      description: User-facing price (markup applied).
-    PublicSearchResponse:
+      - id
+      - displayName
+      - endpointCount
+      - kind
+      - children
+    ProviderResourcesResponse:
       type: object
       properties:
         items:
           type: array
           items:
-            $ref: '#/components/schemas/PublicEndpointInfo'
-        query:
-          type: string
-          description: Echo of the `q` input.
-        count:
-          type: integer
-          minimum: 0
-          description: Number of items on THIS page (not the total).
-        cursor:
-          type: string
-          description: Cursor for the next page; absent when no more pages.
-        total:
-          type: integer
-          minimum: 0
-          description: Total endpoints matching the query, irrespective of pagination. Capped — see `totalIsCapped`.
-        totalIsCapped:
-          type: boolean
-          description: '`true` when `total` met or exceeded the count cap; the real count is unknown but >= `total`.'
+            $ref: '#/components/schemas/ProviderResource'
       required:
       - items
-      - query
-      - count
     PublicRegistryStats:
       type: object
       properties:
@@ -498,6 +547,16 @@ components:
           items:
             type: string
           description: User-facing tags (e.g. `["verified"]`). Always an array; empty when no tags are set on the indexed wrapper.
+        categories:
+          type: array
+          items:
+            type: string
+          description: Depth-2 category paths — authored functional paths AND derived provider placement paths (e.g. `["social-media/twitter", "scrapers/apify"]`), treated uniformly. Bare top-level ancestors are excluded. Empty when the endpoint is outside the category catalog.
+        supportedX402Networks:
+          type: array
+          items:
+            type: string
+          description: Customer-payment networks (CAIP-2 ids, e.g. `["eip155:8453", "eip155:143"]`) this endpoint can be paid for through `POST /x402/v1/run`. Empty when the endpoint is not x402-eligible (workspace-resource coupling, cost accrual, settlement-window fit, or visibility). Static protocol/policy compatibility — network availability and request/payment validation are checked at execution time.
       required:
       - provider
       - providerDisplayName
@@ -506,25 +565,720 @@ components:
       - displayDescription
       - price
       - tags
-    PublicProviderEntry:
+      - categories
+      - supportedX402Networks
+    ResourceEndpoint:
+      type: object
+      properties:
+        endpoint:
+          type: string
+          example: /machines
+        displayName:
+          type: string
+          example: Create machine
+        price:
+          $ref: '#/components/schemas/PublicPrice'
+        effects:
+          type: array
+          items:
+            type: string
+            enum:
+            - create
+            - read
+            - update
+            - delete
+          description: What this endpoint does to the resource (derived from the endpoint's resource lifecycle).
+          example:
+          - create
+      required:
+      - endpoint
+      - displayName
+      - price
+      - effects
+    PublicCategoryNode:
+      oneOf:
+      - $ref: '#/components/schemas/TopCategoryNode'
+      - $ref: '#/components/schemas/LeafCategoryNode'
+      - $ref: '#/components/schemas/ProviderCategoryNode'
+      discriminator:
+        propertyName: kind
+        mapping:
+          top: '#/components/schemas/TopCategoryNode'
+          category: '#/components/schemas/LeafCategoryNode'
+          provider: '#/components/schemas/ProviderCategoryNode'
+    ProviderCategoryNode:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Stable node id (e.g. "social-media", "twitter", "apify").
+        displayName:
+          type: string
+          description: Display label — manifest copy for tops/leaves; resolved provider display name for provider nodes.
+        description:
+          type: string
+          description: Short blurb, when available.
+        endpointCount:
+          type: integer
+          minimum: 0
+          description: 'Live endpoint count (with `q`: endpoints matching the query). Top counts are DISTINCT-document counts across their members.'
+        kind:
+          type: string
+          enum:
+          - provider
+          description: Derived provider node.
+        provider:
+          type: string
+          description: Provider slug.
+        url:
+          type: string
+          format: uri
+          description: 'The provider''s own public website, when it declares one (`ProviderInfo.url`). Absent otherwise — never null, never empty. Provider nodes only: a leaf/top category has no vendor to link to. This is display copy, NOT the endpoint-level documentation URL (`docUrl`).'
+          example: https://context.dev
+        docsUrl:
+          type: string
+          format: uri
+          description: The provider's own API documentation, when known (`ProviderInfo.docsUrl`). Provider nodes only; absent otherwise.
+          example: https://docs.context.dev
+        parents:
+          type: array
+          items:
+            type: string
+          description: Top ids this provider node is linked under (a node may have several parents).
+      required:
+      - id
+      - displayName
+      - endpointCount
+      - kind
+      - provider
+      - parents
+    ProviderResource:
       type: object
       properties:
         provider:
           type: string
-          description: Provider slug.
+          example: smolmachine
+        providerDisplayName:
+          type: string
+          example: Smol Machines
+        providerUrl:
+          type: string
+          format: uri
+          description: The provider's website, when known.
+        providerDocsUrl:
+          type: string
+          format: uri
+          description: The provider's API docs, when known.
+        resource:
+          type: string
+          description: Resource slug — unique with `provider`.
+          example: SmolmachineMachine
+        resourceType:
+          type: string
+          example: machine
         displayName:
           type: string
-          description: Resolved display label (curation > slug).
+          example: Virtual machine
         displayDescription:
           type: string
-        endpointCount:
-          type: integer
-          minimum: 0
-          description: Number of currently-enabled endpoints.
+        summary:
+          type: string
+        pricing:
+          type: object
+          properties:
+            rent:
+              $ref: '#/components/schemas/ResourceRent'
+            rateCard:
+              type: array
+              items:
+                $ref: '#/components/schemas/ResourceRateLine'
+              description: Metered usage rates (empty when the resource is not usage-billed).
+            firstPeriodChargedAtCreation:
+              type: boolean
+              description: True when the call that creates the resource charges the first rent period (so the rent is not charged twice).
+          required:
+          - rent
+          - rateCard
+          - firstPeriodChargedAtCreation
+        endpoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResourceEndpoint'
+          description: The endpoints that operate on this resource and are visible to the caller, with what each does to it.
+        categories:
+          type: array
+          items:
+            type: string
+          description: Category node ids — the union of those endpoints' categories.
       required:
       - provider
+      - providerDisplayName
+      - resource
+      - resourceType
       - displayName
-      - endpointCount
+      - displayDescription
+      - summary
+      - pricing
+      - endpoints
+      - categories
+    ResourceRateLine:
+      type: object
+      properties:
+        label:
+          type: string
+          example: cpu
+        ratePerUnit:
+          type: number
+          description: USD per `per` unit.
+          example: 0.05
+        per:
+          type: string
+          example: vCPU·hour
+      required:
+      - label
+      - ratePerUnit
+      - per
+    PublicPrice:
+      type: object
+      properties:
+        type:
+          type: string
+        amount:
+          type: object
+          properties:
+            value:
+              type: number
+            currency:
+              type: string
+              enum:
+              - USD
+          required:
+          - value
+          - currency
+        flatFee:
+          type: object
+          properties:
+            value:
+              type: number
+            currency:
+              type: string
+              enum:
+              - USD
+          required:
+          - value
+          - currency
+        period:
+          type: object
+          properties:
+            unit:
+              type: string
+              enum:
+              - MINUTE
+              - DAY
+              - MONTH
+            count:
+              type: integer
+              exclusiveMinimum: 0
+          required:
+          - unit
+          - count
+        per:
+          anyOf:
+          - type: object
+            properties:
+              unit:
+                type: string
+                enum:
+                - MINUTE
+                - DAY
+                - MONTH
+              count:
+                type: integer
+                exclusiveMinimum: 0
+            required:
+            - unit
+            - count
+          - type: number
+        unit:
+          type: string
+          enum:
+          - token
+          - character
+          - second
+          - image
+          - credit
+          - result
+          - gb-month
+          - step
+        default:
+          anyOf:
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - PER_CALL
+              amount:
+                type: object
+                properties:
+                  value:
+                    type: number
+                  currency:
+                    type: string
+                    enum:
+                    - USD
+                required:
+                - value
+                - currency
+            required:
+            - type
+            - amount
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - PER_RESULT
+              amount:
+                type: object
+                properties:
+                  value:
+                    type: number
+                  currency:
+                    type: string
+                    enum:
+                    - USD
+                required:
+                - value
+                - currency
+              flatFee:
+                type: object
+                properties:
+                  value:
+                    type: number
+                  currency:
+                    type: string
+                    enum:
+                    - USD
+                required:
+                - value
+                - currency
+            required:
+            - type
+            - amount
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - METERED
+              amount:
+                type: object
+                properties:
+                  value:
+                    type: number
+                  currency:
+                    type: string
+                    enum:
+                    - USD
+                required:
+                - value
+                - currency
+              per:
+                type: object
+                properties:
+                  unit:
+                    type: string
+                    enum:
+                    - MINUTE
+                    - DAY
+                    - MONTH
+                  count:
+                    type: integer
+                    exclusiveMinimum: 0
+                required:
+                - unit
+                - count
+            required:
+            - type
+            - amount
+            - per
+          - type: object
+            properties:
+              type:
+                type: string
+                enum:
+                - PER_UNIT
+              amount:
+                type: object
+                properties:
+                  value:
+                    type: number
+                  currency:
+                    type: string
+                    enum:
+                    - USD
+                required:
+                - value
+                - currency
+              per:
+                type: number
+              unit:
+                type: string
+                enum:
+                - token
+                - character
+                - second
+                - image
+                - credit
+                - result
+                - gb-month
+                - step
+            required:
+            - type
+            - amount
+            - per
+            - unit
+        selectors:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              key:
+                type: string
+              in:
+                type: string
+                enum:
+                - body
+                - queryParam
+                - pathParam
+                - output
+              offset:
+                type: integer
+                minimum: 0
+            required:
+            - label
+            - key
+            - in
+        variants:
+          type: array
+          items:
+            type: object
+            properties:
+              when:
+                type: object
+                additionalProperties:
+                  anyOf:
+                  - type: string
+                  - type: number
+                  - type: boolean
+              price:
+                anyOf:
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - PER_CALL
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                  required:
+                  - type
+                  - amount
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - PER_RESULT
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                    flatFee:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                  required:
+                  - type
+                  - amount
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - METERED
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                    per:
+                      type: object
+                      properties:
+                        unit:
+                          type: string
+                          enum:
+                          - MINUTE
+                          - DAY
+                          - MONTH
+                        count:
+                          type: integer
+                          exclusiveMinimum: 0
+                      required:
+                      - unit
+                      - count
+                  required:
+                  - type
+                  - amount
+                  - per
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - PER_UNIT
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                    per:
+                      type: number
+                    unit:
+                      type: string
+                      enum:
+                      - token
+                      - character
+                      - second
+                      - image
+                      - credit
+                      - result
+                      - gb-month
+                      - step
+                  required:
+                  - type
+                  - amount
+                  - per
+                  - unit
+              label:
+                type: string
+            required:
+            - when
+            - price
+        tiers:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+              when:
+                type: object
+                additionalProperties:
+                  anyOf:
+                  - type: string
+                  - type: number
+                  - type: boolean
+              selector:
+                type: object
+                properties:
+                  label:
+                    type: string
+                  key:
+                    type: string
+                  in:
+                    type: string
+                    enum:
+                    - body
+                    - queryParam
+                    - pathParam
+                    - output
+                  offset:
+                    type: integer
+                    minimum: 0
+                required:
+                - label
+                - key
+                - in
+              price:
+                anyOf:
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - PER_CALL
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                  required:
+                  - type
+                  - amount
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - PER_RESULT
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                    flatFee:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                  required:
+                  - type
+                  - amount
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - METERED
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                    per:
+                      type: object
+                      properties:
+                        unit:
+                          type: string
+                          enum:
+                          - MINUTE
+                          - DAY
+                          - MONTH
+                        count:
+                          type: integer
+                          exclusiveMinimum: 0
+                      required:
+                      - unit
+                      - count
+                  required:
+                  - type
+                  - amount
+                  - per
+                - type: object
+                  properties:
+                    type:
+                      type: string
+                      enum:
+                      - PER_UNIT
+                    amount:
+                      type: object
+                      properties:
+                        value:
+                          type: number
+                        currency:
+                          type: string
+                          enum:
+                          - USD
+                      required:
+                      - value
+                      - currency
+                    per:
+                      type: number
+                    unit:
+                      type: string
+                      enum:
+                      - token
+                      - character
+                      - second
+                      - image
+                      - credit
+                      - result
+                      - gb-month
+                      - step
+                  required:
+                  - type
+                  - amount
+                  - per
+                  - unit
+            required:
+            - label
+            - price
+      required:
+      - type
+      - amount
+      description: User-facing price (markup applied).
     Error:
       type: object
       properties:
@@ -536,9 +1290,168 @@ components:
           type: string
           description: Human-readable error description.
           example: Bad Request
+        errorCode:
+          type: string
+          enum:
+          - RATE_LIMITED
+          - X402_WORKSPACE_RESOURCES
+          - X402_ACCRUING_COST
+          - X402_EXCEEDS_SETTLEMENT_WINDOW
+          - X402_VALIDITY_WINDOW_TOO_SHORT
+          - X402_UNBOUNDED_PRICE
+          - INSUFFICIENT_SCOPE
+          - WALLET_INSUFFICIENT_FUNDS
+          - IDENTITY_PROVIDER_UNKNOWN
+          - IDENTITY_LINK_REQUIRES_SESSION
+          - IDENTITY_LINK_STATE_INVALID
+          - IDENTITY_VERIFICATION_FAILED
+          - IDENTITY_PROVIDER_UNAVAILABLE
+          - IDENTITY_ALREADY_LINKED
+          - IDENTITY_USER_ALREADY_LINKED
+          - IDENTITY_LINK_RATE_LIMITED
+          - IDENTITY_REQUIRED
+          - PROMO_IDENTITY_REDEEMED
+          - PROMO_REDEEM_REQUIRES_SESSION
+          - PROMO_REDEEM_DISABLED
+          description: OPTIONAL machine-readable discriminant from the documented `ApiErrorCode` registry. Absent on legacy errors; clients MUST treat unknown values as absent.
       required:
       - code
       - message
+    LeafCategoryNode:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Stable node id (e.g. "social-media", "twitter", "apify").
+        displayName:
+          type: string
+          description: Display label — manifest copy for tops/leaves; resolved provider display name for provider nodes.
+        description:
+          type: string
+          description: Short blurb, when available.
+        endpointCount:
+          type: integer
+          minimum: 0
+          description: 'Live endpoint count (with `q`: endpoints matching the query). Top counts are DISTINCT-document counts across their members.'
+        kind:
+          type: string
+          enum:
+          - category
+          description: Leaf category node.
+        parents:
+          type: array
+          items:
+            type: string
+          description: Top ids this leaf is linked under (a leaf may have several parents).
+      required:
+      - id
+      - displayName
+      - endpointCount
+      - kind
+      - parents
+    PublicEndpointDetail:
+      allOf:
+      - $ref: '#/components/schemas/PublicEndpointInfo'
+      - type: object
+        properties:
+          summary:
+            type: string
+            description: Rich long-form endpoint detail, when authored.
+          method:
+            type: string
+            description: HTTP method for this endpoint.
+          docUrl:
+            type: string
+            format: uri
+            description: The vendor's docs page for this endpoint, when known.
+          hints:
+            type: object
+            additionalProperties: {}
+            description: Raw structured agent-guidance hints (phrase → target), when authored on the endpoint. Cross-links related endpoints in multi-step workflows.
+    PublicProviderEntry:
+      type: object
+      properties:
+        provider:
+          type: string
+          description: Provider slug.
+        displayName:
+          type: string
+          description: Resolved display label (curation > slug).
+        displayDescription:
+          type: string
+        url:
+          type: string
+          format: uri
+          description: Provider's public website. Absent when the provider declares none — never null, never empty. NOT the endpoint-level documentation URL (`docUrl`), which is served only on the endpoint detail and `POST /v1/inspect`.
+          example: https://context.dev
+        docsUrl:
+          type: string
+          format: uri
+          description: Provider's own API documentation, when known. Absent otherwise — never null, never empty.
+        endpointCount:
+          type: integer
+          minimum: 0
+          description: Number of currently-enabled endpoints.
+      required:
+      - provider
+      - displayName
+      - endpointCount
+    PublicCategoriesResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PublicCategoryNode'
+          description: 'Flat node list: tops (priority order) then leaves/providers (alphabetical). Hidden, unlinked, and zero-count nodes omitted.'
+        totalEndpointCount:
+          type: integer
+          minimum: 0
+          description: 'Exact number of catalog-visible endpoints (with `q`: matching the query) — drives the All rail count.'
+      required:
+      - items
+      - totalEndpointCount
+    ResourceRent:
+      type:
+      - object
+      - 'null'
+      properties:
+        type:
+          type: string
+          enum:
+          - BY_PERIOD
+        amount:
+          type: object
+          properties:
+            value:
+              type: number
+            currency:
+              type: string
+              enum:
+              - USD
+          required:
+          - value
+          - currency
+        period:
+          type: object
+          properties:
+            unit:
+              type: string
+              enum:
+              - MINUTE
+              - DAY
+              - MONTH
+            count:
+              type: integer
+              exclusiveMinimum: 0
+          required:
+          - unit
+          - count
+      required:
+      - type
+      - amount
+      - period
+      description: Recurring rent, or null when the resource charges no rent (free to hold, or billed by usage only).
   securitySchemes:
     Bearer:
       type: http

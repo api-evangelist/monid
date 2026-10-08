@@ -1,23 +1,30 @@
-generated: '2026-07-23'
-method: searched
+generated: '2026-10-07'
+method: none
 source: https://www.npmjs.com/package/@monid-ai/cli
-packages:
-- language: javascript
+packages: []
+notes: 'Monid ships a first-party CLI on npm but no standalone server-side client library (SDK) — programmatic access
+  is via the HTTP API (bearer key), the hosted MCP server, or this CLI. No PyPI / Maven / NuGet / RubyGems / crates.io
+  first-party package found (probed 2026-07-23; re-probed 2026-10-07: pypi.org/pypi/monid and /monid-ai both 404;
+  the npm scope @monid-ai holds only @monid-ai/cli). Version and date read from registry.npmjs.org/@monid-ai/cli
+  dist-tags.latest + time (0.1.7, 2026-08-30). The org also ships plugin bundles outside any registry: github.com/monid-ai/plugins
+  (agent-plugins.org mcp.json pointing at https://mcp.monid.ai/v1), monid-ai/cursor-plugin and monid-ai/hermes-plugin.'
+rejected:
+- name: '@monid-ai/cli'
   registry: npm
-  name: "@monid-ai/cli"
-  version: 0.1.4
-  url: https://www.npmjs.com/package/@monid-ai/cli
-  install: npm install -g @monid-ai/cli
-  binary: monid
-  repository: https://github.com/monid-ai/cli
-  official: true
-  kind: cli
-  description: >-
-    Official Monid CLI — discover, inspect, and run data endpoints across
-    hundreds of tools from the command line. Provides the `monid` binary
-    (see cli/monid-cli.yml for the command surface).
-notes: >-
-  Monid ships a first-party CLI on npm but no standalone server-side client
-  library (SDK) — programmatic access is via the HTTP API (bearer key), the
-  hosted MCP server, or this CLI. No PyPI / Maven / NuGet / RubyGems / crates.io
-  first-party package found (probed 2026-07-23).
+  reason: 'registry metadata names neither the provider''s domain nor its GitHub org: official downgraded (harvest-packages.py
+    --audit)'
+note: 'no first-party package: every candidate a model listed was unowned (harvest-packages.py --audit)'
+docs_evidence:
+  package: '@monid-ai/cli'
+  registry: npm
+  version: 0.1.7
+  published: '2026-08-30'
+  named_by_provider_docs:
+  - https://monid.ai/docs/cli/overview.md ("npm install -g @monid-ai/cli")
+  - https://monid.ai/SKILL.md (provider-published skill, byte-identical to github.com/monid-ai/cli skills/monid/SKILL.md
+    v0.1.7)
+  registry_repository: git+https://github.com/monid-ai/cli.git
+  audit_gap: 'harvest-packages.py --audit accepts only registry metadata naming the domain or a GitHub org whose
+    profile declares it; the monid-ai org profile has no website field (blog: null, probed 2026-10-07) and the npm
+    record never spells monid.ai, so the first-party CLI is recorded as an absence although the provider''s own
+    docs name it. Left for the audit rule to decide, not overridden by hand.'

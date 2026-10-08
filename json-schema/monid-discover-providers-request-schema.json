@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/monid/main/json-schema/monid-discover-providers-request-schema.json",
+  "title": "DiscoverProvidersRequest",
+  "x-generated": "2026-10-07",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/monid-discover-api-openapi.yml#/components/schemas/DiscoverProvidersRequest",
+  "type": "object",
+  "properties": {
+    "q": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000,
+      "description": "Natural-language search query."
+    },
+    "minScore": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 2,
+      "description": "Per-call override for the post-rerank score floor — same semantics as the legacy POST /v1/discover body field."
+    },
+    "supportsX402": {
+      "type": "boolean",
+      "description": "Filter by static eligibility for x402 payment (`POST /x402/v1/run`): `true` keeps only payable endpoints, `false` only non-payable ones. Omit for all endpoints. Network availability and request/payment validation are checked at execution time."
+    },
+    "x402Network": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Narrow to endpoints payable via x402 on this customer-payment network (CAIP-2 id, e.g. `eip155:8453`). Implies `supportsX402=true`; an unknown/unconfigured id returns an empty page."
+    },
+    "readonly": {
+      "type": "boolean",
+      "description": "Filter by whether running the endpoint can change your workspace resources (phone numbers, files, asset libraries): `true` keeps only endpoints that cannot create, modify or delete them, `false` only endpoints that can. Omit for all endpoints. This describes RESOURCE effects only — a readonly endpoint may still perform real-world actions and is still billed."
+    },
+    "effects": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "creates",
+          "updates",
+          "deletes"
+        ]
+      },
+      "minItems": 1,
+      "description": "Keep only endpoints whose run can have AT LEAST ONE of the named effects on your workspace resources (phone numbers, files, asset libraries): `creates`, `updates`, `deletes`. Omit for all endpoints. Takes precedence over `readonly` (`readonly=true` is the alias for \"no write effects\"). Resource effects only — an endpoint with no effect may still perform real-world actions and is still billed."
+    }
+  },
+  "required": [
+    "q"
+  ]
+}

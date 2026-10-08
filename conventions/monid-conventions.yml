@@ -1,53 +1,99 @@
-generated: '2026-07-23'
+generated: '2026-10-07'
 method: searched
-source: https://monid.ai/docs/api/overview.md
+source: https://monid.ai/docs/api/overview.md + https://monid.ai/docs/api/runs/stop.md + https://monid.ai/docs/guide/pay-with-x402.md
+  + openapi/_original/monid-openapi.json
 authentication:
   style: bearer
-  header: "Authorization: Bearer <token>"
+  header: 'Authorization: Bearer <token>'
   token_types:
   - Monid API key (prefix `monid_live_`)
   - Clerk-issued JWT access token (OAuth 2.0)
   workspace_context:
     header: x-workspace-id
-    when: >-
-      Required only with OAuth/JWT tokens that lack organization context; scopes
-      a request to a specific workspace (org_...). List via GET /v1/auth/workspaces.
+    when: Required only with OAuth/JWT tokens that lack organization context; scopes a request to a specific workspace
+      (org_...). List via GET /v1/auth/workspaces.
   see: authentication/monid-authentication.yml
 pagination:
   style: cursor
   request_params:
-  - limit    # requested page size (server-side cap applies per endpoint)
-  - cursor   # opaque forward cursor
+  - limit
+  - cursor
   response_fields:
-  - items    # result array
-  - cursor   # next-page cursor; null or absent = last page
+  - items
+  - cursor
   note: Consult each operation schema for its exact last-page cursor encoding.
 idempotency:
   supported: false
-  note: >-
-    No Idempotency-Key header or idempotent-retry contract is documented. Run
-    creation (POST /v1/run) is not idempotent; use budgets/run-caps and GET
-    /v1/runs to reconcile rather than blind retries.
+  note: No Idempotency-Key header or idempotent-retry contract is documented. Run creation (POST /v1/run) is not
+    idempotent; use budgets/run-caps and GET /v1/runs to reconcile rather than blind retries.
+  coverage: none
+  header: null
+  mechanism: null
+  retention: null
+  docs: https://monid.ai/docs/api/overview.md
 request_tracing:
   header: x-request-id
   note: Unique per-request id; include it when reporting issues.
 content_type: application/json
 error_envelope:
   shape: '{ "code": <int http status>, "message": <string> }'
-  note: >-
-    Flat JSON envelope (NOT RFC 9457 problem+json). `code` duplicates the HTTP
-    status. A 402 always means the workspace wallet balance is insufficient; an
-    upstream provider's own 402 surfaces as 502. See errors/monid-problem-types.yml.
+  note: Flat JSON envelope (NOT RFC 9457 problem+json). `code` duplicates the HTTP status. A 402 always means the
+    workspace wallet balance is insufficient; an upstream provider's own 402 surfaces as 502. See errors/monid-problem-types.yml.
 rate_limiting:
   documented_headers: false
-  note: >-
-    No per-response rate-limit headers are documented. Monid pools rate limits
-    across upstream providers and retries on the next-best provider when one is
-    throttled ("one rate-limit envelope").
+  note: No per-response rate-limit headers are documented. Monid pools rate limits across upstream providers and
+    retries on the next-best provider when one is throttled ("one rate-limit envelope").
 versioning:
   scheme: uri-path
   current: v1
-  public_alias: >-
-    https://monid.ai exposes the public/v1 registry routes (stats, providers,
-    search) without auth; https://api.monid.ai serves the full /v1 surface.
+  public_alias: https://monid.ai exposes the public/v1 registry routes (stats, providers, search) without auth;
+    https://api.monid.ai serves the full /v1 surface.
   see: lifecycle/monid-lifecycle.yml
+dry_run_mode:
+  coverage: none
+  note: No dry-run or validate-only flag is documented. POST /v1/inspect returns the input schema, output shape
+    and price before a run is paid for, which previews cost but does not rehearse the call.
+reversibility:
+  grade: verified
+  docs: https://monid.ai/docs/api/runs/stop.md
+  summary: 'One reversal path is published: a queued or running run can be stopped. No refund, un-revoke, unlink,
+    restore or cancel-top-up operation is documented for the other write surfaces.'
+  surfaces:
+  - write: postV1Run
+    reversal: postV1RunsByRunIdStop
+    window: while the run is READY or RUNNING; the stop is acknowledged with 202 and status STOPPING, settles asynchronously,
+      and a run that is terminal or not stoppable answers 409 Conflict
+    docs: https://monid.ai/docs/api/runs/stop.md
+    status: verified
+    note: 'Billing: a synchronous run that times out (408 TIMED_OUT) is zero-billed per the x402 guide; no refund
+      of a completed run is documented.'
+  - write: postV1WalletTopupSessions
+    reversal: null
+    window: null
+    status: none
+    note: No cancellation or refund of a wallet top-up is documented.
+  - write: postV1ApiKeysByLabelRevoke
+    reversal: null
+    window: null
+    status: none
+    note: Revocation is itself the terminal action; no reinstatement is documented.
+  - write: patchV1ControlsWorkspaceBudgetsByBudgetControlId
+    reversal: null
+    window: null
+    status: none
+    note: Budget and run-cap controls are edited in place by PATCH; no explicit undo is documented.
+  - write: postV1IdentitiesByProviderLink
+    reversal: null
+    window: null
+    status: none
+    note: No unlink operation is published in the contract.
+  - write: deleteV1ResourcesByResourceIdMintAssets
+    reversal: null
+    window: null
+    status: none
+    note: No restore of deleted mint assets is documented.
+  - write: postV1ResourcesByResourceIdRelease
+    reversal: null
+    window: null
+    status: none
+    note: No reversal of a resource release is documented.

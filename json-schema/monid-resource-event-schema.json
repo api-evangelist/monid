@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/monid/main/json-schema/monid-resource-event-schema.json",
+  "title": "ResourceEvent",
+  "x-generated": "2026-10-07",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/monid-resources-api-openapi.yml#/components/schemas/ResourceEvent",
+  "type": "object",
+  "properties": {
+    "eventId": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "cycle": {
+      "type": "number"
+    },
+    "amount": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number"
+        },
+        "currency": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "currency"
+      ]
+    },
+    "reason": {
+      "type": "string"
+    },
+    "at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "eventId",
+    "type",
+    "at"
+  ]
+}

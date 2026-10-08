@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/monid/main/json-schema/monid-identity-link-start-response-schema.json",
+  "title": "IdentityLinkStartResponse",
+  "x-generated": "2026-10-07",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/monid-identities-api-openapi.yml#/components/schemas/IdentityLinkStartResponse",
+  "type": "object",
+  "properties": {
+    "authorizationUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "Send the browser here to authenticate at the provider."
+    },
+    "expiresAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The pending link must be completed before this instant."
+    }
+  },
+  "required": [
+    "authorizationUrl",
+    "expiresAt"
+  ]
+}

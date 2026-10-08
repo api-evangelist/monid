@@ -1,0 +1,384 @@
+generated: '2026-10-07'
+method: derived
+generator: derive-vocabulary.py
+source:
+- openapi/monid-api-keys-api-openapi.yml
+- openapi/monid-auth-api-openapi.yml
+- openapi/monid-controls-api-openapi.yml
+- openapi/monid-discover-api-openapi.yml
+- openapi/monid-endpoints-api-openapi.yml
+vocabulary:
+  name: Monid Domain Vocabulary
+  description: 'Terms declared by Monid''s own API contract: its resource groups, objects and enumerations, with the contract''s definitions.
+    Derived, not authored.'
+  version: '2026-10-07'
+  terms:
+  - term: UpdateApiKeyRequest
+    definition: 'Object declared by the contract with fields: label.'
+    tags:
+    - Object
+    source: openapi/monid-api-keys-api-openapi.yml#/components/schemas/UpdateApiKeyRequest
+  - term: ApiKey
+    definition: 'Object declared by the contract with fields: label, keyPrefix, owner, createdBy, scopes, status, origin, expiresAt, revokedAt,
+      revokedBy, createdAt, lastUsedAt.'
+    tags:
+    - Object
+    source: openapi/monid-api-keys-api-openapi.yml#/components/schemas/ApiKey
+  - term: ScopeCatalog
+    definition: 'Object declared by the contract with fields: resources.'
+    tags:
+    - Object
+    source: openapi/monid-api-keys-api-openapi.yml#/components/schemas/ScopeCatalog
+  - term: Error
+    definition: 'Object declared by the contract with fields: code, message, errorCode.'
+    tags:
+    - Object
+    source: openapi/monid-api-keys-api-openapi.yml#/components/schemas/Error
+  - term: WorkspaceListResponse
+    definition: 'Object declared by the contract with fields: workspaces.'
+    tags:
+    - Object
+    source: openapi/monid-auth-api-openapi.yml#/components/schemas/WorkspaceListResponse
+  - term: WorkspaceListItem
+    definition: 'Object declared by the contract with fields: workspaceId, slug.'
+    tags:
+    - Object
+    source: openapi/monid-auth-api-openapi.yml#/components/schemas/WorkspaceListItem
+  - term: AuthWorkspace
+    definition: Absent when the caller is not part of a workspace.
+    tags:
+    - Object
+    source: openapi/monid-auth-api-openapi.yml#/components/schemas/AuthWorkspace
+  - term: IdentityProviderAvailability
+    definition: 'Object declared by the contract with fields: key, enabled.'
+    tags:
+    - Object
+    source: openapi/monid-auth-api-openapi.yml#/components/schemas/IdentityProviderAvailability
+  - term: AuthCredential
+    definition: 'Object declared by the contract with fields: kind, scopes, defaultScopes, fingerprint, expiresAt.'
+    tags:
+    - Object
+    source: openapi/monid-auth-api-openapi.yml#/components/schemas/AuthCredential
+  - term: IdentitySummary
+    definition: 'Object declared by the contract with fields: provider, verified, linkedAt, lastVerifiedAt.'
+    tags:
+    - Object
+    source: openapi/monid-auth-api-openapi.yml#/components/schemas/IdentitySummary
+  - term: WhoamiResponse
+    definition: 'Object declared by the contract with fields: user, workspace, credential, identities, identityProviders.'
+    tags:
+    - Object
+    source: openapi/monid-auth-api-openapi.yml#/components/schemas/WhoamiResponse
+  - term: AuthUser
+    definition: 'Object declared by the contract with fields: userId, username, email, metadata, createdAt, updatedAt.'
+    tags:
+    - Object
+    source: openapi/monid-auth-api-openapi.yml#/components/schemas/AuthUser
+  - term: WorkspaceRunCapPatchRequest
+    definition: 'Object declared by the contract with fields: limitAmount, status.'
+    tags:
+    - Object
+    source: openapi/monid-controls-api-openapi.yml#/components/schemas/WorkspaceRunCapPatchRequest
+  - term: WorkspaceBudgetPatchRequest
+    definition: 'Object declared by the contract with fields: limitAmount, status.'
+    tags:
+    - Object
+    source: openapi/monid-controls-api-openapi.yml#/components/schemas/WorkspaceBudgetPatchRequest
+  - term: WorkspaceBudgetRun
+    definition: 'Object declared by the contract with fields: budgetControlId, runId, holdAmount, settledAmount, currency, status, snapshot, createdAt,
+      settledAt.'
+    tags:
+    - Object
+    source: openapi/monid-controls-api-openapi.yml#/components/schemas/WorkspaceBudgetRun
+  - term: WorkspaceBudget
+    definition: 'Object declared by the contract with fields: budgetControlId, workspaceId, period, limitAmount, spentAmount, heldAmount, availableAmount,
+      currency, windowStart, status, createdAt, updatedAt.'
+    tags:
+    - Object
+    source: openapi/monid-controls-api-openapi.yml#/components/schemas/WorkspaceBudget
+  - term: WorkspaceRunCapRun
+    definition: 'Object declared by the contract with fields: runCapControlId, runId, estimatedCost, currency, snapshot, status, createdAt.'
+    tags:
+    - Object
+    source: openapi/monid-controls-api-openapi.yml#/components/schemas/WorkspaceRunCapRun
+  - term: WorkspaceRunCap
+    definition: 'Object declared by the contract with fields: runCapControlId, workspaceId, limitAmount, currency, status, createdAt, updatedAt.'
+    tags:
+    - Object
+    source: openapi/monid-controls-api-openapi.yml#/components/schemas/WorkspaceRunCap
+  - term: DiscoverResourcesRequest
+    definition: 'Object declared by the contract with fields: category, provider.'
+    tags:
+    - Object
+    source: openapi/monid-discover-api-openapi.yml#/components/schemas/DiscoverResourcesRequest
+  - term: DiscoverRequest
+    definition: 'Object declared by the contract with fields: query, limit, minScore, includeUnavailable, supportsX402, x402Network, readonly,
+      effects.'
+    tags:
+    - Object
+    source: openapi/monid-discover-api-openapi.yml#/components/schemas/DiscoverRequest
+  - term: PublicProviderEntry
+    definition: 'Object declared by the contract with fields: provider, displayName, displayDescription, url, docsUrl, endpointCount.'
+    tags:
+    - Object
+    source: openapi/monid-discover-api-openapi.yml#/components/schemas/PublicProviderEntry
+  - term: ProviderResource
+    definition: 'Object declared by the contract with fields: provider, providerDisplayName, providerUrl, providerDocsUrl, resource, resourceType,
+      displayName, displayDescription, summary, pricing, endpoints, categories.'
+    tags:
+    - Object
+    source: openapi/monid-discover-api-openapi.yml#/components/schemas/ProviderResource
+  - term: PublicPrice
+    definition: User-facing price (markup applied).
+    tags:
+    - Object
+    source: openapi/monid-discover-api-openapi.yml#/components/schemas/PublicPrice
+  - term: ResourceRent
+    definition: Recurring rent, or null when the resource charges no rent (free to hold, or billed by usage only).
+    tags:
+    - Object
+    source: openapi/monid-discover-api-openapi.yml#/components/schemas/ResourceRent
+  - term: PublicCategoriesResponse
+    definition: 'Object declared by the contract with fields: items, totalEndpointCount.'
+    tags:
+    - Object
+    source: openapi/monid-discover-api-openapi.yml#/components/schemas/PublicCategoriesResponse
+  - term: DiscoverProvidersRequest
+    definition: 'Object declared by the contract with fields: q, minScore, supportsX402, x402Network, readonly, effects.'
+    tags:
+    - Object
+    source: openapi/monid-discover-api-openapi.yml#/components/schemas/DiscoverProvidersRequest
+  - term: ResourceEndpoint
+    definition: 'Object declared by the contract with fields: endpoint, displayName, price, effects.'
+    tags:
+    - Object
+    source: openapi/monid-discover-api-openapi.yml#/components/schemas/ResourceEndpoint
+  - term: ProviderCategoryNode
+    definition: 'Object declared by the contract with fields: id, displayName, description, endpointCount, kind, provider, url, docsUrl, parents.'
+    tags:
+    - Object
+    source: openapi/monid-discover-api-openapi.yml#/components/schemas/ProviderCategoryNode
+  - term: DiscoverResult
+    definition: 'Object declared by the contract with fields: provider, providerName, endpoint, description, price, score, tags, metrics, hints.'
+    tags:
+    - Object
+    source: openapi/monid-discover-api-openapi.yml#/components/schemas/DiscoverResult
+  - term: DiscoverResponse
+    definition: 'Object declared by the contract with fields: results, query, count.'
+    tags:
+    - Object
+    source: openapi/monid-discover-api-openapi.yml#/components/schemas/DiscoverResponse
+  - term: TopCategoryNode
+    definition: 'Object declared by the contract with fields: id, displayName, description, endpointCount, kind, children.'
+    tags:
+    - Object
+    source: openapi/monid-discover-api-openapi.yml#/components/schemas/TopCategoryNode
+  - term: DiscoverEndpointsResponse
+    definition: 'Object declared by the contract with fields: items, total.'
+    tags:
+    - Object
+    source: openapi/monid-discover-api-openapi.yml#/components/schemas/DiscoverEndpointsResponse
+  - term: DiscoverCategoriesRequest
+    definition: 'Object declared by the contract with fields: q, minScore, supportsX402, x402Network, readonly, effects.'
+    tags:
+    - Object
+    source: openapi/monid-discover-api-openapi.yml#/components/schemas/DiscoverCategoriesRequest
+  - term: ResourceRateLine
+    definition: 'Object declared by the contract with fields: label, ratePerUnit, per.'
+    tags:
+    - Object
+    source: openapi/monid-discover-api-openapi.yml#/components/schemas/ResourceRateLine
+  - term: DiscoverPrice
+    definition: User-facing price (markup applied, no notes).
+    tags:
+    - Object
+    source: openapi/monid-discover-api-openapi.yml#/components/schemas/DiscoverPrice
+  - term: ProviderResourcesResponse
+    definition: 'Object declared by the contract with fields: items.'
+    tags:
+    - Object
+    source: openapi/monid-discover-api-openapi.yml#/components/schemas/ProviderResourcesResponse
+  - term: LeafCategoryNode
+    definition: 'Object declared by the contract with fields: id, displayName, description, endpointCount, kind, parents.'
+    tags:
+    - Object
+    source: openapi/monid-discover-api-openapi.yml#/components/schemas/LeafCategoryNode
+  - term: DiscoverEndpointsRequest
+    definition: 'Object declared by the contract with fields: q, limit, category, minScore, supportsX402, x402Network, readonly, effects.'
+    tags:
+    - Object
+    source: openapi/monid-discover-api-openapi.yml#/components/schemas/DiscoverEndpointsRequest
+  - term: PublicEndpointInfo
+    definition: 'Object declared by the contract with fields: provider, providerDisplayName, providerDisplayDescription, endpoint, displayName,
+      displayDescription, price, tags, categories, supportedX402Networks.'
+    tags:
+    - Object
+    source: openapi/monid-discover-api-openapi.yml#/components/schemas/PublicEndpointInfo
+  - term: IdentityLinkCompleteRequest
+    definition: 'Object declared by the contract with fields: state, code.'
+    tags:
+    - Object
+    source: openapi/monid-identities-api-openapi.yml#/components/schemas/IdentityLinkCompleteRequest
+  - term: IdentityLinkCompleteResponse
+    definition: 'Object declared by the contract with fields: provider, verified, firstLink, returnTo.'
+    tags:
+    - Object
+    source: openapi/monid-identities-api-openapi.yml#/components/schemas/IdentityLinkCompleteResponse
+  - term: IdentityLinkStartRequest
+    definition: 'Object declared by the contract with fields: returnTo.'
+    tags:
+    - Object
+    source: openapi/monid-identities-api-openapi.yml#/components/schemas/IdentityLinkStartRequest
+  - term: IdentityLinkStartResponse
+    definition: 'Object declared by the contract with fields: authorizationUrl, expiresAt.'
+    tags:
+    - Object
+    source: openapi/monid-identities-api-openapi.yml#/components/schemas/IdentityLinkStartResponse
+  - term: InspectResponse
+    definition: 'Object declared by the contract with fields: provider, providerName, endpoint, description, summary, method, price, docUrl, notes,
+      tags, categories, metrics. (2 more)'
+    tags:
+    - Object
+    source: openapi/monid-inspect-api-openapi.yml#/components/schemas/InspectResponse
+  - term: InspectRequest
+    definition: 'Object declared by the contract with fields: provider, endpoint.'
+    tags:
+    - Object
+    source: openapi/monid-inspect-api-openapi.yml#/components/schemas/InspectRequest
+  - term: EndpointInput
+    definition: Structured input — JSON Schema per param location (path, query, body).
+    tags:
+    - Object
+    source: openapi/monid-inspect-api-openapi.yml#/components/schemas/EndpointInput
+  - term: Price
+    definition: User-facing price (markup applied).
+    tags:
+    - Object
+    source: openapi/monid-inspect-api-openapi.yml#/components/schemas/Price
+  - term: PublicRegistryStats
+    definition: 'Object declared by the contract with fields: endpointCount, providerCount.'
+    tags:
+    - Object
+    source: openapi/monid-public-registry-api-openapi.yml#/components/schemas/PublicRegistryStats
+  - term: ResourceReleaseAccepted
+    definition: 'Object declared by the contract with fields: resourceId, state, message.'
+    tags:
+    - Object
+    source: openapi/monid-resources-api-openapi.yml#/components/schemas/ResourceReleaseAccepted
+  - term: ExternalResourceDetail
+    definition: 'Object declared by the contract with fields: kind, displayName, label, data.'
+    tags:
+    - Object
+    source: openapi/monid-resources-api-openapi.yml#/components/schemas/ExternalResourceDetail
+  - term: Resource
+    definition: 'Object declared by the contract with fields: resourceId, provider, providerName, resourceSlug, resourceType, displayName, description,
+      summary, externalId, identifier, releasable, state. (23 more)'
+    tags:
+    - Object
+    source: openapi/monid-resources-api-openapi.yml#/components/schemas/Resource
+  - term: ResourceEvent
+    definition: 'Object declared by the contract with fields: eventId, type, cycle, amount, reason, at.'
+    tags:
+    - Object
+    source: openapi/monid-resources-api-openapi.yml#/components/schemas/ResourceEvent
+  - term: ExternalResourceSummary
+    definition: 'Object declared by the contract with fields: kind, displayName, label.'
+    tags:
+    - Object
+    source: openapi/monid-resources-api-openapi.yml#/components/schemas/ExternalResourceSummary
+  - term: ResourceRenewal
+    definition: 'Object declared by the contract with fields: price, renewLead, startedAt, currentPeriodStart, currentPeriodEnd, renewAttemptAt,
+      cycle, lastAttempt, cancelledAt.'
+    tags:
+    - Object
+    source: openapi/monid-resources-api-openapi.yml#/components/schemas/ResourceRenewal
+  - term: RunStopAccepted
+    definition: 'Object declared by the contract with fields: runId, status, message.'
+    tags:
+    - Object
+    source: openapi/monid-runs-api-openapi.yml#/components/schemas/RunStopAccepted
+  - term: RunBlocked
+    definition: 'Object declared by the contract with fields: runId, status, provider, endpoint, reason, price, controls, createdAt, completedAt,
+      hints.'
+    tags:
+    - Object
+    source: openapi/monid-runs-api-openapi.yml#/components/schemas/RunBlocked
+  - term: RunAccepted
+    definition: 'Object declared by the contract with fields: runId, provider, endpoint, status, price, createdAt, hints.'
+    tags:
+    - Object
+    source: openapi/monid-runs-api-openapi.yml#/components/schemas/RunAccepted
+  - term: Cost
+    definition: 'Object declared by the contract with fields: value, currency.'
+    tags:
+    - Object
+    source: openapi/monid-runs-api-openapi.yml#/components/schemas/Cost
+  - term: RunListItem
+    definition: 'Object declared by the contract with fields: runId, caller, owner, provider, providerName, endpoint, status, stoppable, providerResponse,
+      price, cost, resultCount. (4 more)'
+    tags:
+    - Object
+    source: openapi/monid-runs-api-openapi.yml#/components/schemas/RunListItem
+  - term: RunBilling
+    definition: 'Object declared by the contract with fields: reportedCost.'
+    tags:
+    - Object
+    source: openapi/monid-runs-api-openapi.yml#/components/schemas/RunBilling
+  - term: RunRequest
+    definition: 'Object declared by the contract with fields: provider, endpoint, input.'
+    tags:
+    - Object
+    source: openapi/monid-runs-api-openapi.yml#/components/schemas/RunRequest
+  - term: ProviderResponse
+    definition: 'Object declared by the contract with fields: httpStatus, error.'
+    tags:
+    - Object
+    source: openapi/monid-runs-api-openapi.yml#/components/schemas/ProviderResponse
+  - term: Run
+    definition: 'Object declared by the contract with fields: runId, caller, owner, provider, providerName, endpoint, status, stoppable, reason,
+      controls, input, output. (10 more)'
+    tags:
+    - Object
+    source: openapi/monid-runs-api-openapi.yml#/components/schemas/Run
+  - term: RunCompleted
+    definition: 'Object declared by the contract with fields: runId, provider, endpoint, status, output, providerResponse, price, billing, resultCount,
+      billedUnits, resources, stopRequestedAt. (3 more)'
+    tags:
+    - Object
+    source: openapi/monid-runs-api-openapi.yml#/components/schemas/RunCompleted
+  - term: WalletTopupConfigResponse
+    definition: 'Object declared by the contract with fields: minAmount, maxAmount, currency, processingFee, promotion, tiers, presets, defaultPreset,
+      autoReload.'
+    tags:
+    - Object
+    source: openapi/monid-wallet-api-openapi.yml#/components/schemas/WalletTopupConfigResponse
+  - term: WalletUnavailableError
+    definition: 'Object declared by the contract with fields: code, message, walletStatus.'
+    tags:
+    - Object
+    source: openapi/monid-wallet-api-openapi.yml#/components/schemas/WalletUnavailableError
+  - term: WalletBalanceResponse
+    definition: 'Object declared by the contract with fields: balance, held, topup.'
+    tags:
+    - Object
+    source: openapi/monid-wallet-api-openapi.yml#/components/schemas/WalletBalanceResponse
+  - term: TopupHints
+    definition: 'Object declared by the contract with fields: stripe, dashboard, docs.'
+    tags:
+    - Object
+    source: openapi/monid-wallet-api-openapi.yml#/components/schemas/TopupHints
+  - term: WalletTopupSessionResponse
+    definition: 'Object declared by the contract with fields: paymentProcessor, sessionId, url.'
+    tags:
+    - Object
+    source: openapi/monid-wallet-api-openapi.yml#/components/schemas/WalletTopupSessionResponse
+  - term: WalletMonetaryAmount
+    definition: 'Object declared by the contract with fields: value, currency.'
+    tags:
+    - Object
+    source: openapi/monid-wallet-api-openapi.yml#/components/schemas/WalletMonetaryAmount
+  - term: WalletTopupRequest
+    definition: 'Object declared by the contract with fields: amount, currency, success_redirect, cancel_redirect, autoReload.'
+    tags:
+    - Object
+    source: openapi/monid-wallet-api-openapi.yml#/components/schemas/WalletTopupRequest

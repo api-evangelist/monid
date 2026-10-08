@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/monid/main/json-schema/monid-public-provider-entry-schema.json",
+  "title": "PublicProviderEntry",
+  "x-generated": "2026-10-07",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/monid-discover-api-openapi.yml#/components/schemas/PublicProviderEntry",
+  "type": "object",
+  "properties": {
+    "provider": {
+      "type": "string",
+      "description": "Provider slug."
+    },
+    "displayName": {
+      "type": "string",
+      "description": "Resolved display label (curation > slug)."
+    },
+    "displayDescription": {
+      "type": "string"
+    },
+    "url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Provider's public website. Absent when the provider declares none — never null, never empty. NOT the endpoint-level documentation URL (`docUrl`), which is served only on the endpoint detail and `POST /v1/inspect`."
+    },
+    "docsUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "Provider's own API documentation, when known. Absent otherwise — never null, never empty."
+    },
+    "endpointCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of currently-enabled endpoints."
+    }
+  },
+  "required": [
+    "provider",
+    "displayName",
+    "endpointCount"
+  ]
+}

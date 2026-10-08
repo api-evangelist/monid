@@ -1,0 +1,1105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/monid/main/json-schema/monid-resource-schema.json",
+  "title": "Resource",
+  "x-generated": "2026-10-07",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/monid-resources-api-openapi.yml#/components/schemas/Resource",
+  "type": "object",
+  "properties": {
+    "resourceId": {
+      "type": "string",
+      "description": "Resource identifier (ULID)."
+    },
+    "provider": {
+      "type": "string"
+    },
+    "providerName": {
+      "type": "string"
+    },
+    "resourceSlug": {
+      "type": "string"
+    },
+    "resourceType": {
+      "type": "string"
+    },
+    "displayName": {
+      "type": "string",
+      "description": "Resource display name (e.g. \"Machine\")."
+    },
+    "description": {
+      "type": "string",
+      "description": "Short one-line description."
+    },
+    "summary": {
+      "type": "string",
+      "description": "Detailed description."
+    },
+    "externalId": {
+      "type": "string"
+    },
+    "identifier": {
+      "type": "string"
+    },
+    "releasable": {
+      "type": "boolean"
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "READY",
+        "PROVISIONING",
+        "ACTIVE",
+        "EXPIRING",
+        "SUSPENDED",
+        "RELEASED",
+        "PROVISION_FAILED"
+      ],
+      "description": "Lifecycle state."
+    },
+    "provisionedBy": {
+      "type": "string"
+    },
+    "releasedBy": {
+      "type": "string"
+    },
+    "renewal": {
+      "$ref": "#/$defs/ResourceRenewal"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "releasedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "releaseReasonCode": {
+      "type": "string"
+    },
+    "releaseReason": {
+      "type": "string"
+    },
+    "phoneNumber": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string"
+    },
+    "numberType": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "totalBytes": {
+      "type": "integer"
+    },
+    "objectCount": {
+      "type": "integer"
+    },
+    "lastMutationAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "cdpUrl": {
+      "type": "string"
+    },
+    "baseUrl": {
+      "type": "string"
+    },
+    "targetUrl": {
+      "type": "string"
+    },
+    "timeoutSeconds": {
+      "type": "integer"
+    },
+    "proxyCountryCode": {
+      "type": "string"
+    },
+    "externalResources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ExternalResourceSummary"
+      }
+    },
+    "syncedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "usageBilling": {
+      "type": "object",
+      "properties": {
+        "rateCard": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "description": "The metered dimension (\"cpu\", \"storage\", …)."
+              },
+              "ratePerUnit": {
+                "type": "number",
+                "description": "The dollar rate per unit (e.g. 0.05)."
+              },
+              "per": {
+                "type": "string",
+                "description": "The unit the rate applies to (\"vCPU·hour\", \"GB·month\", …)."
+              }
+            },
+            "required": [
+              "label",
+              "ratePerUnit",
+              "per"
+            ]
+          },
+          "description": "One line per term of the metered price function."
+        }
+      },
+      "required": [
+        "rateCard"
+      ],
+      "description": "Metered usage pricing (absent for rent-only resources)."
+    }
+  },
+  "required": [
+    "resourceId",
+    "provider",
+    "resourceSlug",
+    "resourceType",
+    "externalId",
+    "identifier",
+    "releasable",
+    "state",
+    "provisionedBy",
+    "createdAt",
+    "updatedAt"
+  ],
+  "$defs": {
+    "ExternalResourceSummary": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "displayName"
+      ]
+    },
+    "Price": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "currency": {
+              "type": "string",
+              "enum": [
+                "USD"
+              ]
+            }
+          },
+          "required": [
+            "value",
+            "currency"
+          ]
+        },
+        "flatFee": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "currency": {
+              "type": "string",
+              "enum": [
+                "USD"
+              ]
+            }
+          },
+          "required": [
+            "value",
+            "currency"
+          ]
+        },
+        "period": {
+          "type": "object",
+          "properties": {
+            "unit": {
+              "type": "string",
+              "enum": [
+                "MINUTE",
+                "DAY",
+                "MONTH"
+              ]
+            },
+            "count": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            }
+          },
+          "required": [
+            "unit",
+            "count"
+          ]
+        },
+        "per": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "type": "string",
+                  "enum": [
+                    "MINUTE",
+                    "DAY",
+                    "MONTH"
+                  ]
+                },
+                "count": {
+                  "type": "integer",
+                  "exclusiveMinimum": 0
+                }
+              },
+              "required": [
+                "unit",
+                "count"
+              ]
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "token",
+            "character",
+            "second",
+            "image",
+            "credit",
+            "result",
+            "gb-month",
+            "step"
+          ]
+        },
+        "default": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "PER_CALL"
+                  ]
+                },
+                "amount": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "enum": [
+                        "USD"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "currency"
+                  ]
+                }
+              },
+              "required": [
+                "type",
+                "amount"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "PER_RESULT"
+                  ]
+                },
+                "amount": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "enum": [
+                        "USD"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "currency"
+                  ]
+                },
+                "flatFee": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "enum": [
+                        "USD"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "currency"
+                  ]
+                }
+              },
+              "required": [
+                "type",
+                "amount"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "METERED"
+                  ]
+                },
+                "amount": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "enum": [
+                        "USD"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "currency"
+                  ]
+                },
+                "per": {
+                  "type": "object",
+                  "properties": {
+                    "unit": {
+                      "type": "string",
+                      "enum": [
+                        "MINUTE",
+                        "DAY",
+                        "MONTH"
+                      ]
+                    },
+                    "count": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    }
+                  },
+                  "required": [
+                    "unit",
+                    "count"
+                  ]
+                }
+              },
+              "required": [
+                "type",
+                "amount",
+                "per"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "PER_UNIT"
+                  ]
+                },
+                "amount": {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "enum": [
+                        "USD"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "currency"
+                  ]
+                },
+                "per": {
+                  "type": "number"
+                },
+                "unit": {
+                  "type": "string",
+                  "enum": [
+                    "token",
+                    "character",
+                    "second",
+                    "image",
+                    "credit",
+                    "result",
+                    "gb-month",
+                    "step"
+                  ]
+                }
+              },
+              "required": [
+                "type",
+                "amount",
+                "per",
+                "unit"
+              ]
+            }
+          ]
+        },
+        "selectors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              },
+              "in": {
+                "type": "string",
+                "enum": [
+                  "body",
+                  "queryParam",
+                  "pathParam",
+                  "output"
+                ]
+              },
+              "offset": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "label",
+              "key",
+              "in"
+            ]
+          }
+        },
+        "variants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "when": {
+                "type": "object",
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                }
+              },
+              "price": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "PER_CALL"
+                        ]
+                      },
+                      "amount": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "number"
+                          },
+                          "currency": {
+                            "type": "string",
+                            "enum": [
+                              "USD"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "currency"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "amount"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "PER_RESULT"
+                        ]
+                      },
+                      "amount": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "number"
+                          },
+                          "currency": {
+                            "type": "string",
+                            "enum": [
+                              "USD"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "currency"
+                        ]
+                      },
+                      "flatFee": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "number"
+                          },
+                          "currency": {
+                            "type": "string",
+                            "enum": [
+                              "USD"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "currency"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "amount"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "METERED"
+                        ]
+                      },
+                      "amount": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "number"
+                          },
+                          "currency": {
+                            "type": "string",
+                            "enum": [
+                              "USD"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "currency"
+                        ]
+                      },
+                      "per": {
+                        "type": "object",
+                        "properties": {
+                          "unit": {
+                            "type": "string",
+                            "enum": [
+                              "MINUTE",
+                              "DAY",
+                              "MONTH"
+                            ]
+                          },
+                          "count": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0
+                          }
+                        },
+                        "required": [
+                          "unit",
+                          "count"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "amount",
+                      "per"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "PER_UNIT"
+                        ]
+                      },
+                      "amount": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "number"
+                          },
+                          "currency": {
+                            "type": "string",
+                            "enum": [
+                              "USD"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "currency"
+                        ]
+                      },
+                      "per": {
+                        "type": "number"
+                      },
+                      "unit": {
+                        "type": "string",
+                        "enum": [
+                          "token",
+                          "character",
+                          "second",
+                          "image",
+                          "credit",
+                          "result",
+                          "gb-month",
+                          "step"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "amount",
+                      "per",
+                      "unit"
+                    ]
+                  }
+                ]
+              },
+              "label": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "when",
+              "price"
+            ]
+          }
+        },
+        "tiers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "when": {
+                "type": "object",
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                }
+              },
+              "selector": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "type": "string"
+                  },
+                  "key": {
+                    "type": "string"
+                  },
+                  "in": {
+                    "type": "string",
+                    "enum": [
+                      "body",
+                      "queryParam",
+                      "pathParam",
+                      "output"
+                    ]
+                  },
+                  "offset": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "label",
+                  "key",
+                  "in"
+                ]
+              },
+              "price": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "PER_CALL"
+                        ]
+                      },
+                      "amount": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "number"
+                          },
+                          "currency": {
+                            "type": "string",
+                            "enum": [
+                              "USD"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "currency"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "amount"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "PER_RESULT"
+                        ]
+                      },
+                      "amount": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "number"
+                          },
+                          "currency": {
+                            "type": "string",
+                            "enum": [
+                              "USD"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "currency"
+                        ]
+                      },
+                      "flatFee": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "number"
+                          },
+                          "currency": {
+                            "type": "string",
+                            "enum": [
+                              "USD"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "currency"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "amount"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "METERED"
+                        ]
+                      },
+                      "amount": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "number"
+                          },
+                          "currency": {
+                            "type": "string",
+                            "enum": [
+                              "USD"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "currency"
+                        ]
+                      },
+                      "per": {
+                        "type": "object",
+                        "properties": {
+                          "unit": {
+                            "type": "string",
+                            "enum": [
+                              "MINUTE",
+                              "DAY",
+                              "MONTH"
+                            ]
+                          },
+                          "count": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0
+                          }
+                        },
+                        "required": [
+                          "unit",
+                          "count"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "amount",
+                      "per"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "PER_UNIT"
+                        ]
+                      },
+                      "amount": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "number"
+                          },
+                          "currency": {
+                            "type": "string",
+                            "enum": [
+                              "USD"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "currency"
+                        ]
+                      },
+                      "per": {
+                        "type": "number"
+                      },
+                      "unit": {
+                        "type": "string",
+                        "enum": [
+                          "token",
+                          "character",
+                          "second",
+                          "image",
+                          "credit",
+                          "result",
+                          "gb-month",
+                          "step"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "amount",
+                      "per",
+                      "unit"
+                    ]
+                  }
+                ]
+              }
+            },
+            "required": [
+              "label",
+              "price"
+            ]
+          }
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "type",
+        "amount"
+      ],
+      "description": "User-facing price (markup applied)."
+    },
+    "ResourceRenewal": {
+      "type": "object",
+      "properties": {
+        "price": {
+          "$ref": "#/$defs/Price"
+        },
+        "renewLead": {
+          "type": "object",
+          "properties": {
+            "unit": {
+              "type": "string"
+            },
+            "count": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "unit",
+            "count"
+          ],
+          "description": "How long before `currentPeriodEnd` charging starts."
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "currentPeriodStart": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "currentPeriodEnd": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "renewAttemptAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "cycle": {
+          "type": "number"
+        },
+        "lastAttempt": {
+          "type": "object",
+          "properties": {
+            "at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "outcome": {
+              "type": "string",
+              "enum": [
+                "SUCCEEDED",
+                "FAILED"
+              ]
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "at",
+            "outcome"
+          ]
+        },
+        "cancelledAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "price",
+        "renewLead",
+        "startedAt",
+        "currentPeriodStart",
+        "currentPeriodEnd",
+        "renewAttemptAt",
+        "cycle"
+      ]
+    }
+  }
+}

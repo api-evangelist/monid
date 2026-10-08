@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/monid/main/json-schema/monid-api-key-schema.json",
+  "title": "ApiKey",
+  "x-generated": "2026-10-07",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/monid-api-keys-api-openapi.yml#/components/schemas/ApiKey",
+  "type": "object",
+  "properties": {
+    "label": {
+      "type": "string",
+      "description": "Human-readable label. Unique per workspace."
+    },
+    "keyPrefix": {
+      "type": "string",
+      "description": "Display prefix of the key (e.g. \"monid_test_a1b2c3d4...\")."
+    },
+    "owner": {
+      "type": "string",
+      "description": "User id the key belongs to (bills to, listed under). Always a user; a child key inherits its parent's owner."
+    },
+    "createdBy": {
+      "type": "string",
+      "description": "Who minted the key — `USER#<id>` (dashboard), `API_KEY#<fingerprint>` (another key), `AEP#<did>` (AEP grant) — an actor id: `USER#<userId>` (dashboard), `API_KEY#<fingerprint>` (another key), `AEP#<did>` (an enrolled agent), `CLERK`, `SYSTEM`."
+    },
+    "scopes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "*",
+          "runs:*",
+          "resources:*",
+          "wallet:*",
+          "topups:*",
+          "controls:*",
+          "api_keys:*",
+          "runs:create",
+          "runs:read",
+          "runs:update",
+          "resources:read",
+          "resources:create",
+          "resources:update",
+          "resources:delete",
+          "wallet:read",
+          "wallet:update",
+          "topups:create",
+          "controls:read",
+          "controls:create",
+          "controls:update",
+          "controls:delete",
+          "api_keys:read",
+          "api_keys:create",
+          "api_keys:update",
+          "api_keys:delete"
+        ]
+      },
+      "minItems": 1,
+      "description": "Scope grants: `{resource}:{action}` over runs, resources, wallet, topups, controls and api_keys with read/create/update/delete, plus `{resource}:*` and `*`. Catalog reads need no scope. Fixed at creation."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ACTIVE",
+        "EXPIRED",
+        "REVOKED"
+      ],
+      "description": "ACTIVE, EXPIRED (derived from expiresAt) or REVOKED. Only ACTIVE keys authenticate."
+    },
+    "origin": {
+      "type": "string",
+      "enum": [
+        "DASHBOARD",
+        "API",
+        "AEP",
+        "SYSTEM"
+      ],
+      "description": "Channel the key was minted through — derived from `createdBy`: DASHBOARD, API, AEP or SYSTEM."
+    },
+    "expiresAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Expiry (ISO 8601). Absent ⇒ never expires."
+    },
+    "revokedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the key was revoked. Present only when REVOKED."
+    },
+    "revokedBy": {
+      "type": "string",
+      "description": "Who revoked the key (present only when REVOKED) — an actor id: `USER#<userId>` (dashboard), `API_KEY#<fingerprint>` (another key), `AEP#<did>` (an enrolled agent), `CLERK`, `SYSTEM`."
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Creation time (ISO 8601)."
+    },
+    "lastUsedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last time the key authenticated a request. Absent if never used."
+    }
+  },
+  "required": [
+    "label",
+    "keyPrefix",
+    "owner",
+    "createdBy",
+    "scopes",
+    "status",
+    "origin",
+    "createdAt"
+  ]
+}

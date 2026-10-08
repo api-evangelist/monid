@@ -1,7 +1,79 @@
-generated: '2026-07-23'
-method: derived
-source: openapi/monid-openapi.json
-problem_types:
+generated: '2026-10-07'
+method: searched
+source: https://monid.ai/docs/api/overview.md (Error Codes + Response Format) + https://monid.ai/docs/guide/pay-with-x402.md
+format: json
+envelope:
+  content_type: application/json
+  shape: '{ "code": <int http status>, "message": "<string>" }'
+  note: Flat envelope, not RFC 9457 problem+json; code duplicates the HTTP status. Every response carries an x-request-id
+    header to quote when reporting issues.
+problems:
+- status: 400
+  title: Bad request
+  type: null
+  description: invalid input, malformed JSON, or validation error
+  remediation: Validate the input against the schema returned by postV1Inspect.
+- status: 401
+  title: Unauthorized
+  type: null
+  description: missing or invalid API key
+  remediation: 'Send Authorization: Bearer <Monid API key or OAuth access token>.'
+- status: 402
+  title: Payment required
+  type: null
+  description: insufficient wallet balance
+  remediation: Top up the workspace wallet (getV1WalletTopup / postV1WalletTopupSessions) or pay per run via x402,
+    then retry.
+- status: 403
+  title: Forbidden
+  type: null
+  description: key is valid but not associated with a workspace, or the resource belongs to another workspace
+  remediation: Use a key bound to the workspace, or pass x-workspace-id with an OAuth token lacking org context.
+- status: 404
+  title: Not found
+  type: null
+  description: resource doesn't exist
+  remediation: Check the provider/endpoint pair with postV1Discover or getPublicV1Endpoints.
+- status: 408
+  title: Request timeout
+  type: null
+  description: a synchronous run timed out (TIMED_OUT)
+  remediation: Run asynchronously and poll getV1RunsByRunId instead of blocking.
+- status: 409
+  title: Conflict
+  type: null
+  description: e.g. stopping a run that is terminal or not stoppable
+  remediation: Read the run state with getV1RunsByRunId before stopping; only READY/RUNNING runs can be stopped.
+- status: 500
+  title: Internal server error
+  type: null
+  description: internal server error
+  remediation: Retry later and report the x-request-id to support@monid.ai.
+- status: 502
+  title: Bad gateway
+  type: null
+  description: the upstream provider rejected the call (e.g. provider-side payment error)
+  remediation: Inspect the provider error in the run body; the upstream provider, not Monid, rejected the call.
+- status: 503
+  title: Service unavailable
+  type: null
+  description: e.g. the wallet is not active
+  remediation: Activate the workspace wallet in the dashboard before running.
+x402_surface:
+- status: 402
+  title: Payment Required
+  description: x402.monid.ai advertises every supported network in its 402 accepts array; the client signs a USDC
+    authorization and retries.
+- status: 408
+  title: TIMED_OUT
+  description: Zero-billed on the x402 surface.
+- status: 401
+  title: signature invalid
+  description: SIWX signature on GET /v1/runs/{runId} rejected.
+- status: 403
+  title: not the paying wallet
+  description: The caller is not the wallet that paid for this run.
+derived_operation_mapping:
 - status: 400
   format: json
   title: Bad request — input failed validation
@@ -61,8 +133,8 @@ problem_types:
   - DELETE /v1/api-keys/{label}
 - status: 402
   format: json
-  title: Payment required — workspace wallet balance insufficient. (A 402 from this API is ALWAYS about
-    your wallet; an upstream provider's own 402 surfaces as 502.)
+  title: Payment required — workspace wallet balance insufficient. (A 402 from this API is ALWAYS about your wallet;
+    an upstream provider's own 402 surfaces as 502.)
   operations:
   - POST /v1/run
 - status: 403
@@ -122,8 +194,8 @@ problem_types:
   - GET /public/v1/providers/{provider}/endpoints/{endpoint}
 - status: 408
   format: json
-  title: TIMED_OUT — the run exceeded its time budget (run deadline or provider request timeout). Terminal,
-    zero-billed; the body is the full run with status TIMED_OUT.
+  title: TIMED_OUT — the run exceeded its time budget (run deadline or provider request timeout). Terminal, zero-billed;
+    the body is the full run with status TIMED_OUT.
   operations:
   - POST /v1/run
 - status: 409
@@ -171,16 +243,17 @@ problem_types:
   - GET /public/v1/providers/{provider}/endpoints/{endpoint}
 - status: 502
   format: json
-  title: Upstream provider payment/quota failure — the provider returned 402 (its account problem, not
-    your wallet). The body is the full COMPLETED run with the provider's error in providerResponse.error;
-    the run is not charged.
+  title: Upstream provider payment/quota failure — the provider returned 402 (its account problem, not your wallet).
+    The body is the full COMPLETED run with the provider's error in providerResponse.error; the run is not charged.
   operations:
   - POST /v1/run
   - GET /v1/resources/{resourceId}/external/{kind}
 - status: 503
   format: json
-  title: Wallet not ACTIVE (provisioning, failed, or being set up). Transient states include a Retry-After
-    header (seconds).
+  title: Wallet not ACTIVE (provisioning, failed, or being set up). Transient states include a Retry-After header
+    (seconds).
   operations:
   - GET /v1/wallet/balance
   - GET /v1/wallet/topup
+derived_note: derived_operation_mapping was computed 2026-07-23 from the then-current contract (33 operations);
+  the live contract now holds 49.

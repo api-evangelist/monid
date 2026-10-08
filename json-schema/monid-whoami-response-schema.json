@@ -1,0 +1,274 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/monid/main/json-schema/monid-whoami-response-schema.json",
+  "title": "WhoamiResponse",
+  "x-generated": "2026-10-07",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/monid-auth-api-openapi.yml#/components/schemas/WhoamiResponse",
+  "type": "object",
+  "properties": {
+    "user": {
+      "$ref": "#/$defs/AuthUser"
+    },
+    "workspace": {
+      "$ref": "#/$defs/AuthWorkspace"
+    },
+    "credential": {
+      "$ref": "#/$defs/AuthCredential"
+    },
+    "identities": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/IdentitySummary"
+      },
+      "description": "External identities linked to this user (e.g. a World ID). The Clerk login itself is not listed."
+    },
+    "identityProviders": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/IdentityProviderAvailability"
+      },
+      "description": "Linkable providers and whether linking is enabled."
+    }
+  },
+  "required": [
+    "user",
+    "credential",
+    "identities",
+    "identityProviders"
+  ],
+  "$defs": {
+    "AuthCredential": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "clerk_session",
+            "api_key"
+          ],
+          "description": "How the request was authenticated."
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "*",
+              "runs:*",
+              "resources:*",
+              "wallet:*",
+              "topups:*",
+              "controls:*",
+              "api_keys:*",
+              "runs:create",
+              "runs:read",
+              "runs:update",
+              "resources:read",
+              "resources:create",
+              "resources:update",
+              "resources:delete",
+              "wallet:read",
+              "wallet:update",
+              "topups:create",
+              "controls:read",
+              "controls:create",
+              "controls:update",
+              "controls:delete",
+              "api_keys:read",
+              "api_keys:create",
+              "api_keys:update",
+              "api_keys:delete"
+            ]
+          },
+          "description": "The grants this credential holds (`*` = everything) — also the MOST a key it mints may hold."
+        },
+        "defaultScopes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "*",
+              "runs:*",
+              "resources:*",
+              "wallet:*",
+              "topups:*",
+              "controls:*",
+              "api_keys:*",
+              "runs:create",
+              "runs:read",
+              "runs:update",
+              "resources:read",
+              "resources:create",
+              "resources:update",
+              "resources:delete",
+              "wallet:read",
+              "wallet:update",
+              "topups:create",
+              "controls:read",
+              "controls:create",
+              "controls:update",
+              "controls:delete",
+              "api_keys:read",
+              "api_keys:create",
+              "api_keys:update",
+              "api_keys:delete"
+            ]
+          },
+          "description": "What `POST /v1/api-keys` mints when this credential omits `scopes`: a session gets every resource except `controls`; an API key passes its own grants down. See `GET /v1/api-keys/scopes` for the catalog."
+        },
+        "fingerprint": {
+          "type": "string",
+          "description": "API-key fingerprint (= AEP `credential_id`). Absent for sessions."
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "API-key expiry. Absent when it never expires or for sessions."
+        }
+      },
+      "required": [
+        "kind",
+        "scopes",
+        "defaultScopes"
+      ]
+    },
+    "AuthUser": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Clerk user id."
+        },
+        "username": {
+          "type": "string",
+          "description": "Username from Clerk (may be empty)."
+        },
+        "email": {
+          "type": "string",
+          "description": "Primary email, when known."
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {},
+          "description": "Free-form user metadata record."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Record creation time (ISO-8601)."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Record last-update time (ISO-8601)."
+        }
+      },
+      "required": [
+        "userId",
+        "username",
+        "metadata",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AuthWorkspace": {
+      "type": "object",
+      "properties": {
+        "workspaceId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Workspace (Clerk organization) id."
+        },
+        "name": {
+          "type": "string",
+          "description": "Organization display name (may be empty)."
+        },
+        "slug": {
+          "type": "string",
+          "description": "Organization slug (may be empty)."
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {},
+          "description": "Free-form workspace metadata record."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Record creation time (ISO-8601)."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Record last-update time (ISO-8601)."
+        }
+      },
+      "required": [
+        "workspaceId",
+        "name",
+        "slug",
+        "metadata",
+        "createdAt",
+        "updatedAt"
+      ],
+      "description": "Absent when the caller is not part of a workspace."
+    },
+    "IdentityProviderAvailability": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "enum": [
+            "clerk",
+            "aep",
+            "world",
+            "world-sandbox"
+          ]
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether NEW links can be started for this provider."
+        }
+      },
+      "required": [
+        "key",
+        "enabled"
+      ]
+    },
+    "IdentitySummary": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": [
+            "clerk",
+            "aep",
+            "world",
+            "world-sandbox"
+          ]
+        },
+        "verified": {
+          "type": "boolean",
+          "description": "Whether the provider vouched for this identity."
+        },
+        "linkedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lastVerifiedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last successful (re-)verification, for OIDC identities."
+        }
+      },
+      "required": [
+        "provider",
+        "verified",
+        "linkedAt"
+      ]
+    }
+  }
+}

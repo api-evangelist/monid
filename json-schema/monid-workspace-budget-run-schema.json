@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/monid/main/json-schema/monid-workspace-budget-run-schema.json",
+  "title": "WorkspaceBudgetRun",
+  "x-generated": "2026-10-07",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/monid-controls-api-openapi.yml#/components/schemas/WorkspaceBudgetRun",
+  "type": "object",
+  "properties": {
+    "budgetControlId": {
+      "type": "string"
+    },
+    "runId": {
+      "type": "string",
+      "description": "Run ID (ULID)."
+    },
+    "holdAmount": {
+      "type": "number",
+      "description": "Estimated cost reserved at run start, in dollars."
+    },
+    "settledAmount": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Actual cost at settlement, in dollars. Null while HELD."
+    },
+    "currency": {
+      "type": "string",
+      "enum": [
+        "USD"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "HELD",
+        "SETTLED",
+        "RELEASED",
+        "ABORTED",
+        "BLOCKED"
+      ]
+    },
+    "snapshot": {
+      "type": "object",
+      "properties": {
+        "period": {
+          "type": "string",
+          "enum": [
+            "HOUR",
+            "DAY",
+            "WEEK",
+            "MONTH"
+          ]
+        },
+        "limitAmount": {
+          "type": "number"
+        },
+        "windowStart": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "period",
+        "limitAmount",
+        "windowStart"
+      ]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "settledAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "budgetControlId",
+    "runId",
+    "holdAmount",
+    "settledAmount",
+    "currency",
+    "status",
+    "snapshot",
+    "createdAt",
+    "settledAt"
+  ]
+}

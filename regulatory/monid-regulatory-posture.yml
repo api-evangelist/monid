@@ -1,0 +1,36 @@
+generated: '2026-10-07'
+method: probed
+source: monid.ai conventional paths + harvested artifacts (well-known/, security/, lifecycle/, conformance/) + https://monid.ai/docs/llms.txt
+  index
+signals: {}
+probed:
+- url: https://monid.ai/accessibility
+  status: 404
+- url: https://monid.ai/accessibility/vpat
+  status: 404
+- url: https://monid.ai/legal/subprocessors
+  status: 404
+- url: https://monid.ai/legal/dpa
+  status: 404
+- url: https://monid.ai/privacy/requests
+  status: 404
+- url: https://monid.ai/transparency
+  status: 404
+- url: https://monid.ai/security/sbom
+  status: 404
+- url: https://monid.ai/docs/data-residency
+  status: 404
+- url: https://monid.ai/ai/transparency
+  status: 404
+- url: https://monid.ai/legal/report-content
+  status: 404
+- url: https://monid.ai/security
+  status: 404
+- url: https://monid.ai/trust
+  status: 404
+- url: https://monid.ai/legal
+  status: 404
+note: 'No horizontal regulatory signal is published: no SBOM, accessibility conformance report, subprocessor list,
+  DPA, DSAR portal, transparency report, data-residency page, support-lifetime statement or GPC statement was found
+  on the site, in the docs index (llms.txt, 23 pages) or in the harvested artifacts; /legal/terms and /legal/privacy
+  exist but carry none of these. Absence is the measurement.'

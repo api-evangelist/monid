@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/monid/main/json-schema/monid-inspect-request-schema.json",
+  "title": "InspectRequest",
+  "x-generated": "2026-10-07",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/monid-inspect-api-openapi.yml#/components/schemas/InspectRequest",
+  "type": "object",
+  "properties": {
+    "provider": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Provider slug."
+    },
+    "endpoint": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Endpoint path."
+    }
+  },
+  "required": [
+    "provider",
+    "endpoint"
+  ]
+}

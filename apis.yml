@@ -1,19 +1,16 @@
 aid: monid
 name: Monid
-description: >-
-  Monid is a San Francisco-based data-access and agent-tool integration platform that gives developers
-  and AI agents on-demand, pay-per-use access to hundreds of web data endpoints and 1,300+ tools across
-  13+ providers (Semrush, Apollo, ElevenLabs, web scrapers, and more) through a single integration.
-  Agents discover, inspect, compare, and execute tools at runtime and pay only for actual usage, with a
-  unified balance and no per-tool API key management or subscriptions. Monid exposes its catalog through
-  four connection methods — an MCP (Model Context Protocol) server for Claude and other AI assistants, a
-  Skill integration for Claude Code and Cursor, a CLI for shell access, and an HTTP API for programmatic
+description: Monid is a San Francisco-based data-access and agent-tool integration platform that gives developers and AI agents on-demand, pay-per-use
+  access to hundreds of web data endpoints and 1,300+ tools across 13+ providers (Semrush, Apollo, ElevenLabs, web scrapers, and more) through
+  a single integration. Agents discover, inspect, compare, and execute tools at runtime and pay only for actual usage, with a unified balance
+  and no per-tool API key management or subscriptions. Monid exposes its catalog through four connection methods — an MCP (Model Context Protocol)
+  server for Claude and other AI assistants, a Skill integration for Claude Code and Cursor, a CLI for shell access, and an HTTP API for programmatic
   integration — with OAuth, proxy, and master API key options for embedded use.
 url: https://raw.githubusercontent.com/api-evangelist/monid/refs/heads/main/apis.yml
 x-type: company
 x-source: manual:direct-request
-x-tier: stub
-x-tier-reason: manual
+x-tier: profiled
+x-tier-reason: enrichment pass 2026-10-07 (local-v5; was manual)
 deliveryModel:
   model: saas
   open_source: false
@@ -41,22 +38,14 @@ accessModel:
   generated: '2026-09-02'
   method: derived
 specificationVersion: '0.23'
-created: 2026-07-23
-modified: '2026-10-06'
-image: ""
+created: '2026-07-23'
+modified: '2026-10-07'
+image: https://monid.ai/share-card.png
 x-enrichment:
-  date: 2026-07-23
+  date: '2026-10-07'
   status: enriched
-  artifacts_added: 11
-  pass: local-v1
-  note: >-
-    Full agent enrichment pass. SEARCHED/PROBED live: OAuth 2.0 + OIDC discovery
-    (well-known on api.monid.ai + mcp.monid.ai, Clerk-backed, scopes captured),
-    provider-published Agent Skill (SKILL.md verbatim), npm CLI @monid-ai/cli,
-    status page, GitHub org monid-ai, x402 crypto-pay surface. GENERATED/DERIVED:
-    conventions, conformance, lifecycle, data-model, overlay, scopes, agentic-access,
-    a grounded discover-inspect-run skill. No security.txt/bug-bounty/trust-center,
-    no changelog/pricing/TOS pages, no sandbox/webhooks — honestly absent, skipped.
+  artifacts_added: 12
+  pass: local-v5
 tags:
 - Company
 - Agents
@@ -70,6 +59,20 @@ maintainers:
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: Newsroom
+  url: https://monid.ai/tools/news
+- type: Plans
+  url: plans/monid-plans-pricing.yml
+- type: Spectral
+  url: rules/monid-rules.yml
+- type: JSONLD
+  url: json-ld/monid-context.jsonld
+- type: Vocabulary
+  url: vocabulary/monid-vocabulary.yml
+- type: Hosts
+  url: hosts/monid-hosts.yml
+- type: Vendors
+  url: vendors/monid-vendors.yml
 - url: https://monid.ai/rss.xml
   type: BlogRSS
 - type: CapabilityMap
@@ -101,8 +104,6 @@ common:
   url: data-model/monid-data-model.yml
 - type: Overlay
   url: overlays/monid-openapi-overlay.yaml
-- type: Packages
-  url: packages/monid-packages.yml
 - type: CLI
   url: cli/monid-cli.yml
 - type: AgentSkill
@@ -116,7 +117,7 @@ common:
 - type: Documentation
   url: https://monid.ai/docs
 - type: APIReference
-  url: https://monid.ai/docs
+  url: https://monid.ai/docs/api/overview
 - type: GettingStarted
   url: https://monid.ai/docs/guide/quickstart-api.md
 - type: Blog
@@ -125,6 +126,15 @@ common:
   url: https://github.com/monid-ai
 - type: SignUp
   url: https://app.monid.ai
+- type: Pricing
+  url: https://monid.ai/docs/guide/pricing
+- type: TermsOfService
+  url: https://monid.ai/legal/terms
+- type: PrivacyPolicy
+  url: https://monid.ai/legal/privacy
+- type: Support
+  url: https://discord.gg/rQzztcgJV8
+  name: Monid community Discord
 apis:
 - aid: monid:monid-api-keys-api
   name: Monid API Keys API
@@ -140,6 +150,12 @@ apis:
     url: openapi/monid-api-keys-api-openapi.yml
   - type: Documentation
     url: https://monid.ai/docs/api/overview.md
+  - type: JSONSchema
+    url: json-schema/monid-api-key-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-scope-catalog-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-update-api-key-request-schema.json
 - aid: monid:monid-auth-api
   name: Monid Auth API
   description: The Auth API from Monid — 2 operation(s) for auth.
@@ -154,6 +170,10 @@ apis:
     url: openapi/monid-auth-api-openapi.yml
   - type: Documentation
     url: https://monid.ai/docs/api/overview.md
+  - type: JSONSchema
+    url: json-schema/monid-whoami-response-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-workspace-list-response-schema.json
 - aid: monid:monid-controls-api
   name: Monid Controls API
   description: The Controls API from Monid — 6 operation(s) for controls.
@@ -168,6 +188,18 @@ apis:
     url: openapi/monid-controls-api-openapi.yml
   - type: Documentation
     url: https://monid.ai/docs/api/overview.md
+  - type: JSONSchema
+    url: json-schema/monid-workspace-budget-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-workspace-budget-run-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-workspace-run-cap-run-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-workspace-run-cap-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-workspace-budget-patch-request-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-workspace-run-cap-patch-request-schema.json
 - aid: monid:monid-discover-api
   name: Monid Discover API
   description: The Discover API from Monid — 1 operation(s) for discover.
@@ -180,6 +212,18 @@ apis:
     url: openapi/monid-discover-api-openapi.yml
   - type: Documentation
     url: https://monid.ai/docs/api/overview.md
+  - type: JSONSchema
+    url: json-schema/monid-discover-request-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-discover-endpoints-request-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-discover-categories-request-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-discover-providers-request-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-public-provider-entry-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-public-categories-response-schema.json
 - aid: monid:monid-endpoints-api
   name: Monid Endpoints API
   description: The Endpoints API from Monid — 1 operation(s) for endpoints.
@@ -193,6 +237,8 @@ apis:
     url: openapi/monid-endpoints-api-openapi.yml
   - type: Documentation
     url: https://monid.ai/docs/api/overview.md
+  - type: JSONSchema
+    url: json-schema/monid-public-endpoint-info-schema.json
 - aid: monid:monid-inspect-api
   name: Monid Inspect API
   description: The Inspect API from Monid — 1 operation(s) for inspect.
@@ -205,6 +251,10 @@ apis:
     url: openapi/monid-inspect-api-openapi.yml
   - type: Documentation
     url: https://monid.ai/docs/api/overview.md
+  - type: JSONSchema
+    url: json-schema/monid-inspect-response-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-inspect-request-schema.json
 - aid: monid:monid-public-registry-api
   name: Monid Public Registry API
   description: The Public Registry API from Monid — 5 operation(s) for public registry.
@@ -217,6 +267,18 @@ apis:
     url: openapi/monid-public-registry-api-openapi.yml
   - type: Documentation
     url: https://monid.ai/docs/api/overview.md
+  - type: JSONSchema
+    url: json-schema/monid-public-endpoint-info-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-public-provider-entry-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-public-endpoint-detail-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-public-categories-response-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-public-registry-stats-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-provider-resources-response-schema.json
 - aid: monid:monid-resources-api
   name: Monid Resources API
   description: The Resources API from Monid — 5 operation(s) for resources.
@@ -229,6 +291,14 @@ apis:
     url: openapi/monid-resources-api-openapi.yml
   - type: Documentation
     url: https://monid.ai/docs/api/overview.md
+  - type: JSONSchema
+    url: json-schema/monid-resource-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-resource-event-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-external-resource-detail-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-resource-release-accepted-schema.json
 - aid: monid:monid-runs-api
   name: Monid Runs API
   description: The Runs API from Monid — 5 operation(s) for runs.
@@ -241,6 +311,18 @@ apis:
     url: openapi/monid-runs-api-openapi.yml
   - type: Documentation
     url: https://monid.ai/docs/api/overview.md
+  - type: JSONSchema
+    url: json-schema/monid-run-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-run-completed-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-run-blocked-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-run-list-item-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-run-accepted-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-run-request-schema.json
 - aid: monid:monid-wallet-api
   name: Monid Wallet API
   description: The Wallet API from Monid — 2 operation(s) for wallet.
@@ -255,3 +337,44 @@ apis:
     url: openapi/monid-wallet-api-openapi.yml
   - type: Documentation
     url: https://monid.ai/docs/api/overview.md
+  - type: JSONSchema
+    url: json-schema/monid-wallet-topup-config-response-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-wallet-topup-request-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-wallet-topup-session-response-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-wallet-balance-response-schema.json
+- aid: monid:monid-identities-api
+  name: Monid Identities API
+  description: The Identities API from Monid — 2 operation(s) for identities.
+  humanURL: https://monid.ai/docs/api/overview.md
+  baseURL: https://api.monid.ai
+  tags:
+  - Identities
+  properties:
+  - type: OpenAPI
+    url: openapi/monid-identities-api-openapi.yml
+  - type: JSONSchema
+    url: json-schema/monid-identity-link-complete-response-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-identity-link-start-response-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-identity-link-start-request-schema.json
+  - type: JSONSchema
+    url: json-schema/monid-identity-link-complete-request-schema.json
+- aid: monid:monid-x402-run-api
+  name: Monid x402 Run API
+  description: Pay-per-run execution surface on x402.monid.ai — POST /v1/run answers HTTP 402 with an accepts[] array of CAIP-2 networks (Base
+    eip155:8453, Monad eip155:143), the client signs a USDC authorization and retries, and GET /v1/runs/{runId} returns the result against a Sign-In-With-X
+    signature from the paying wallet. No workspace, API key or prepaid balance is needed to run; discovery and inspection still use the keyed
+    api.monid.ai surface. Minimum price $0.01 per run; metered endpoints are not available on x402.
+  humanURL: https://monid.ai/docs/guide/pay-with-x402
+  baseURL: https://x402.monid.ai
+  tags:
+  - x402
+  - Payments
+  - Agents
+  properties:
+  - type: Documentation
+    url: https://monid.ai/docs/guide/pay-with-x402.md

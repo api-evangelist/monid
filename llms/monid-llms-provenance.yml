@@ -1,0 +1,6 @@
+generated: '2026-10-07'
+method: probed
+generator: harvest-llms.py
+source: https://monid.ai/llms.txt
+bytes: 12028
+note: saved verbatim; the provider's own document

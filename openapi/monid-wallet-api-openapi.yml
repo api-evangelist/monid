@@ -38,6 +38,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded (errorCode `RATE_LIMITED`) — the `Retry-After` header carries whole seconds until the caller may retry; `RateLimit-Limit/-Remaining/-Reset` and `X-RateLimit-Rule` name the binding rule (also sent on allowed responses that matched a rule; responses that matched no rule, or an `unlimited` exemption, carry none of them). Applies to every authenticated `/v1` route (per API key / user / origin / workspace); POST /v1/run additionally enforces per-provider/endpoint run limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           description: Internal server error
           content:
@@ -62,12 +68,12 @@ paths:
       tags:
       - Wallet
       summary: Get top-up configuration
-      description: Fees and limits for wallet top-ups, so the frontend does not hardcode values.
+      description: Fees and limits for wallet top-ups, plus the workspace's applied promotion (tiers, presets) and the auto-reload checkout offer.
       security:
       - Bearer: []
       responses:
         '200':
-          description: Top-up fees and limits
+          description: Top-up fees, limits, promotion tiers, and presets
           content:
             application/json:
               schema:
@@ -80,6 +86,12 @@ paths:
                 $ref: '#/components/schemas/Error'
         '403':
           description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded (errorCode `RATE_LIMITED`) — the `Retry-After` header carries whole seconds until the caller may retry; `RateLimit-Limit/-Remaining/-Reset` and `X-RateLimit-Rule` name the binding rule (also sent on allowed responses that matched a rule; responses that matched no rule, or an `unlimited` exemption, carry none of them). Applies to every authenticated `/v1` route (per API key / user / origin / workspace); POST /v1/run additionally enforces per-provider/endpoint run limits.
           content:
             application/json:
               schema:
@@ -103,8 +115,91 @@ paths:
                 $ref: '#/components/schemas/WalletUnavailableError'
       operationId: getV1WalletTopup
       x-operation-id-source: derived
+  /v1/wallet/topup/sessions:
+    post:
+      tags:
+      - Wallet
+      summary: Create a hosted top-up checkout session
+      description: 'Creates a hosted Stripe checkout session and returns the session id and redirect URL. This is the funding path advertised by the `WALLET_INSUFFICIENT_FUNDS` 402 and by `GET /v1/wallet/balance` (`topup.stripe`): an agent creates the session and hands `url` to its human owner to pay.'
+      security:
+      - Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WalletTopupRequest'
+      responses:
+        '200':
+          description: Checkout session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletTopupSessionResponse'
+        '400':
+          description: Bad request — input failed validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized — missing or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden — caller has no workspace or no access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded (errorCode `RATE_LIMITED`) — the `Retry-After` header carries whole seconds until the caller may retry; `RateLimit-Limit/-Remaining/-Reset` and `X-RateLimit-Rule` name the binding rule (also sent on allowed responses that matched a rule; responses that matched no rule, or an `unlimited` exemption, carry none of them). Applies to every authenticated `/v1` route (per API key / user / origin / workspace); POST /v1/run additionally enforces per-provider/endpoint run limits.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Wallet not ACTIVE (provisioning, failed, or being set up). Transient states include a Retry-After header (seconds).
+          headers:
+            Retry-After:
+              description: Seconds to wait before retrying (present for transient states).
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletUnavailableError'
+      operationId: postV1WalletTopupSessions
+      x-operation-id-source: derived
 components:
   schemas:
+    WalletTopupSessionResponse:
+      type: object
+      properties:
+        paymentProcessor:
+          type: string
+          description: Payment processor type (e.g. STRIPE).
+          example: STRIPE
+        sessionId:
+          type: string
+          description: Hosted checkout session id.
+          example: cs_test_...
+        url:
+          type: string
+          description: Hosted checkout redirect URL.
+          example: https://checkout.stripe.com/c/pay/...
+      required:
+      - paymentProcessor
+      - sessionId
+      - url
     WalletBalanceResponse:
       type: object
       properties:
@@ -112,9 +207,59 @@ components:
           $ref: '#/components/schemas/WalletMonetaryAmount'
         held:
           $ref: '#/components/schemas/WalletMonetaryAmount'
+        topup:
+          $ref: '#/components/schemas/TopupHints'
       required:
       - balance
       - held
+      - topup
+    WalletUnavailableError:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 503
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Wallet is being provisioned.
+        walletStatus:
+          type:
+          - string
+          - 'null'
+          description: Wallet provisioning status (e.g. PROVISIONING, FAILED). Null when the wallet does not exist yet.
+          example: PROVISIONING
+      required:
+      - code
+      - message
+    WalletTopupRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+          exclusiveMinimum: 0
+          description: Top-up amount in dollars (float).
+          example: 25
+        currency:
+          type: string
+          enum:
+          - USD
+          description: Top-up currency (currently only USD).
+        success_redirect:
+          type: string
+          description: Where to send the payer after a successful checkout. Must be on the Monid web-app origin. Defaults to the web-app wallet page, so an agent without a UI can omit it and hand the returned `url` to its owner.
+          example: https://app.monid.ai/wallet?topup=success
+        cancel_redirect:
+          type: string
+          description: Where to send the user if checkout is cancelled. Must be on the Monid web-app origin.
+          example: https://app.monid.ai/wallet?topup=cancelled
+        autoReload:
+          type: boolean
+          description: 'Opt in to auto-reload (with the service defaults) when this checkout completes. Opt-in ONLY: the system never enables auto-reload on the caller''s behalf, so `false` and an omitted field are equivalent and record nothing. Ignored when auto-reload is already enabled on the wallet.'
+      required:
+      - amount
+      - currency
     WalletTopupConfigResponse:
       type: object
       properties:
@@ -149,10 +294,125 @@ components:
           - type
           - rate
           - description
+        promotion:
+          type: object
+          properties:
+            key:
+              type: string
+              description: Promotion key (config-defined).
+              example: firstTopup
+            label:
+              type: string
+              description: Server-defined display text for the badge.
+              example: New user promotion
+          required:
+          - key
+          - label
+          description: Active promotion. Absent when the baseline (`default`) applies — no promotion badge.
+        tiers:
+          type: array
+          items:
+            type: object
+            properties:
+              minAmount:
+                type: number
+                description: Inclusive tier minimum in dollars.
+                example: 100
+              rate:
+                type: number
+                description: Bonus rate applied to the actual amount.
+                example: 0.15
+            required:
+            - minAmount
+            - rate
+          description: Bonus tiers for the applied promotion, ascending. Any amount rounds DOWN to a tier; the rate applies to the actual amount.
+        presets:
+          type: array
+          items:
+            type: number
+          description: Preset amounts in dollars, display order. Bonuses are client-derived from `tiers` (round-down tier match).
+        defaultPreset:
+          type: number
+          description: Pre-selected preset amount in dollars.
+          example: 100
+        autoReload:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+              description: Whether auto-reload is currently enabled on the workspace. True means checkout shows a passive 'auto-reload is on' note instead of an enrollment toggle — disabling lives on the wallet page.
+            topUpToAmount:
+              type: number
+              description: Balance (dollars) each automatic reload tops up TO — the same 'Top up to' amount the wallet settings panel shows. Metronome charges this minus the current balance.
+              example: 20
+            threshold:
+              type: number
+              description: Balance level (dollars) that triggers a reload.
+              example: 5
+          required:
+          - enabled
+          - topUpToAmount
+          - threshold
       required:
       - minAmount
       - currency
       - processingFee
+      - tiers
+      - presets
+      - defaultPreset
+      - autoReload
+    TopupHints:
+      type: object
+      properties:
+        stripe:
+          type: string
+          description: Origin-relative path of the hosted Stripe checkout session creator (POST).
+          example: /v1/wallet/topup/sessions
+        dashboard:
+          type: string
+          description: The dashboard wallet page a human can top up from.
+          example: https://app.monid.ai/wallet
+        docs:
+          type: string
+          description: Human documentation on funding a wallet.
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code, duplicated in the body.
+          example: 400
+        message:
+          type: string
+          description: Human-readable error description.
+          example: Bad Request
+        errorCode:
+          type: string
+          enum:
+          - RATE_LIMITED
+          - X402_WORKSPACE_RESOURCES
+          - X402_ACCRUING_COST
+          - X402_EXCEEDS_SETTLEMENT_WINDOW
+          - X402_VALIDITY_WINDOW_TOO_SHORT
+          - X402_UNBOUNDED_PRICE
+          - INSUFFICIENT_SCOPE
+          - WALLET_INSUFFICIENT_FUNDS
+          - IDENTITY_PROVIDER_UNKNOWN
+          - IDENTITY_LINK_REQUIRES_SESSION
+          - IDENTITY_LINK_STATE_INVALID
+          - IDENTITY_VERIFICATION_FAILED
+          - IDENTITY_PROVIDER_UNAVAILABLE
+          - IDENTITY_ALREADY_LINKED
+          - IDENTITY_USER_ALREADY_LINKED
+          - IDENTITY_LINK_RATE_LIMITED
+          - IDENTITY_REQUIRED
+          - PROMO_IDENTITY_REDEEMED
+          - PROMO_REDEEM_REQUIRES_SESSION
+          - PROMO_REDEEM_DISABLED
+          description: OPTIONAL machine-readable discriminant from the documented `ApiErrorCode` registry. Absent on legacy errors; clients MUST treat unknown values as absent.
+      required:
+      - code
+      - message
     WalletMonetaryAmount:
       type: object
       properties:
@@ -167,40 +427,6 @@ components:
       required:
       - value
       - currency
-    WalletUnavailableError:
-      type: object
-      properties:
-        code:
-          type: integer
-          description: HTTP status code, duplicated in the body.
-          example: 503
-        message:
-          type: string
-          description: Human-readable error description.
-          example: Wallet is being provisioned.
-        walletStatus:
-          type:
-          - string
-          - 'null'
-          description: Wallet provisioning status (e.g. PROVISIONING, FAILED). Null when the wallet does not exist yet.
-          example: PROVISIONING
-      required:
-      - code
-      - message
-    Error:
-      type: object
-      properties:
-        code:
-          type: integer
-          description: HTTP status code, duplicated in the body.
-          example: 400
-        message:
-          type: string
-          description: Human-readable error description.
-          example: Bad Request
-      required:
-      - code
-      - message
   securitySchemes:
     Bearer:
       type: http

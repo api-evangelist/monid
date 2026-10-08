@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/monid/main/json-schema/monid-workspace-budget-schema.json",
+  "title": "WorkspaceBudget",
+  "x-generated": "2026-10-07",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/monid-controls-api-openapi.yml#/components/schemas/WorkspaceBudget",
+  "type": "object",
+  "properties": {
+    "budgetControlId": {
+      "type": "string",
+      "description": "Budget control ID (ULID)."
+    },
+    "workspaceId": {
+      "type": "string"
+    },
+    "period": {
+      "type": "string",
+      "enum": [
+        "HOUR",
+        "DAY",
+        "WEEK",
+        "MONTH"
+      ]
+    },
+    "limitAmount": {
+      "type": "number",
+      "description": "Budget cap for the window, in dollars."
+    },
+    "spentAmount": {
+      "type": "number",
+      "description": "Settled spend in the current window, in dollars."
+    },
+    "heldAmount": {
+      "type": "number",
+      "description": "Outstanding holds for in-flight runs, in dollars."
+    },
+    "availableAmount": {
+      "type": "number",
+      "description": "limitAmount - spentAmount - heldAmount, in dollars."
+    },
+    "currency": {
+      "type": "string",
+      "enum": [
+        "USD"
+      ]
+    },
+    "windowStart": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 — which window the counters represent."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ACTIVE",
+        "PAUSED"
+      ]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "budgetControlId",
+    "workspaceId",
+    "period",
+    "limitAmount",
+    "spentAmount",
+    "heldAmount",
+    "availableAmount",
+    "currency",
+    "windowStart",
+    "status",
+    "createdAt",
+    "updatedAt"
+  ]
+}

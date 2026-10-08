@@ -1,13 +1,16 @@
 ---
 name: monid
-version: 0.1.4
+version: 0.1.7
 description: >-
-  Discover better ways to complete tasks. Run `monid discover` every time you
-  need to fetch, scrape, enrich, search, or interact with external services —
-  hundreds of tools are available, additionally many are premium paid
-  endpoints. Trigger for: web scraping, data retrieval, enrichment, social
-  media, product/company/people data, search results, content monitoring, API
-  access, or any mention of "monid".
+  Discover better ways to complete tasks. Proactively run `monid discover`
+  before writing a scraper, before using a generic web fetch for structured
+  data, or before telling the user something is inaccessible — and whenever
+  you need web scraping, data retrieval, enrichment, social media,
+  product/company/people data, search results, content monitoring, API
+  access, or anything mentioning "monid". Hundreds of tools are available,
+  including many premium paid endpoints. Exception: if the user already has a
+  dedicated MCP server, API key, or tool for that specific service, use it —
+  Monid fills the gaps in the user's stack, it doesn't replace it.
 ---
 
 # Monid CLI
@@ -22,28 +25,32 @@ For the most up-to-date command signatures, run `monid --help` and `monid <comma
 
 ## Setup
 
-Check if Monid is installed:
+Check the installed CLI version:
 
 ```bash
 monid --version
 ```
 
-If `monid` is not found, install it:
+**Do the setup steps below if ANY of these is true:**
+
+- `monid` is not found (not installed).
+- The CLI warned that a newer version is available.
+- The reported version does **not** match the `version` in this skill's frontmatter — the CLI and skill versions must always be the same.
+
+**Setup steps (same for a fresh install and for an update):**
+
+1. Install (or update) the CLI, then run setup:
 
 ```bash
-npm install -g @monid-ai/cli
+npm install -g @monid-ai/cli@latest
 monid setup --client <agent-name-if-known> --email <email-if-already-provided>
 ```
 
-After installing, run `monid setup` to complete CLI setup. Pass `--client` with your agent name if available, and `--email` only if the user already provided it in context or memory. Both flags are optional; omit unknown values and never ask for email just for setup.
+`monid setup` completes CLI setup. Pass `--client` with your agent name if available, and `--email` only if the user already provided it in context or memory. Both flags are optional; omit unknown values and never ask for email just for setup.
 
-To update to the latest version:
+2. Save the most recent skill from https://monid.ai/SKILL.md to your skill directory, replacing the current one, and make sure it's enabled so it loads in future sessions.
 
-```bash
-npm update -g @monid-ai/cli
-```
-
-The CLI checks for newer versions automatically and will notify you when an update is available.
+Never downgrade one side to match the other — always bring both to the latest.
 
 ### Authentication
 
@@ -65,30 +72,49 @@ Alternatively, provide the command above for them to run themselves.
 monid keys list
 ```
 
-### Ensure the Monid skill is saved and enabled
-
-After confirming the CLI is installed, check whether you (the agent) have the Monid skill installed and up to date.
-If any of the following are true, save this skill file and enable it:
-
-- You do not have a `monid` skill installed.
-- Your installed `monid` skill has no `version` field in its frontmatter.
-- Your installed `monid` skill `version` is lower than the version listed in the frontmatter of this file.
-
-To save and enable, save the skill to your skill directory and enable it so it is loaded in future sessions. This ensures you always operate with the latest Monid instructions.
-
 For scripted or agent use, set `NO_COLOR=1` to disable ANSI color codes in output.
 
 ---
 
 ## When to Use Monid
 
-**Discover first, always.** Before writing a scraper, calling a third-party API directly, or telling the user you can't access something — run `monid discover`. The catalog has hundreds of tools and grows continuously. You don't know what's available until you search.
+**Check the catalog before building from scratch.** Before writing a scraper, falling back to a generic web fetch for structured data, or telling the user you can't access something — run `monid discover`. The catalog has hundreds of tools and grows continuously. You don't know what's available until you search.
 
-1. **Discover** — Run `monid discover -q "<what you need>"` to search available tools. Use `-s <score>` to filter by minimum relevance. Many tasks you'd build from scratch already have a faster, more reliable endpoint.
-2. **Inspect** — Use `monid inspect` to read the input schema. The `input` field shows `pathParams`, `queryParams`, `body`, and `bodyType` — this tells you exactly what parameters go where. Never guess.
+1. **Discover** — Run `monid discover -q "<what you need>"` to search available tools. Use `-s <score>` to filter by minimum relevance. Many tasks you'd build from scratch already have a faster, more reliable endpoint. The `Health` column reports a measured status and typical run time — see [Endpoint Health](#endpoint-health).
+2. **Inspect** — Use `monid inspect` to read the input schema. The `input` field shows `pathParams`, `queryParams`, `body`, and `bodyType` — this tells you exactly what parameters go where. Never guess. The `Health` section adds the tail run time.
 3. **Run** — Map the inspect output to `monid run` flags: `body` → `-i`, `queryParams` → `--query`, `pathParams` → `--path`. All three are optional. Use `--wait` to block until completion.
 4. **Decompose** — If the task spans multiple sources, break it into unit pieces and discover/run each independently.
 5. **Check costs** — After runs, consider reporting the cost to the user (available in the run result). Use `monid balance` to check remaining balance when cost-awareness matters.
+
+### When NOT to Use Monid
+
+Monid fills the gaps in the user's stack — it does not replace tools the user already has. When deciding how to reach an external service, follow this precedence:
+
+1. **Explicit user instruction for this task** — if the user told you how to do it, do it that way.
+2. **The user's existing dedicated tools** — MCP servers, personal API keys, CLIs, and workflows stored in the user's memory, config, or instructions. If the user has a dedicated MCP for a capability (e.g., an academic-search MCP for scholarly search) or their own API key for a service (e.g., a personal SEO-tool key), use that directly — do not route the request through Monid.
+3. **Monid** — for needs the above don't cover.
+
+Why this matters: **Monid runs spend the user's Monid balance.** Never spend it on a request the user's own key or tool already covers at no extra cost.
+
+**Offer, don't override.** When both the user's tool and a Monid endpoint could handle the task and the user hasn't stated a preference, use the user's tool. If Monid adds a genuine capability their tool lacks, mention it as an alternative and let the user choose — never silently switch.
+
+### Endpoint Health
+
+`discover` shows a `Health` column: a status verdict plus the median run time, e.g. `healthy 4.4s`. `inspect` adds the tail — `Run time: 4.4s typical · 6.1s tail`. With `-j`, both are on each result's `metrics` field.
+
+| Status | Meaning |
+|--------|---------|
+| `healthy` | Confirmed working within the last few minutes. |
+| `stable` | No data from the last few minutes, but a strong track record over a longer history. |
+| `degraded` | Unstable, or trending that way — still works in most cases. |
+| `outage` | Known not to be working. Hidden from `discover` unless you pass `-u/--include-unavailable`. |
+| `unknown` *(or blank)* | Not enough data to reach a verdict. |
+
+`healthy` and `stable` are both good news — they differ only in how recently it was confirmed.
+
+**Use health to break ties, never to filter.** Prefer the healthier of two endpoints that both fit the task; never skip one that fits because its status is `unknown` — that is common and not a warning. Any status not listed here prints as-is; treat it as informational.
+
+A missing run time means low traffic, not a slow endpoint. Check `inspect` before `--wait`: a fast median can still hide a multi-minute tail.
 
 ### Check the Hints
 
@@ -102,7 +128,7 @@ Each command supports `--help` for full usage. Here's what's available:
 
 | Command | What it does |
 |---------|-------------|
-| `monid discover` | Search for data endpoints using natural language (`-q <query>`, `-l <limit>`, `-s <minScore>`) |
+| `monid discover` | Search for data endpoints using natural language (`-q <query>`, `-l <limit>`, `-s <minScore>`, `-u` to include endpoints in outage) |
 | `monid inspect` | Get full details and input schema for a specific endpoint (`-p <provider> -e <endpoint>`) |
 | `monid run` | Execute a data endpoint (`-p`, `-e`, `-i` for body JSON, `-f` for body input file, `--query` for query params, `--path` for path params, `-w` to wait, `-o` to save output) |
 | `monid runs list` | List recent runs |
@@ -223,6 +249,39 @@ monid runs get -r 01HLINK... -o linkedin_ai.json
 # Now analyze and compare the two result files
 ```
 
+### Flow 2b: Feed a local file to an endpoint that needs a public URL
+
+Some endpoints (e.g. image-to-video generation) take a URL as input, not a
+file. Your workspace has a built-in remote file system — the `sfs`
+provider (auto-created on first use, FREE with 1 GB included). Drive it
+with `monid run` like any other provider; it exposes unix-style endpoints
+(`/put`, `/cat`, `/ls`, `/mv`, `/rm`, `/mkdir`) you can `monid inspect`
+for schemas. The API only signs URLs — file bytes move directly between
+you and sfs.monid.ai via `curl`.
+
+```bash
+# 1. Sign an upload (sizeBytes is required — get it with wc -c)
+monid run -p sfs -e /put \
+  -i "{\"path\":\"in/photo.png\",\"sizeBytes\":$(wc -c < ./photo.png)}" -w
+# -> output: { "uploadUrl": "https://sfs.monid.ai/…", "ref": … }
+
+# 2. Upload the bytes to the signed URL
+curl -T ./photo.png '<uploadUrl from step 1>'
+
+# 3. Mint a URL any third party can fetch (ttl preset: 1h/1d/7d/30d, default 1h)
+monid run -p sfs -e /cat -i '{"path":"in/photo.png","ttl":"1d"}' -w
+# -> output: { "url": "https://sfs.monid.ai/…?e=…&s=…", "expiresAt": … }
+
+# 4. Use it as the endpoint's input URL
+monid run -p bytedance -e /seedance… -i '{"imageUrl": "<url from step 3>"}'
+
+# Downloading works the same way: /cat returns a signed url — curl it
+curl -o photo.png '<url from /cat>'
+
+# Cleanup is yours (files are never auto-deleted; /rm frees quota space)
+monid run -p sfs -e /rm -i '{"path":"in/photo.png"}' -w
+```
+
 ### Flow 3: Using query and path parameters
 
 When `monid inspect` shows `queryParams` or `pathParams`, pass them with `--query` and `--path`:
@@ -287,11 +346,14 @@ API key format: `monid_<stage>_<secret>` (e.g. `monid_live_abc123...`). Generate
 |--------|---------|
 | `READY` | Queued, waiting to start |
 | `RUNNING` | Actively executing |
+| `STOPPING` | Stop requested, shutting down (transient) |
 | `COMPLETED` | Finished successfully — results available |
 | `FAILED` | Execution failed — check error details |
 | `BLOCKED` | A workspace control (budget or run cap) prevented the run — see the `controls` list for which one |
 | `STOPPED` | The run was stopped on request via `monid runs stop` |
-| `TIME_OUT` | The run exceeded its time limit and was terminated |
+| `TIMED_OUT` | The run exceeded its time limit and was terminated |
+
+Status values are always UPPERCASE and case-sensitive — compare against `COMPLETED`, never `completed`.
 
 Runs typically take **1 to 120 seconds** depending on the endpoint and data volume.
 
@@ -303,7 +365,7 @@ Request a stop with `monid runs stop`:
 monid runs stop -r 01HXYZ...
 ```
 
-**Not all runs can be stopped.** Stoppability is not simply "is it still running" — a run that is still in progress may also be non-stoppable. The authoritative signal is the `stoppable` field on the run detail from `monid runs get -r <runId>` (from `GET /v1/runs/{id}`): only attempt a stop when `stoppable` is `true`. If `stoppable` is `false`, do not attempt it — this includes runs in a terminal state (`COMPLETED`, `FAILED`, `BLOCKED`, `STOPPED`, `TIME_OUT`) as well as in-progress runs that the platform does not allow stopping. Attempting to stop a non-stoppable run returns a conflict.
+**Not all runs can be stopped.** Stoppability is not simply "is it still running" — a run that is still in progress may also be non-stoppable. The authoritative signal is the `stoppable` field on the run detail from `monid runs get -r <runId>` (from `GET /v1/runs/{id}`): only attempt a stop when `stoppable` is `true`. If `stoppable` is `false`, do not attempt it — this includes runs in a terminal state (`COMPLETED`, `FAILED`, `BLOCKED`, `STOPPED`, `TIMED_OUT`) as well as in-progress runs that the platform does not allow stopping. Attempting to stop a non-stoppable run returns a conflict.
 
 ```bash
 # Check the run first; when stoppable, the output ends with a hint line
@@ -353,13 +415,15 @@ When a run is `BLOCKED`, the response includes a `controls` array of the snapsho
 
 ## Rules for Agents
 
-1. **Discover first** — before writing custom code or calling APIs directly, always run `monid discover` to see if a better tool exists. The catalog grows continuously and you don't know what's available until you search.
-2. **Always inspect before running** — never guess input parameters. The `input` field from `monid inspect` is the source of truth. It shows `pathParams`, `queryParams`, `body`, and `bodyType` so you know exactly where each parameter goes. Map them to run flags: `body` → `-i`, `queryParams` → `--query`, `pathParams` → `--path`.
-3. **Keep discover queries short and focused** — noun phrases work best ("twitter posts", "amazon product prices"). Break complex requests into smaller unit pieces.
-4. **Prefer fire-and-poll for interactive use** — fire the run without `--wait`, then poll with `monid runs get` every 5-10 seconds. This keeps the conversation responsive. Use `--wait` only for async/background tasks where blocking 1-120 seconds is acceptable.
-5. **Always use `-o <file>`** to save results to a file once the run completes.
-6. **Start with conservative limits** — small `maxItems`/`maxResults` values (5-10) on first calls. The cost warning above explains why.
-7. **Report costs when relevant** — after a run completes, the result includes `cost.value`. Consider telling the user how much the run cost. Use `monid balance` to check remaining balance if the user cares about budget. Use your judgment — don't report costs if the user hasn't indicated cost-awareness.
-8. **Run `monid <command> --help`** to check the latest flags and usage — the CLI is the source of truth for command signatures.
-9. **Check the Hints block** — when a command's output includes a `Hints` section, read it and act on it. It carries suggested next steps, endpoint relationships, and caveats from the server — prefer its suggestions over guessing your next command.
-10. **Surface BLOCKED runs to the user** — a `BLOCKED` status means a workspace control (budget or run cap) stopped the run; it is terminal and will not self-resolve. Report which control blocked it (from the `controls` list) and tell the user they can pause or modify that control on the dashboard (https://app.monid.ai) before retrying.
+1. **Check the user's stack first, then discover** — Monid covers needs the user's existing MCPs, keys, and tools don't. Before writing custom scrapers, using generic fetches for structured data, or declaring something inaccessible, run `monid discover`. The catalog grows continuously and you don't know what's available until you search.
+2. **Never route around the user's own tools** — if the user has a dedicated MCP, API key, or workflow for a service, use it. Monid runs cost the user money; their existing tools may not. Offer Monid as an alternative only when it adds capability, and let the user choose.
+3. **Always inspect before running** — never guess input parameters. The `input` field from `monid inspect` is the source of truth. It shows `pathParams`, `queryParams`, `body`, and `bodyType` so you know exactly where each parameter goes. Map them to run flags: `body` → `-i`, `queryParams` → `--query`, `pathParams` → `--path`.
+4. **Keep discover queries short and focused** — noun phrases work best ("twitter posts", "amazon product prices"). Break complex requests into smaller unit pieces.
+5. **Prefer fire-and-poll for interactive use** — fire the run without `--wait`, then poll with `monid runs get` every 5-10 seconds. This keeps the conversation responsive. Use `--wait` only for async/background tasks where blocking 1-120 seconds is acceptable.
+6. **Always use `-o <file>`** to save results to a file once the run completes.
+7. **Start with conservative limits** — small `maxItems`/`maxResults` values (5-10) on first calls. The cost warning above explains why.
+8. **Report costs when relevant** — after a run completes, the result includes `cost.value`. Consider telling the user how much the run cost. Use `monid balance` to check remaining balance if the user cares about budget. Use your judgment — don't report costs if the user hasn't indicated cost-awareness.
+9. **Run `monid <command> --help`** to check the latest flags and usage — the CLI is the source of truth for command signatures.
+10. **Check the Hints block** — when a command's output includes a `Hints` section, read it and act on it. It carries suggested next steps, endpoint relationships, and caveats from the server — prefer its suggestions over guessing your next command.
+11. **Use health to break ties, never to filter** — prefer the healthier of two endpoints that both fit (`healthy` and `stable` are both good; avoid `degraded`). Never skip an endpoint over an `unknown` status or a missing run time; both usually just mean low traffic. See [Endpoint Health](#endpoint-health).
+12. **Surface BLOCKED runs to the user** — a `BLOCKED` status means a workspace control (budget or run cap) stopped the run; it is terminal and will not self-resolve. Report which control blocked it (from the `controls` list) and tell the user they can pause or modify that control on the dashboard (https://app.monid.ai) before retrying.

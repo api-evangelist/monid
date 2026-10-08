@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/monid/main/json-schema/monid-identity-link-complete-response-schema.json",
+  "title": "IdentityLinkCompleteResponse",
+  "x-generated": "2026-10-07",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/monid-identities-api-openapi.yml#/components/schemas/IdentityLinkCompleteResponse",
+  "type": "object",
+  "properties": {
+    "provider": {
+      "type": "string",
+      "enum": [
+        "clerk",
+        "aep",
+        "world",
+        "world-sandbox"
+      ]
+    },
+    "verified": {
+      "type": "boolean"
+    },
+    "firstLink": {
+      "type": "boolean",
+      "description": "True when this call created the identity link."
+    },
+    "returnTo": {
+      "type": "string",
+      "description": "The `returnTo` supplied when the link was started."
+    }
+  },
+  "required": [
+    "provider",
+    "verified",
+    "firstLink"
+  ]
+}

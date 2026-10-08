@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/monid/main/json-schema/monid-wallet-topup-session-response-schema.json",
+  "title": "WalletTopupSessionResponse",
+  "x-generated": "2026-10-07",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/monid-wallet-api-openapi.yml#/components/schemas/WalletTopupSessionResponse",
+  "type": "object",
+  "properties": {
+    "paymentProcessor": {
+      "type": "string",
+      "description": "Payment processor type (e.g. STRIPE)."
+    },
+    "sessionId": {
+      "type": "string",
+      "description": "Hosted checkout session id."
+    },
+    "url": {
+      "type": "string",
+      "description": "Hosted checkout redirect URL."
+    }
+  },
+  "required": [
+    "paymentProcessor",
+    "sessionId",
+    "url"
+  ]
+}

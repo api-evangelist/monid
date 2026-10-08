@@ -1,16 +1,16 @@
 ---
-name: Discover, inspect, and run a data endpoint
+name: monid-discover-inspect-run
 description: >-
   Use the Monid HTTP API to find the right external data/tool endpoint in natural
   language, check its input schema and price, execute it, and retrieve results —
   paying per run from a workspace wallet balance.
-api: openapi/monid-openapi.json
+api: openapi/_original/monid-openapi.json
 operations:
-  - POST /v1/discover
-  - POST /v1/inspect
-  - POST /v1/run
-  - GET /v1/runs/{runId}
-  - GET /v1/wallet/balance
+  - postV1Discover
+  - postV1Inspect
+  - postV1Run
+  - getV1RunsByRunId
+  - getV1WalletBalance
 ---
 
 # Discover → inspect → run a Monid data endpoint

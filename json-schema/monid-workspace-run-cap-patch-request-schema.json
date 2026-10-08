@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/monid/main/json-schema/monid-workspace-run-cap-patch-request-schema.json",
+  "title": "WorkspaceRunCapPatchRequest",
+  "x-generated": "2026-10-07",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/monid-controls-api-openapi.yml#/components/schemas/WorkspaceRunCapPatchRequest",
+  "type": "object",
+  "properties": {
+    "limitAmount": {
+      "type": "object",
+      "properties": {
+        "currency": {
+          "type": "string",
+          "enum": [
+            "USD"
+          ]
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "MICRO_DOLLAR",
+            "CENT",
+            "DOLLAR"
+          ]
+        }
+      },
+      "required": [
+        "currency",
+        "value",
+        "unit"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ACTIVE",
+        "PAUSED"
+      ]
+    }
+  }
+}

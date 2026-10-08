@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/monid/main/json-schema/monid-public-categories-response-schema.json",
+  "title": "PublicCategoriesResponse",
+  "x-generated": "2026-10-07",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/monid-discover-api-openapi.yml#/components/schemas/PublicCategoriesResponse",
+  "type": "object",
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PublicCategoryNode"
+      },
+      "description": "Flat node list: tops (priority order) then leaves/providers (alphabetical). Hidden, unlinked, and zero-count nodes omitted."
+    },
+    "totalEndpointCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Exact number of catalog-visible endpoints (with `q`: matching the query) — drives the All rail count."
+    }
+  },
+  "required": [
+    "items",
+    "totalEndpointCount"
+  ],
+  "$defs": {
+    "LeafCategoryNode": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Stable node id (e.g. \"social-media\", \"twitter\", \"apify\")."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display label — manifest copy for tops/leaves; resolved provider display name for provider nodes."
+        },
+        "description": {
+          "type": "string",
+          "description": "Short blurb, when available."
+        },
+        "endpointCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Live endpoint count (with `q`: endpoints matching the query). Top counts are DISTINCT-document counts across their members."
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "category"
+          ],
+          "description": "Leaf category node."
+        },
+        "parents": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Top ids this leaf is linked under (a leaf may have several parents)."
+        }
+      },
+      "required": [
+        "id",
+        "displayName",
+        "endpointCount",
+        "kind",
+        "parents"
+      ]
+    },
+    "ProviderCategoryNode": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Stable node id (e.g. \"social-media\", \"twitter\", \"apify\")."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display label — manifest copy for tops/leaves; resolved provider display name for provider nodes."
+        },
+        "description": {
+          "type": "string",
+          "description": "Short blurb, when available."
+        },
+        "endpointCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Live endpoint count (with `q`: endpoints matching the query). Top counts are DISTINCT-document counts across their members."
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "provider"
+          ],
+          "description": "Derived provider node."
+        },
+        "provider": {
+          "type": "string",
+          "description": "Provider slug."
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "The provider's own public website, when it declares one (`ProviderInfo.url`). Absent otherwise — never null, never empty. Provider nodes only: a leaf/top category has no vendor to link to. This is display copy, NOT the endpoint-level documentation URL (`docUrl`)."
+        },
+        "docsUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "The provider's own API documentation, when known (`ProviderInfo.docsUrl`). Provider nodes only; absent otherwise."
+        },
+        "parents": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Top ids this provider node is linked under (a node may have several parents)."
+        }
+      },
+      "required": [
+        "id",
+        "displayName",
+        "endpointCount",
+        "kind",
+        "provider",
+        "parents"
+      ]
+    },
+    "PublicCategoryNode": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/TopCategoryNode"
+        },
+        {
+          "$ref": "#/$defs/LeafCategoryNode"
+        },
+        {
+          "$ref": "#/$defs/ProviderCategoryNode"
+        }
+      ]
+    },
+    "TopCategoryNode": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Stable node id (e.g. \"social-media\", \"twitter\", \"apify\")."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display label — manifest copy for tops/leaves; resolved provider display name for provider nodes."
+        },
+        "description": {
+          "type": "string",
+          "description": "Short blurb, when available."
+        },
+        "endpointCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Live endpoint count (with `q`: endpoints matching the query). Top counts are DISTINCT-document counts across their members."
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "top"
+          ],
+          "description": "System group node."
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Ordered member node ids (linked leaves in display order, then provider nodes)."
+        }
+      },
+      "required": [
+        "id",
+        "displayName",
+        "endpointCount",
+        "kind",
+        "children"
+      ]
+    }
+  }
+}

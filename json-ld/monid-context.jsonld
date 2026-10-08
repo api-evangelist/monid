@@ -1,0 +1,824 @@
+{
+  "@context": {
+    "@vocab": "https://monid.ai/schema#",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "monid": "https://monid.ai/schema#",
+    "UpdateApiKeyRequest": "monid:UpdateApiKeyRequest",
+    "label": {
+      "@id": "monid:label",
+      "@type": "xsd:string"
+    },
+    "ApiKey": "monid:ApiKey",
+    "keyPrefix": {
+      "@id": "monid:keyPrefix",
+      "@type": "xsd:string"
+    },
+    "owner": {
+      "@id": "monid:owner",
+      "@type": "xsd:string"
+    },
+    "createdBy": {
+      "@id": "monid:createdBy",
+      "@type": "xsd:string"
+    },
+    "scopes": {
+      "@id": "monid:scopes",
+      "@container": "@list"
+    },
+    "status": {
+      "@id": "monid:status",
+      "@type": "xsd:string"
+    },
+    "origin": {
+      "@id": "monid:origin",
+      "@type": "xsd:string"
+    },
+    "expiresAt": {
+      "@id": "monid:expiresAt",
+      "@type": "xsd:dateTime"
+    },
+    "revokedAt": {
+      "@id": "monid:revokedAt",
+      "@type": "xsd:dateTime"
+    },
+    "revokedBy": {
+      "@id": "monid:revokedBy",
+      "@type": "xsd:string"
+    },
+    "createdAt": {
+      "@id": "monid:createdAt",
+      "@type": "xsd:dateTime"
+    },
+    "lastUsedAt": {
+      "@id": "monid:lastUsedAt",
+      "@type": "xsd:dateTime"
+    },
+    "ScopeCatalog": "monid:ScopeCatalog",
+    "resources": {
+      "@id": "monid:resources",
+      "@container": "@list"
+    },
+    "Error": "monid:Error",
+    "code": {
+      "@id": "monid:code",
+      "@type": "xsd:integer"
+    },
+    "message": {
+      "@id": "monid:message",
+      "@type": "xsd:string"
+    },
+    "errorCode": {
+      "@id": "monid:errorCode",
+      "@type": "xsd:string"
+    },
+    "WorkspaceListResponse": "monid:WorkspaceListResponse",
+    "workspaces": {
+      "@id": "monid:workspaces",
+      "@container": "@list"
+    },
+    "WorkspaceListItem": "monid:WorkspaceListItem",
+    "workspaceId": {
+      "@id": "monid:workspaceId",
+      "@type": "xsd:string"
+    },
+    "slug": {
+      "@id": "monid:slug",
+      "@type": "xsd:string"
+    },
+    "AuthWorkspace": "monid:AuthWorkspace",
+    "name": {
+      "@id": "monid:name",
+      "@type": "xsd:string"
+    },
+    "metadata": {
+      "@id": "monid:metadata"
+    },
+    "updatedAt": {
+      "@id": "monid:updatedAt",
+      "@type": "xsd:dateTime"
+    },
+    "IdentityProviderAvailability": "monid:IdentityProviderAvailability",
+    "key": {
+      "@id": "monid:key",
+      "@type": "xsd:string"
+    },
+    "enabled": {
+      "@id": "monid:enabled",
+      "@type": "xsd:boolean"
+    },
+    "AuthCredential": "monid:AuthCredential",
+    "kind": {
+      "@id": "monid:kind",
+      "@type": "xsd:string"
+    },
+    "defaultScopes": {
+      "@id": "monid:defaultScopes",
+      "@container": "@list"
+    },
+    "fingerprint": {
+      "@id": "monid:fingerprint",
+      "@type": "xsd:string"
+    },
+    "IdentitySummary": "monid:IdentitySummary",
+    "provider": {
+      "@id": "monid:provider",
+      "@type": "xsd:string"
+    },
+    "verified": {
+      "@id": "monid:verified",
+      "@type": "xsd:boolean"
+    },
+    "linkedAt": {
+      "@id": "monid:linkedAt",
+      "@type": "xsd:dateTime"
+    },
+    "lastVerifiedAt": {
+      "@id": "monid:lastVerifiedAt",
+      "@type": "xsd:dateTime"
+    },
+    "WhoamiResponse": "monid:WhoamiResponse",
+    "user": {
+      "@id": "monid:user",
+      "@type": "@id"
+    },
+    "workspace": {
+      "@id": "monid:workspace",
+      "@type": "@id"
+    },
+    "credential": {
+      "@id": "monid:credential",
+      "@type": "@id"
+    },
+    "identities": {
+      "@id": "monid:identities",
+      "@container": "@list"
+    },
+    "identityProviders": {
+      "@id": "monid:identityProviders",
+      "@container": "@list"
+    },
+    "AuthUser": "monid:AuthUser",
+    "userId": {
+      "@id": "monid:userId",
+      "@type": "xsd:string"
+    },
+    "username": {
+      "@id": "monid:username",
+      "@type": "xsd:string"
+    },
+    "email": {
+      "@id": "monid:email",
+      "@type": "xsd:string"
+    },
+    "WorkspaceRunCapPatchRequest": "monid:WorkspaceRunCapPatchRequest",
+    "limitAmount": {
+      "@id": "monid:limitAmount"
+    },
+    "WorkspaceBudgetPatchRequest": "monid:WorkspaceBudgetPatchRequest",
+    "WorkspaceBudgetRun": "monid:WorkspaceBudgetRun",
+    "budgetControlId": {
+      "@id": "monid:budgetControlId",
+      "@type": "xsd:string"
+    },
+    "runId": {
+      "@id": "monid:runId",
+      "@type": "xsd:string"
+    },
+    "holdAmount": {
+      "@id": "monid:holdAmount",
+      "@type": "xsd:decimal"
+    },
+    "settledAmount": {
+      "@id": "monid:settledAmount",
+      "@type": "xsd:decimal"
+    },
+    "currency": {
+      "@id": "monid:currency",
+      "@type": "xsd:string"
+    },
+    "snapshot": {
+      "@id": "monid:snapshot"
+    },
+    "settledAt": {
+      "@id": "monid:settledAt",
+      "@type": "xsd:dateTime"
+    },
+    "WorkspaceBudget": "monid:WorkspaceBudget",
+    "period": {
+      "@id": "monid:period",
+      "@type": "xsd:string"
+    },
+    "spentAmount": {
+      "@id": "monid:spentAmount",
+      "@type": "xsd:decimal"
+    },
+    "heldAmount": {
+      "@id": "monid:heldAmount",
+      "@type": "xsd:decimal"
+    },
+    "availableAmount": {
+      "@id": "monid:availableAmount",
+      "@type": "xsd:decimal"
+    },
+    "windowStart": {
+      "@id": "monid:windowStart",
+      "@type": "xsd:dateTime"
+    },
+    "WorkspaceRunCapRun": "monid:WorkspaceRunCapRun",
+    "runCapControlId": {
+      "@id": "monid:runCapControlId",
+      "@type": "xsd:string"
+    },
+    "estimatedCost": {
+      "@id": "monid:estimatedCost",
+      "@type": "xsd:decimal"
+    },
+    "WorkspaceRunCap": "monid:WorkspaceRunCap",
+    "DiscoverResourcesRequest": "monid:DiscoverResourcesRequest",
+    "category": {
+      "@id": "monid:category",
+      "@type": "xsd:string"
+    },
+    "DiscoverRequest": "monid:DiscoverRequest",
+    "query": {
+      "@id": "monid:query",
+      "@type": "xsd:string"
+    },
+    "limit": {
+      "@id": "monid:limit",
+      "@type": "xsd:integer"
+    },
+    "minScore": {
+      "@id": "monid:minScore",
+      "@type": "xsd:decimal"
+    },
+    "includeUnavailable": {
+      "@id": "monid:includeUnavailable",
+      "@type": "xsd:boolean"
+    },
+    "supportsX402": {
+      "@id": "monid:supportsX402",
+      "@type": "xsd:boolean"
+    },
+    "x402Network": {
+      "@id": "monid:x402Network",
+      "@type": "xsd:string"
+    },
+    "readonly": {
+      "@id": "monid:readonly",
+      "@type": "xsd:boolean"
+    },
+    "effects": {
+      "@id": "monid:effects",
+      "@container": "@list"
+    },
+    "PublicProviderEntry": "monid:PublicProviderEntry",
+    "displayName": {
+      "@id": "monid:displayName",
+      "@type": "xsd:string"
+    },
+    "displayDescription": {
+      "@id": "monid:displayDescription",
+      "@type": "xsd:string"
+    },
+    "url": {
+      "@id": "monid:url",
+      "@type": "@id"
+    },
+    "docsUrl": {
+      "@id": "monid:docsUrl",
+      "@type": "@id"
+    },
+    "endpointCount": {
+      "@id": "monid:endpointCount",
+      "@type": "xsd:integer"
+    },
+    "ProviderResource": "monid:ProviderResource",
+    "providerDisplayName": {
+      "@id": "monid:providerDisplayName",
+      "@type": "xsd:string"
+    },
+    "providerUrl": {
+      "@id": "monid:providerUrl",
+      "@type": "@id"
+    },
+    "providerDocsUrl": {
+      "@id": "monid:providerDocsUrl",
+      "@type": "@id"
+    },
+    "resource": {
+      "@id": "monid:resource",
+      "@type": "xsd:string"
+    },
+    "resourceType": {
+      "@id": "monid:resourceType",
+      "@type": "xsd:string"
+    },
+    "summary": {
+      "@id": "monid:summary",
+      "@type": "xsd:string"
+    },
+    "pricing": {
+      "@id": "monid:pricing"
+    },
+    "endpoints": {
+      "@id": "monid:endpoints",
+      "@container": "@list"
+    },
+    "categories": {
+      "@id": "monid:categories",
+      "@container": "@list"
+    },
+    "PublicPrice": "monid:PublicPrice",
+    "type": {
+      "@id": "monid:type",
+      "@type": "xsd:string"
+    },
+    "amount": {
+      "@id": "monid:amount"
+    },
+    "flatFee": {
+      "@id": "monid:flatFee"
+    },
+    "per": {
+      "@id": "monid:per"
+    },
+    "unit": {
+      "@id": "monid:unit",
+      "@type": "xsd:string"
+    },
+    "default": {
+      "@id": "monid:default"
+    },
+    "selectors": {
+      "@id": "monid:selectors",
+      "@container": "@list"
+    },
+    "variants": {
+      "@id": "monid:variants",
+      "@container": "@list"
+    },
+    "tiers": {
+      "@id": "monid:tiers",
+      "@container": "@list"
+    },
+    "ResourceRent": "monid:ResourceRent",
+    "PublicCategoriesResponse": "monid:PublicCategoriesResponse",
+    "items": {
+      "@id": "monid:items",
+      "@container": "@list"
+    },
+    "totalEndpointCount": {
+      "@id": "monid:totalEndpointCount",
+      "@type": "xsd:integer"
+    },
+    "DiscoverProvidersRequest": "monid:DiscoverProvidersRequest",
+    "q": {
+      "@id": "monid:q",
+      "@type": "xsd:string"
+    },
+    "ResourceEndpoint": "monid:ResourceEndpoint",
+    "endpoint": {
+      "@id": "monid:endpoint",
+      "@type": "xsd:string"
+    },
+    "price": {
+      "@id": "monid:price",
+      "@type": "@id"
+    },
+    "ProviderCategoryNode": "monid:ProviderCategoryNode",
+    "id": {
+      "@id": "monid:id",
+      "@type": "xsd:string"
+    },
+    "description": {
+      "@id": "monid:description",
+      "@type": "xsd:string"
+    },
+    "parents": {
+      "@id": "monid:parents",
+      "@container": "@list"
+    },
+    "DiscoverResult": "monid:DiscoverResult",
+    "providerName": {
+      "@id": "monid:providerName",
+      "@type": "xsd:string"
+    },
+    "score": {
+      "@id": "monid:score",
+      "@type": "xsd:decimal"
+    },
+    "tags": {
+      "@id": "monid:tags",
+      "@container": "@list"
+    },
+    "metrics": {
+      "@id": "monid:metrics"
+    },
+    "hints": {
+      "@id": "monid:hints"
+    },
+    "DiscoverResponse": "monid:DiscoverResponse",
+    "results": {
+      "@id": "monid:results",
+      "@container": "@list"
+    },
+    "count": {
+      "@id": "monid:count",
+      "@type": "xsd:decimal"
+    },
+    "TopCategoryNode": "monid:TopCategoryNode",
+    "children": {
+      "@id": "monid:children",
+      "@container": "@list"
+    },
+    "DiscoverEndpointsResponse": "monid:DiscoverEndpointsResponse",
+    "total": {
+      "@id": "monid:total",
+      "@type": "xsd:integer"
+    },
+    "DiscoverCategoriesRequest": "monid:DiscoverCategoriesRequest",
+    "ResourceRateLine": "monid:ResourceRateLine",
+    "ratePerUnit": {
+      "@id": "monid:ratePerUnit",
+      "@type": "xsd:decimal"
+    },
+    "DiscoverPrice": "monid:DiscoverPrice",
+    "ProviderResourcesResponse": "monid:ProviderResourcesResponse",
+    "LeafCategoryNode": "monid:LeafCategoryNode",
+    "DiscoverEndpointsRequest": "monid:DiscoverEndpointsRequest",
+    "PublicEndpointInfo": "monid:PublicEndpointInfo",
+    "providerDisplayDescription": {
+      "@id": "monid:providerDisplayDescription",
+      "@type": "xsd:string"
+    },
+    "supportedX402Networks": {
+      "@id": "monid:supportedX402Networks",
+      "@container": "@list"
+    },
+    "IdentityLinkCompleteRequest": "monid:IdentityLinkCompleteRequest",
+    "state": {
+      "@id": "monid:state",
+      "@type": "xsd:string"
+    },
+    "IdentityLinkCompleteResponse": "monid:IdentityLinkCompleteResponse",
+    "firstLink": {
+      "@id": "monid:firstLink",
+      "@type": "xsd:boolean"
+    },
+    "returnTo": {
+      "@id": "monid:returnTo",
+      "@type": "xsd:string"
+    },
+    "IdentityLinkStartRequest": "monid:IdentityLinkStartRequest",
+    "IdentityLinkStartResponse": "monid:IdentityLinkStartResponse",
+    "authorizationUrl": {
+      "@id": "monid:authorizationUrl",
+      "@type": "@id"
+    },
+    "InspectResponse": "monid:InspectResponse",
+    "method": {
+      "@id": "monid:method",
+      "@type": "xsd:string"
+    },
+    "docUrl": {
+      "@id": "monid:docUrl",
+      "@type": "xsd:string"
+    },
+    "notes": {
+      "@id": "monid:notes",
+      "@container": "@list"
+    },
+    "input": {
+      "@id": "monid:input",
+      "@type": "@id"
+    },
+    "InspectRequest": "monid:InspectRequest",
+    "EndpointInput": "monid:EndpointInput",
+    "pathParams": {
+      "@id": "monid:pathParams"
+    },
+    "queryParams": {
+      "@id": "monid:queryParams"
+    },
+    "body": {
+      "@id": "monid:body"
+    },
+    "bodyType": {
+      "@id": "monid:bodyType",
+      "@type": "xsd:string"
+    },
+    "Price": "monid:Price",
+    "PublicRegistryStats": "monid:PublicRegistryStats",
+    "providerCount": {
+      "@id": "monid:providerCount",
+      "@type": "xsd:integer"
+    },
+    "ResourceReleaseAccepted": "monid:ResourceReleaseAccepted",
+    "resourceId": {
+      "@id": "monid:resourceId",
+      "@type": "xsd:string"
+    },
+    "ExternalResourceDetail": "monid:ExternalResourceDetail",
+    "data": {
+      "@id": "monid:data"
+    },
+    "Resource": "monid:Resource",
+    "resourceSlug": {
+      "@id": "monid:resourceSlug",
+      "@type": "xsd:string"
+    },
+    "externalId": {
+      "@id": "monid:externalId",
+      "@type": "xsd:string"
+    },
+    "identifier": {
+      "@id": "monid:identifier",
+      "@type": "xsd:string"
+    },
+    "releasable": {
+      "@id": "monid:releasable",
+      "@type": "xsd:boolean"
+    },
+    "provisionedBy": {
+      "@id": "monid:provisionedBy",
+      "@type": "xsd:string"
+    },
+    "releasedBy": {
+      "@id": "monid:releasedBy",
+      "@type": "xsd:string"
+    },
+    "renewal": {
+      "@id": "monid:renewal",
+      "@type": "@id"
+    },
+    "releasedAt": {
+      "@id": "monid:releasedAt",
+      "@type": "xsd:dateTime"
+    },
+    "releaseReasonCode": {
+      "@id": "monid:releaseReasonCode",
+      "@type": "xsd:string"
+    },
+    "releaseReason": {
+      "@id": "monid:releaseReason",
+      "@type": "xsd:string"
+    },
+    "phoneNumber": {
+      "@id": "monid:phoneNumber",
+      "@type": "xsd:string"
+    },
+    "country": {
+      "@id": "monid:country",
+      "@type": "xsd:string"
+    },
+    "numberType": {
+      "@id": "monid:numberType",
+      "@type": "xsd:string"
+    },
+    "totalBytes": {
+      "@id": "monid:totalBytes",
+      "@type": "xsd:integer"
+    },
+    "objectCount": {
+      "@id": "monid:objectCount",
+      "@type": "xsd:integer"
+    },
+    "lastMutationAt": {
+      "@id": "monid:lastMutationAt",
+      "@type": "xsd:dateTime"
+    },
+    "cdpUrl": {
+      "@id": "monid:cdpUrl",
+      "@type": "xsd:string"
+    },
+    "baseUrl": {
+      "@id": "monid:baseUrl",
+      "@type": "xsd:string"
+    },
+    "targetUrl": {
+      "@id": "monid:targetUrl",
+      "@type": "xsd:string"
+    },
+    "timeoutSeconds": {
+      "@id": "monid:timeoutSeconds",
+      "@type": "xsd:integer"
+    },
+    "proxyCountryCode": {
+      "@id": "monid:proxyCountryCode",
+      "@type": "xsd:string"
+    },
+    "externalResources": {
+      "@id": "monid:externalResources",
+      "@container": "@list"
+    },
+    "syncedAt": {
+      "@id": "monid:syncedAt",
+      "@type": "xsd:dateTime"
+    },
+    "usageBilling": {
+      "@id": "monid:usageBilling"
+    },
+    "ResourceEvent": "monid:ResourceEvent",
+    "eventId": {
+      "@id": "monid:eventId",
+      "@type": "xsd:string"
+    },
+    "cycle": {
+      "@id": "monid:cycle",
+      "@type": "xsd:decimal"
+    },
+    "reason": {
+      "@id": "monid:reason",
+      "@type": "xsd:string"
+    },
+    "at": {
+      "@id": "monid:at",
+      "@type": "xsd:dateTime"
+    },
+    "ExternalResourceSummary": "monid:ExternalResourceSummary",
+    "ResourceRenewal": "monid:ResourceRenewal",
+    "renewLead": {
+      "@id": "monid:renewLead"
+    },
+    "startedAt": {
+      "@id": "monid:startedAt",
+      "@type": "xsd:dateTime"
+    },
+    "currentPeriodStart": {
+      "@id": "monid:currentPeriodStart",
+      "@type": "xsd:dateTime"
+    },
+    "currentPeriodEnd": {
+      "@id": "monid:currentPeriodEnd",
+      "@type": "xsd:dateTime"
+    },
+    "renewAttemptAt": {
+      "@id": "monid:renewAttemptAt",
+      "@type": "xsd:dateTime"
+    },
+    "lastAttempt": {
+      "@id": "monid:lastAttempt"
+    },
+    "cancelledAt": {
+      "@id": "monid:cancelledAt",
+      "@type": "xsd:dateTime"
+    },
+    "RunStopAccepted": "monid:RunStopAccepted",
+    "RunBlocked": "monid:RunBlocked",
+    "controls": {
+      "@id": "monid:controls",
+      "@container": "@list"
+    },
+    "completedAt": {
+      "@id": "monid:completedAt",
+      "@type": "xsd:dateTime"
+    },
+    "RunAccepted": "monid:RunAccepted",
+    "Cost": "monid:Cost",
+    "value": {
+      "@id": "monid:value",
+      "@type": "xsd:decimal"
+    },
+    "RunListItem": "monid:RunListItem",
+    "caller": {
+      "@id": "monid:caller",
+      "@type": "xsd:string"
+    },
+    "stoppable": {
+      "@id": "monid:stoppable",
+      "@type": "xsd:boolean"
+    },
+    "providerResponse": {
+      "@id": "monid:providerResponse",
+      "@type": "@id"
+    },
+    "cost": {
+      "@id": "monid:cost",
+      "@type": "@id"
+    },
+    "resultCount": {
+      "@id": "monid:resultCount",
+      "@type": "xsd:decimal"
+    },
+    "billedUnits": {
+      "@id": "monid:billedUnits",
+      "@type": "xsd:decimal"
+    },
+    "RunBilling": "monid:RunBilling",
+    "reportedCost": {
+      "@id": "monid:reportedCost"
+    },
+    "RunRequest": "monid:RunRequest",
+    "ProviderResponse": "monid:ProviderResponse",
+    "httpStatus": {
+      "@id": "monid:httpStatus",
+      "@type": "xsd:integer"
+    },
+    "error": {
+      "@id": "monid:error"
+    },
+    "Run": "monid:Run",
+    "output": {
+      "@id": "monid:output"
+    },
+    "RunCompleted": "monid:RunCompleted",
+    "billing": {
+      "@id": "monid:billing",
+      "@type": "@id"
+    },
+    "stopRequestedAt": {
+      "@id": "monid:stopRequestedAt",
+      "@type": "xsd:dateTime"
+    },
+    "WalletTopupConfigResponse": "monid:WalletTopupConfigResponse",
+    "minAmount": {
+      "@id": "monid:minAmount",
+      "@type": "xsd:decimal"
+    },
+    "maxAmount": {
+      "@id": "monid:maxAmount",
+      "@type": "xsd:decimal"
+    },
+    "processingFee": {
+      "@id": "monid:processingFee"
+    },
+    "promotion": {
+      "@id": "monid:promotion"
+    },
+    "presets": {
+      "@id": "monid:presets",
+      "@container": "@list"
+    },
+    "defaultPreset": {
+      "@id": "monid:defaultPreset",
+      "@type": "xsd:decimal"
+    },
+    "autoReload": {
+      "@id": "monid:autoReload"
+    },
+    "WalletUnavailableError": "monid:WalletUnavailableError",
+    "walletStatus": {
+      "@id": "monid:walletStatus",
+      "@type": "xsd:string"
+    },
+    "WalletBalanceResponse": "monid:WalletBalanceResponse",
+    "balance": {
+      "@id": "monid:balance",
+      "@type": "@id"
+    },
+    "held": {
+      "@id": "monid:held",
+      "@type": "@id"
+    },
+    "topup": {
+      "@id": "monid:topup",
+      "@type": "@id"
+    },
+    "TopupHints": "monid:TopupHints",
+    "stripe": {
+      "@id": "monid:stripe",
+      "@type": "xsd:string"
+    },
+    "dashboard": {
+      "@id": "monid:dashboard",
+      "@type": "xsd:string"
+    },
+    "docs": {
+      "@id": "monid:docs",
+      "@type": "xsd:string"
+    },
+    "WalletTopupSessionResponse": "monid:WalletTopupSessionResponse",
+    "paymentProcessor": {
+      "@id": "monid:paymentProcessor",
+      "@type": "xsd:string"
+    },
+    "sessionId": {
+      "@id": "monid:sessionId",
+      "@type": "xsd:string"
+    },
+    "WalletMonetaryAmount": "monid:WalletMonetaryAmount",
+    "WalletTopupRequest": "monid:WalletTopupRequest",
+    "success_redirect": {
+      "@id": "monid:success_redirect",
+      "@type": "xsd:string"
+    },
+    "cancel_redirect": {
+      "@id": "monid:cancel_redirect",
+      "@type": "xsd:string"
+    }
+  },
+  "@type": "schema:Dataset",
+  "schema:name": "Monid API JSON-LD context",
+  "schema:description": "A JSON-LD @context for the objects Monid's own API contract declares: one class per component schema, one property per declared field, typed from the contract. Derived by script (derive-json-ld.py, 2026-10-07) from openapi/monid-api-keys-api-openapi.yml, openapi/monid-auth-api-openapi.yml, openapi/monid-controls-api-openapi.yml.",
+  "dcterms:created": "2026-10-07",
+  "dcterms:source": [
+    "openapi/monid-api-keys-api-openapi.yml",
+    "openapi/monid-auth-api-openapi.yml",
+    "openapi/monid-controls-api-openapi.yml",
+    "openapi/monid-discover-api-openapi.yml",
+    "openapi/monid-endpoints-api-openapi.yml"
+  ]
+}

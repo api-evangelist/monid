@@ -1,0 +1,77 @@
+generated: '2026-10-07'
+method: probed
+source: pre-flight dossier (docs platform, portal detections) + CNAME chains and response headers of the hosts apis.yml names
+registry: all/0-working/vendors.yml
+areas_vocabulary:
+- documentation
+- developer-portal
+- api-gateway
+- cdn
+- hosting
+- sdk-generation
+- api-collections
+- status-page
+- support
+- community
+- identity
+- mcp-hosting
+vendors:
+- vendor: cloudfront
+  name: Amazon CloudFront
+  area: cdn
+  host: monid.ai
+  evidence: header:x-amz-cf-id
+  signal: header
+  confidence: high
+  kin_score: []
+- vendor: discord
+  name: Discord
+  area: community
+  host: discord.gg
+  evidence: https://discord.gg/rQzztcgJV8
+  signal: url:discord.gg
+  confidence: high
+  kin_score:
+  - community_present
+- vendor: clerk
+  name: Clerk
+  area: identity
+  host: clerk.app.monid.ai
+  evidence: monid-clerk-oauth-authorization-server.json names clerk in its OAuth metadata
+  signal: oauth-metadata
+  confidence: high
+  kin_score:
+  - authentication
+- vendor: betterstack
+  name: Better Stack
+  area: status-page
+  host: status.monid.ai
+  evidence: cname:betteruptime.com
+  signal: cname
+  confidence: high
+  kin_score:
+  - status_page
+reliance:
+  areas_vendor_served:
+  - cdn
+  - community
+  - identity
+  - status-page
+  vendor_count: 4
+  areas_observed: 12
+  share_of_observable_areas: 0.333
+  note: areas where a third party was DETECTED serving this provider; an area absent here was either self-run or not observed, and this script
+    cannot tell those apart
+checked:
+- 'docs-platform: custom'
+- status.monid.ai (StatusPage)
+- monid.ai (Website)
+- monid.ai (DeveloperPortal)
+- monid.ai (Documentation)
+- monid.ai (APIReference)
+- monid.ai (GettingStarted)
+- app.monid.ai (SignUp)
+- discord.gg (Support)
+- api.monid.ai (baseURL)
+- x402.monid.ai (baseURL)
+- mcp.monid.ai (mcp)
