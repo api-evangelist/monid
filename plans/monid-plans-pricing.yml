@@ -27,3 +27,15 @@ note: 'No fixed price list is published: every endpoint carries its own per-call
   the API (the price field of discover/inspect/run and the public registry). The page shows only illustrative examples
   ($0.003 per call; $0.001 per review plus a $0.002 base fee), so published is false. No free tier, subscription
   or enterprise plan is published.'
+x-canonical:
+  generated: '2026-10-08'
+  vocabulary: all/0-working/economics/plans-canonical.yml
+  models: []
+  units: []
+  plans:
+  - name: Pay-as-you-go (prepaid wallet)
+    access: other
+    model: unstated
+    model_how: derived
+    units: []
+    periods: []
