@@ -59,6 +59,8 @@ maintainers:
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: RateLimits
+  url: rate-limits/monid-rate-limits.yml
 - type: Newsroom
   url: https://monid.ai/tools/news
 - type: Plans
