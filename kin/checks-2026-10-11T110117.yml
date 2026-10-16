@@ -2,22 +2,18 @@
 kin_checks:
   slug: monid
   schema_version: 0.23.0
-  scored_at: '2026-10-03'
-  run_ts: 2026-10-03T024842
+  scored_at: '2026-10-11'
+  run_ts: 2026-10-11T110117
   note: Actionable checks (missed + partial) in `checks`, plus the ids that did not
     apply in `na`. Everything else in rubric/scoring-0.23.0.yml was earned; counts
     below let you verify that.
   counts:
     total: 153
-    earned: 30
-    partial: 20
-    missed: 76
+    earned: 42
+    partial: 26
+    missed: 58
     na: 27
   checks:
-  - id: image_present
-    status: missed
-  - id: newsroom_present
-    status: missed
   - id: leadership_present
     status: missed
   - id: multiple_apis
@@ -28,45 +24,27 @@ kin_checks:
     status: missed
   - id: openapi_3_2
     status: missed
-    detail: 0 of 10 openapi documents pass; credited at 90% because of their provenance
+    detail: 0 of 11 openapi documents pass; credited at 90% because of their provenance
       (unknown)
   - id: openapi_3_0
     status: missed
-    detail: 0 of 10 openapi documents pass; credited at 90% because of their provenance
+    detail: 0 of 11 openapi documents pass; credited at 90% because of their provenance
       (unknown)
   - id: info_complete
     status: missed
-    detail: 0 of 10 openapi documents pass; credited at 90% because of their provenance
+    detail: 0 of 11 openapi documents pass; credited at 90% because of their provenance
       (unknown)
   - id: examples_present
     status: missed
   - id: webhooks_or_callbacks
     status: missed
-    detail: 0 of 10 openapi documents pass; credited at 90% because of their provenance
+    detail: 0 of 11 openapi documents pass; credited at 90% because of their provenance
       (unknown)
   - id: asyncapi_present
-    status: missed
-  - id: json_schema_present
-    status: missed
-  - id: json_schema_per_resource
-    status: missed
-  - id: json_ld_present
-    status: missed
-  - id: json_ld_class_depth
-    status: missed
-  - id: json_ld_property_depth
     status: missed
   - id: lifecycle_documented
     status: missed
   - id: domain_standard_conformance
-    status: missed
-  - id: rules_present
-    status: missed
-  - id: rules_substantial
-    status: missed
-  - id: balanced_severities
-    status: missed
-  - id: vocabulary_published
     status: missed
   - id: overlay_published
     status: missed
@@ -94,21 +72,11 @@ kin_checks:
     status: missed
   - id: postman_present
     status: missed
-  - id: support_channel
-    status: missed
-  - id: plans_present
-    status: missed
   - id: plans_multiple
-    status: missed
-  - id: pricing_link
     status: missed
   - id: sign_up_present
     status: missed
     detail: pointer liveness 0.0
-  - id: terms_of_service
-    status: missed
-  - id: privacy_policy
-    status: missed
   - id: finops_mapped
     status: missed
   - id: compliance_published
@@ -116,10 +84,6 @@ kin_checks:
   - id: trust_center
     status: missed
   - id: reg_vulnerability_disclosure
-    status: missed
-  - id: reg_terms_of_service
-    status: missed
-  - id: reg_privacy_policy
     status: missed
   - id: reg_compliance_published
     status: missed
@@ -181,12 +145,12 @@ kin_checks:
   - id: openapi_3_1
     status: partial
     earned: 4.5
-    detail: 10 of 10 openapi documents pass; credited at 90% because of their provenance
+    detail: 11 of 11 openapi documents pass; credited at 90% because of their provenance
       (unknown)
   - id: servers_defined
     status: partial
     earned: 2.7
-    detail: 10 of 10 openapi documents pass; credited at 90% because of their provenance
+    detail: 11 of 11 openapi documents pass; credited at 90% because of their provenance
       (unknown)
   - id: servers_resolvable
     status: partial
@@ -194,63 +158,81 @@ kin_checks:
   - id: operations_summary_coverage
     status: partial
     earned: 5.4
-    detail: 10 of 10 openapi documents pass; credited at 90% because of their provenance
+    detail: 11 of 11 openapi documents pass; credited at 90% because of their provenance
       (unknown)
   - id: operations_description_coverage
     status: partial
-    earned: 4.86
-    detail: 9 of 10 openapi documents pass; credited at 90% because of their provenance
+    earned: 4.91
+    detail: 10 of 11 openapi documents pass; credited at 90% because of their provenance
       (unknown)
   - id: operations_tagged
     status: partial
     earned: 3.6
-    detail: 10 of 10 openapi documents pass; credited at 90% because of their provenance
+    detail: 11 of 11 openapi documents pass; credited at 90% because of their provenance
       (unknown)
   - id: operations_operation_ids
     status: partial
     earned: 3.6
-    detail: 10 of 10 openapi documents pass; credited at 90% because of their provenance
+    detail: 11 of 11 openapi documents pass; credited at 90% because of their provenance
       (unknown)
   - id: response_coverage
     status: partial
     earned: 4.5
-    detail: 10 of 10 openapi documents pass; credited at 90% because of their provenance
+    detail: 11 of 11 openapi documents pass; credited at 90% because of their provenance
       (unknown)
   - id: error_responses_documented
     status: partial
     earned: 3.6
-    detail: 10 of 10 openapi documents pass; credited at 90% because of their provenance
+    detail: 11 of 11 openapi documents pass; credited at 90% because of their provenance
       (unknown)
   - id: components_reuse
     status: partial
-    earned: 2.16
-    detail: 8 of 10 openapi documents pass; credited at 90% because of their provenance
+    earned: 2.21
+    detail: 9 of 11 openapi documents pass; credited at 90% because of their provenance
       (unknown)
   - id: security_schemes_defined
     status: partial
     earned: 3.6
-    detail: 10 of 10 openapi documents pass; credited at 90% because of their provenance
+    detail: 11 of 11 openapi documents pass; credited at 90% because of their provenance
       (unknown)
   - id: security_applied
     status: partial
-    earned: 2.43
-    detail: 9 of 10 openapi documents pass; credited at 90% because of their provenance
+    earned: 2.46
+    detail: 10 of 11 openapi documents pass; credited at 90% because of their provenance
       (unknown)
   - id: oauth_flows_current
     status: partial
     earned: 3.6
-    detail: 10 of 10 openapi documents pass; credited at 90% because of their provenance
+    detail: 11 of 11 openapi documents pass; credited at 90% because of their provenance
       (unknown)
   - id: credentials_not_in_query
     status: partial
     earned: 2.7
-    detail: 10 of 10 openapi documents pass; credited at 90% because of their provenance
+    detail: 11 of 11 openapi documents pass; credited at 90% because of their provenance
       (unknown)
   - id: oauth_scopes_enumerated
     status: partial
     earned: 3.6
-    detail: 10 of 10 openapi documents pass; credited at 90% because of their provenance
+    detail: 11 of 11 openapi documents pass; credited at 90% because of their provenance
       (unknown)
+  - id: json_schema_present
+    status: partial
+    earned: 5.4
+  - id: json_schema_per_resource
+    status: partial
+    earned: 3.6
+  - id: rules_present
+    status: partial
+    earned: 2.5
+  - id: rules_substantial
+    status: partial
+    earned: 1.25
+  - id: balanced_severities
+    status: partial
+    earned: 0.75
+  - id: vocabulary_published
+    status: partial
+    earned: 1.25
   - id: status_page_present
     status: partial
     earned: 3.0
